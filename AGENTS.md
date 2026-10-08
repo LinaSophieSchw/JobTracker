@@ -60,3 +60,16 @@ placement questions, and decision records in this project.
 
 Decision records for this project belong in `docs/decisions` and should be
 based on `docs/decision-template.md`.
+
+## Git workflow
+
+The team members are Git beginners. Two skills cover the workflow:
+
+ * `.agents/skills/start-coding` – when someone starts a new task: get the
+   latest code, sync dependencies, create a feature branch.
+ * `.agents/skills/end-coding` – when someone is done: check changes, write
+   a German commit message with a type prefix such as `feat:`, commit, push
+   and open a pull request.
+
+For Claude Code both skills are also registered in `.claude/skills/`, which
+only point to the shared files above.
