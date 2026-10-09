@@ -63,13 +63,19 @@ based on `docs/decision-template.md`.
 
 ## Git workflow
 
-The team members are Git beginners. Two skills cover the workflow:
+The team members are Git and programming beginners. Three skills cover the
+workflow:
 
  * `.agents/skills/start-coding` – when someone starts a new task: get the
    latest code, sync dependencies, create a feature branch.
+ * `.agents/skills/learn-coding` – while programming: build each user story
+   as a vertical slice (frontend → backend → database) in small, runnable
+   steps, write code in the style of the course examples and explain every
+   step in simple German, so the team can explain the code in the
+   presentation.
  * `.agents/skills/end-coding` – when someone is done: check changes, write
    a German commit message with a type prefix such as `feat:`, commit, push
    and open a pull request.
 
-For Claude Code both skills are also registered in `.claude/skills/`, which
+For Claude Code all three skills are also registered in `.claude/skills/`, which
 only point to the shared files above.
