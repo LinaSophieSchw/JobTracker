@@ -106,9 +106,11 @@ wie man ihn nächstes Mal selbst erkennt.
 
 - **Einfach vor elegant:** kurze Funktionen, sprechende Namen, keine cleveren
   Tricks. Was ein Anfänger nicht lesen kann, kann er nicht präsentieren.
-- **Stil wie in den Codebeispielen** aus dem Unterricht: deutsche Namen,
-  Docstrings, Kommentare, die das *Warum* und den Denkweg erklären – siehe
-  `references/code-stil.md`.
+- **Stil wie in den Codebeispielen** aus dem Unterricht: Namenskonventionen
+  von Python (`snake_case`, `PascalCase`, `KONSTANTEN`), Team-Konventionen
+  (deutsche Namen, Einheiten im Namen, max. 88 Zeichen pro Zeile, max. 3
+  Verschachtelungsebenen), Docstrings und Kommentare, die das *Warum* und den
+  Denkweg erklären – siehe `references/code-stil.md`.
 - **Technologien laut Kursempfehlung:** Backend mit Flask oder FastAPI,
   Frontend ohne Build-Tools (z. B. Vue 3 über CDN, HTMX oder einfaches
   JavaScript), eine SQL-Datenbank. Neue Bibliotheken nur nach Rückfrage und
