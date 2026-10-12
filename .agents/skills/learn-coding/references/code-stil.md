@@ -5,16 +5,45 @@ Bankkonto, Greeter, Passwort-Prüfung) haben einen gemeinsamen Stil. Das Team
 kennt ihn und kann Code in diesem Stil lesen. Deshalb schreibt der Agent
 Projektcode genauso.
 
-## Namen
+## Namenskonventionen von Python
+
+Jede Programmiersprache hat eigene Konventionen, wie Bezeichner geschrieben
+werden. Der Agent hält sich in Python immer an diese drei:
+
+| Was | Stil | Beispiele |
+|-----|------|-----------|
+| Variablen, Funktionen, Parameter, Module | `snake_case`: klein, Wortteile mit `_` getrennt | `firmen_name`, `bewerbung_speichern()` |
+| Klassen | `PascalCase`: jedes Wort gross, ohne Trennzeichen | `Bewerbung`, `BewerbungsListe` |
+| Konstanten (Wert ändert sich zur Laufzeit nicht) | `SCREAMING_SNAKE_CASE`: alles gross, mit `_` | `ERLAUBTE_STATUS`, `MAXIMALE_TITEL_LAENGE` |
+
+Eine Konstante steht oben im Modul und wird nur gelesen, nie verändert.
+Eine Liste, die zur Laufzeit wächst (z. B. `bewerbungen.append(...)`), ist
+keine Konstante und wird klein geschrieben.
+
+## Team-Konventionen
+
+Zusätzlich zu den Python-Konventionen hat sich das Team auf folgende Regeln
+geeinigt. Der Agent hält sie ein und kann sie auf Nachfrage begründen:
 
 - **Deutsch und sprechend**, so dass man ohne Kommentar versteht, was drin
-  ist: `name_ohne_abstand`, `kontostand_in_chf`, `maximale_baum_breite`.
-  Lieber lang und klar als kurz und rätselhaft (`neue_bewerbung` statt `nb`).
+  ist: `name_ohne_abstand`, `maximale_baum_breite`.
+- **Keine unklaren Abkürzungen:** Lieber lang und klar als kurz und rätselhaft
+  (`neue_bewerbung` statt `nb`). Gängige Abkürzungen wie `id`, `url`, `api`,
+  `html` oder `json` sind erlaubt.
 - **Funktionen heissen nach dem, was sie tun:** `bewerbung_speichern()`,
   `bewerbungen_nach_status_filtern()`.
 - **Umlaute in Namen vermeiden** (`anzahl_bewerbungen`, `aendern`), weil sie in
   URLs, Datenbankspalten und Dateinamen Probleme machen können. In Kommentaren
   und Texten sind Umlaute natürlich in Ordnung.
+- **Einheiten gehören in den Namen**, wenn ein Wert eine hat:
+  `lohn_in_chf`, `pensum_in_prozent`, `wartezeit_in_tagen`. So verwechselt
+  niemand Franken mit Rappen oder Tage mit Wochen.
+- **Maximal 88 Zeichen pro Zeile.** Das ist die Einstellung von Black und
+  Ruff in `pyproject.toml`; lange Aufrufe werden auf mehrere Zeilen verteilt.
+- **Höchstens 3 Verschachtelungsebenen** bei Schleifen und Abfragen
+  (`for`, `while`, `if`, `with`, `try`). Wird es tiefer, lagert der Agent den
+  inneren Teil in eine eigene Funktion aus oder verlässt die Funktion früh
+  mit `return` bzw. überspringt mit `continue`, statt weiter einzurücken.
 
 ## Docstrings
 
