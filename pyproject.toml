@@ -61,3 +61,6 @@ source = ["app"]
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
+
+[tool.vercel]
+entrypoint = "src.app:app"
