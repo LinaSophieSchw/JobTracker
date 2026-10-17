@@ -60,3 +60,58 @@ werden; vor dem Onlinebetrieb muss dauerhafte Speicherung auch über Neustarts
 und erneute Deployments hinweg gewährleistet sein. Andernfalls ist ein Wechsel
 des Hostings oder der Datenbank nötig. Ein technischer Wechsel wurde nicht
 vorgenommen. Persönliche Erkenntnisse dazu wurden noch nicht formuliert.
+
+## 2026-10-18 – SQLite lokal einrichten und testen
+
+**Was haben wir gemacht?**
+Auf dem Branch `SQLite` wurde die lokale Datenbankanbindung vorbereitet:
+`/instance/` in `.gitignore` ausgeschlossen, der Datenbankpfad in
+`src/app/__init__.py` konfiguriert und die Funktion `verbindung_oeffnen()`
+in `src/app/datenbank.py` ergänzt. Die Route `/api/datenbank/status`
+prüft die Verbindung mit `SELECT 1` und liefert `{"datenbank":"ok"}`.
+Lina bestätigte das Ergebnis durch einen Screenshot im Browser.
+
+In `tests/test_datenbank.py` wurden zwei automatische Tests ergänzt:
+einer für die Verbindungsfunktion und einer für die Flask-Statusroute.
+Lina bestätigte zunächst den erfolgreichen Lauf der Datenbanktests und danach
+auch den Gesamttest mit den erwarteten vier erfolgreichen Tests. Die vollständige
+Terminalausgabe des Gesamttests wurde im Chat nicht übermittelt.
+
+**Warum haben wir das gemacht?**
+Die Bewerbungserfassung braucht später eine Datenbank. SQLite ermöglicht
+den lokalen Einstieg ohne separaten Datenbankserver. Automatische Tests
+sollen Änderungen an Verbindung und Statusroute überprüfbar machen.
+
+**Welche Auswirkungen hat das?**
+Die SQLite-Datei wird bei Bedarf lokal unter `instance/jobtracker.db` erstellt.
+Sie enthält noch keine Bewerbungstabelle und wird nicht über Git geteilt.
+Die Verbindung wird mit `closing` nach jeder Prüfung geschlossen.
+Die dauerhafte Datenspeicherung auf Vercel bleibt weiterhin ungeklärt.
+
+**Welche Konzepte wurden behandelt?**
+SQL als Abfragesprache und SQLite als Datenbanksystem; Trennung von Code und
+lokalen Daten; Pfadberechnung mit `Path` und `parents[2]`; Python-Standardbibliothek
+gegenüber zusätzlich installierten Paketen; Flask-Routen und Serverneustart.
+Beim Testen wurden pytest, `assert`, temporäre Ordner mit `tmp_path` und die
+vorübergehende Konfigurationsänderung mit `monkeypatch` besprochen.
+Die Tests prüfen echte SQLite-Zugriffe; der Routentest prüft zusätzlich das
+Zusammenspiel mit Flask. Sie belegen noch keine Speicherung von Bewerbungen
+über Neustarts oder Deployments hinweg.
+
+**Eigenleistung und KI-Unterstützung**
+Lina erstellte den Branch selbst, übernahm die Codevorschläge, ergänzte
+Kommentare, startete den Server und führte die Prüfungen aus. Sie fragte
+unter anderem nach Ordnernamen, Pfadberechnung, Imports und pytest.
+Der Agent lieferte Code und Testvorschläge, erklärte die Schritte und half bei
+der zunächst auftretenden 404-Meldung. Der spätere erfolgreiche Aufruf ist
+belegt; die genaue Ursache der vorherigen 404-Meldung wurde nicht abschliessend
+nachgewiesen.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+Was kann ich durch die Browserprüfung nachweisen, und was prüfen die
+automatischen Tests zusätzlich? Welche Teile kann ich bereits selbst erklären?
+
+**Nächster Lernschritt**
+Codequalität und Formatierung prüfen und das SQLite-Grundgerüst als
+Zwischenstand sichern. Danach das Datenmodell für die Erfassung eines
+Stellenlinks festlegen.

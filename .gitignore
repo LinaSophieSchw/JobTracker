@@ -43,3 +43,6 @@ venv/
 
 # MacOS files
 .DS_Store
+
+# Lokale Datenbank und rechnerbezogene Dateien --> Dies ist für SQLite die Datenbank wird vorerst lokal gespeichert bis zur Entscheidung
+/instance/
