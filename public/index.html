@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8">
+    <title>JobTracker</title>
+    <!-- Vue 3 wird direkt aus dem Internet (CDN) geladen. -->
+    <!-- So brauchen wir keine Installation und keine Build-Tools. -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <h1>JobTracker</h1>
+        <p>Backend: {{ backend_status }}</p>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            // data() enthält die Werte, die auf der Seite angezeigt werden.
+            // Ändert sich ein Wert, aktualisiert Vue die Seite automatisch.
+            data() {
+                return { backend_status: "wird geprüft …" };
+            },
+            // mounted() läuft einmal, sobald die Seite geladen ist.
+            async mounted() {
+                try {
+                    const antwort = await fetch("/api/status");
+                    const daten = await antwort.json();
+                    this.backend_status = daten.status;
+                } catch (fehler) {
+                    this.backend_status = "nicht erreichbar";
+                }
+            },
+        }).mount("#app");
+    </script>
+</body>
+
+</html>
