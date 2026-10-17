@@ -61,6 +61,7 @@ placement questions, and decision records in this project.
 Decision records for this project belong in `docs/decisions` and should be
 based on `docs/decision-template.md`.
 
+
 ## Git workflow
 
 The team members are Git and programming beginners. Three skills cover the
@@ -79,3 +80,20 @@ workflow:
 
 For Claude Code all three skills are also registered in `.claude/skills/`, which
 only point to the shared files above.
+
+## Learninglog zur Reflexionsvorbereitung
+
+Verwende `.agents/skills/learninglog/SKILL.md` nach relevanten abgeschlossenen
+Arbeitsschritten, wichtigen Entscheidungen oder gelösten Problemen sowie auf
+ausdrücklichen Wunsch. Kläre die aktive Person, sofern sie nicht eindeutig ist.
+
+Führe getrennte Learninglogs:
+
+ * Lina: `docs/reflection/Lina/learninglog_lina.md`
+ * Mirko: `docs/reflection/Mirko/learninglog_mirko.md`
+ * Fabio: `docs/reflection/Fabio/learninglog_fabio.md`
+
+Erstelle Ordner und Datei beim ersten relevanten Eintrag automatisch, sofern
+Änderungen im Projektordner erlaubt sind. Halte beobachtbare Arbeit und
+KI-Unterstützung fest; persönliche Reflexionen dürfen nicht erfunden werden.
+Der Skill ist auch unter `.claude/skills/learninglog/` als Verweis registriert.
