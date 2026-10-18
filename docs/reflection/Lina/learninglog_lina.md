@@ -115,3 +115,88 @@ automatischen Tests zusätzlich? Welche Teile kann ich bereits selbst erklären?
 Codequalität und Formatierung prüfen und das SQLite-Grundgerüst als
 Zwischenstand sichern. Danach das Datenmodell für die Erfassung eines
 Stellenlinks festlegen.
+
+## 2026-10-18 – Dokumentation nach ihrem Zweck einordnen
+
+**Was haben wir gemacht?**
+Die Ablage der Projektdokumentation wurde anhand dieser Übersicht erklärt:
+
+- **`docs/user-stories/`**: Was soll die Anwendung können?
+- **`docs/decisions/`**: Warum haben wir eine bestimmte Lösung gewählt?
+- **`docs/reflection/`**: Was haben wir dabei gemacht und gelernt?
+
+**Warum haben wir das gemacht?**
+Anforderungen, Entscheidungsbegründungen und persönliche Lernerfahrungen sollen
+klar unterscheidbar und für das Team auffindbar sein. User Stories können
+als Markdown-Dateien im Repository geführt werden; GitHub Issues sind dafür
+nicht erforderlich.
+
+**Welche Auswirkungen hat das?**
+Die erste User Story liegt unter
+`docs/user-stories/00001-stellenlink-erfassen.md`. Sie beschreibt den gewünschten
+Ablauf und die Akzeptanzkriterien, ohne eine technische Umsetzung zu behaupten.
+Architekturentscheidungen und Learninglogs bleiben in ihren eigenen Ordnern.
+
+**Welche Konzepte wurden behandelt?**
+Unterscheidung zwischen Anforderung (User Story), begründetem Entscheid
+(Decision Record) und Dokumentation des Lernprozesses (Learninglog).
+
+**Eigenleistung und KI-Unterstützung**
+Lina wünschte eine Dokumentation unter `docs` statt in GitHub Issues und bat
+um die Aufnahme der Übersicht ins Learninglog. Der Agent schlug die Aufteilung
+vor und erstellte die erste User-Story-Datei.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+Woran erkenne ich, ob eine Information in eine User Story, einen Entscheid
+oder mein Learninglog gehört?
+
+**Nächster Lernschritt**
+Den Abruf des Stellentitels für die erste User Story technisch prüfen.
+
+## 2026-10-18 – Stellenlink laden und Titelvorschau anzeigen
+
+**Was haben wir gemacht?**
+Auf dem Branch `Bewerbung_erfassen_per_Link` wurde die erste Titelvorschau
+umgesetzt. Requests lädt eine jobs.ch-Anzeige, Beautiful Soup liest ihre
+Hauptüberschrift. Direkte Links und Suchlinks mit jobid werden geprüft und
+auf einen direkten Anzeigenlink vereinheitlicht. Ein Flask-Blueprint stellt
+`POST /api/stellenanzeigen/vorschau` bereit. Das Vue-Formular zeigt den Titel
+bearbeitbar an. Lina bestätigte den Abruf zuerst in der Python-Konsole und
+danach im Browser auf Port 8081.
+
+**Warum haben wir das gemacht?**
+Der erste Vertical Slice beginnt mit Link und Titel. Download, Auslesen und
+Verarbeitung der Browseranfrage liegen in getrennten Funktionen und Dateien,
+so dass sie nachvollziehbar und einzeln prüfbar bleiben.
+
+**Welche Auswirkungen hat das?**
+Die Titelvorschau funktioniert für die ausprobierte Anzeige. Es wird noch
+keine Stelle gespeichert; Speichern und Übersicht sind die nächsten Schritte.
+Zunächst kam HTML statt JSON zurück: Die laufende Anwendung auf Port 8080
+antwortete mit HTTP 405, obwohl ein frisch geladenes Flask die POST-Route
+auflistete. Auf Port 8081 funktionierte der aktuelle Stand. Dies spricht für
+einen älteren Serverprozess auf 8080; dessen Identität wurde nicht abschliessend
+geprüft. Die bisherige SQLite-Anbindung bleibt lokal.
+
+**Welche Konzepte wurden behandelt?**
+Python-Pakete und pyproject.toml; Requests und Beautiful Soup; HTML-Überschriften;
+Linkprüfung und UUID; Flask-Routen, POST und JSON; Blueprints als Sammlung
+zusammengehöriger Routen; Vue data, methods, v-model, fetch und async/await.
+Die User Story liegt tatsächlich unter `docs/user_stories/00001-stellenlink-erfassen.md`;
+dies präzisiert den zuvor im Log genannten Ordnernamen mit Bindestrich.
+
+**Eigenleistung und KI-Unterstützung**
+Lina legte Dateien an, übernahm und kommentierte die Codevorschläge, ergänzte das
+Formular und probierte Konsole und Browser aus. Der Agent lieferte die Bausteine,
+erklärte ihre Aufgaben, prüfte die Fehlerantwort und ergänzte automatisierte
+Tests für Titelerkennung, Linkprüfung und Vorschau-Route ohne Live-Abrufe.
+
+**Persönliche Reflexion – Lina**
+Lina möchte Flask später noch besser verstehen. Routen und Blueprints wurden
+besprochen; vollständiges Verständnis wird nicht vorausgesetzt.
+Offene Frage: Wie gelangt der Formularlink über die Route zur Auslesefunktion
+und als Titel zurück ins Frontend?
+
+**Nächster Lernschritt**
+Nach der Pause Link und bestätigten Titel in SQLite speichern und gespeicherte
+Einträge anzeigen. Die User Story ist noch nicht abgeschlossen.

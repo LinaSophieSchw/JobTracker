@@ -19,6 +19,9 @@ from flask import Flask, jsonify
 # Lädt unsere eigene Funktion aus datenbank.py; keine Installation nötig. (LS)
 from app.datenbank import verbindung_oeffnen
 
+# Lädt die Sammlung unserer Stellenanzeigen-Routen.
+from app.stellenanzeigen_routes import stellenanzeigen
+
 # Das Frontend liegt im Ordner public/ im Hauptordner des Projekts.
 # Online liefert Vercel diesen Ordner selbst aus. Damit es auf deinem
 # Laptop gleich funktioniert, zeigen wir Flask denselben Ordner.
@@ -26,6 +29,9 @@ from app.datenbank import verbindung_oeffnen
 PUBLIC_ORDNER = Path(__file__).resolve().parents[2] / "public"
 
 app = Flask(__name__, static_folder=PUBLIC_ORDNER, static_url_path="")
+
+# Macht die Stellenanzeigen-Routen in dieser Flask-App erreichbar.
+app.register_blueprint(stellenanzeigen)
 
 # Die lokale Datenbank liegt im Hauptordner unter instance/. [LS]
 datenbank_ordner = Path(__file__).resolve().parents[2] / "instance"
