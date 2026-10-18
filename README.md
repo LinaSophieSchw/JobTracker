@@ -55,6 +55,36 @@ match with whatever you chose when creating the image in the previous step:
 You should now be able to open your web browser under the URL 
 http://localhost:8000 and you should be greeted with a very simple page.
 
+## Lokale SQLite-Datenbank
+
+Für die lokale Entwicklung verwenden wir SQLite. Das Python-Modul `sqlite3`
+ist bereits in Python enthalten; ein separater Datenbankserver ist nicht nötig.
+
+- Speicherort: `instance/jobtracker.db`, relativ zum Projekt-Hauptordner.
+- Tabelle: `stellenanzeigen` mit `id`, `url` und `titel`.
+- Beim Speichern über `POST /api/stellenanzeigen` wird die Tabelle bei Bedarf
+  angelegt und der Link mit dem bestätigten Titel gespeichert.
+- Die reine Titelvorschau speichert noch keinen Eintrag.
+- Die Datei bleibt lokal und wird über `/instance/` in `.gitignore` von Git
+  ausgeschlossen. Jedes Teammitglied hat seine eigene Datenbank.
+- Die Daten bleiben erhalten, solange diese Datei erhalten bleibt. Dies löst
+  nicht die weiterhin offene dauerhafte Datenspeicherung auf Vercel.
+
+### Einträge in VS Code ansehen
+
+Lokal wurde die Erweiterung **SQLite Viewer** mit der Kennung
+`qwtel.sqlite-viewer` installiert (festgestellte Version: 26.9.1).
+Sie dient zur Ansicht der Datenbank und ist für die Anwendung nicht erforderlich.
+Sie ist kein Python-Paket und gehört deshalb nicht in `pyproject.toml`.
+
+1. In VS Code die Erweiterungen mit **Strg + Umschalt + X** öffnen.
+2. Nach `qwtel.sqlite-viewer` suchen und die Erweiterung bei Bedarf installieren.
+3. `instance/jobtracker.db` öffnen; falls nötig über **Öffnen mit …** die
+   SQLite-Ansicht wählen.
+4. Die Tabelle `stellenanzeigen` auswählen, um ID, Link und Titel zu sehen.
+
+Die `.db`-Datei ist eine Binärdatei. Sie soll nicht als gewöhnlicher Text
+bearbeitet werden. 
 ## Understanding the sources
 
 Explain any high level concepts that you are using in your software. What were

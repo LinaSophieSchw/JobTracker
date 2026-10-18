@@ -200,3 +200,63 @@ und als Titel zurück ins Frontend?
 **Nächster Lernschritt**
 Nach der Pause Link und bestätigten Titel in SQLite speichern und gespeicherte
 Einträge anzeigen. Die User Story ist noch nicht abgeschlossen.
+
+## 2026-10-18 – Stellenanzeige in SQLite speichern
+
+**Was haben wir gemacht?**
+Auf dem Branch `stellenanzeige_speichern` wurden in `src/app/datenbank.py`
+die Funktionen `tabellen_erstellen()` und `stellenanzeige_speichern()` ergänzt.
+Die Tabelle `stellenanzeigen` enthält ID, URL und Titel. Lina erstellte die
+Tabelle in der Python-Konsole, prüfte die Spalten mit `PRAGMA table_info`,
+speicherte einen Testeintrag und bestätigte das Zurücklesen über eine neue
+Verbindung.
+
+In `src/app/stellenanzeigen_routes.py` wurde `POST /api/stellenanzeigen`
+ergänzt. Die Route prüft Link und Titel, legt die Tabelle bei Bedarf an und
+liefert nach dem Speichern die ID mit HTTP 201 zurück. Das Vue-Frontend in
+`public/index.html` erhielt einen Speicherbutton, eine Speicherfunktion sowie
+Lade- und Erfolgsmeldungen. Der Browser bestätigte einen Eintrag mit ID 2.
+
+**Warum haben wir das gemacht?**
+Die Titelvorschau soll erst nach ausdrücklicher Bestätigung gespeichert werden.
+Parametrisierte SQL-Abfragen trennen Nutzereingaben vom SQL-Befehl. `commit()`
+bestätigt die Änderung; `closing` schliesst die Verbindung anschliessend.
+
+**Welche Auswirkungen hat das?**
+Link und Titel können nun lokal über die Webseite gespeichert werden. Die
+Übersicht auf der Webseite fehlt noch. Ein erneuter Abruf der Daten über eine
+neue Verbindung wurde bestätigt; ein gezielter Nachweis nach Serverneustart
+und automatische Tests der neuen Speicherfunktion stehen noch aus.
+Die früheren zehn erfolgreichen Tests beziehen sich auf den Vorschau-Zwischenstand,
+nicht auf die neu hinzugefügte Speicherung. Das Vercel-Speicherthema bleibt offen.
+
+Beim ersten Browserversuch kam erneut HTML statt JSON zurück. Beide Routen
+wurden mit dem Flask-Befehl zur Routenauflistung nachgewiesen. Nach der
+Anleitung zum Stoppen älterer Server und Neustarten eines einzelnen Servers
+auf Port 8081 bestätigte Lina die erfolgreiche Speicherung. Die genaue
+Prozessursache wurde nicht abschliessend nachgewiesen.
+
+**Welche Konzepte wurden behandelt?**
+Tabellenstruktur, Primärschlüssel, NOT NULL, CREATE TABLE IF NOT EXISTS,
+INSERT mit Platzhaltern, SELECT, commit, lastrowid und current_app.
+Eine SQLite-Datei ist binär und benötigt zur tabellarischen Ansicht ein
+geeignetes Werkzeug. Lokal ist `qwtel.sqlite-viewer` (Version 26.9.1)
+installiert; die optionale Erweiterung und ihre Verwendung wurden in der
+README dokumentiert. Die tatsächliche Tabellenansicht in der Erweiterung
+wurde im Chat noch nicht bestätigt.
+
+**Eigenleistung und KI-Unterstützung**
+Lina übernahm die erklärten Codebausteine selbst, führte die Konsolenprüfungen
+aus und testete den Formularablauf. Der Agent lieferte und erklärte die
+Bausteine, unterstützte die Fehlersuche und ergänzte auf Wunsch README und
+Learninglog. Neue automatische Speichertests wurden nicht ungefragt erstellt.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+Woran erkenne ich den Unterschied zwischen einer angezeigten Vorschau und
+einem tatsächlich gespeicherten Datensatz? Flask bleibt ein offener
+Vertiefungspunkt aus dem vorherigen Eintrag.
+
+**Nächster Lernschritt**
+Gespeicherte Einträge auf der Webseite anzeigen, Speicherung nach Neustart
+prüfen und gemeinsam automatische Speichertests ergänzen. Danach Codeprüfung,
+Formatprüfung sowie manueller Commit und Push.

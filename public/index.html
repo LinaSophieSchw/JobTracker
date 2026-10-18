@@ -28,7 +28,15 @@
         <div v-if="vorschau_vorhanden">
             <label for="stellentitel">Erkannter Stellentitel</label>
             <input id="stellentitel" type="text" v-model="stellentitel">
+
+            <!-- Speichert den Link und den gegebenenfalls korrigierten Titel. -->
+            <button type="button" @click="stellenanzeige_speichern" :disabled="speichert">
+                {{ speichert ? "Wird gespeichert …" : "Speichern" }}
+            </button>
         </div>
+
+        <!-- Bestätigt später die erfolgreiche Speicherung. -->
+        <p v-if="erfolgsmeldung">{{ erfolgsmeldung }}</p>
 
     </div>
 
@@ -47,6 +55,8 @@
                     laedt: false,               // Zeigt, ob der Abruf gerade läuft.
                     fehlermeldung: "",          // Meldung bei einem Fehler.
                     vorschau_vorhanden: false,  // Steuert die Sichtbarkeit des Titelfelds.
+                    speichert: false,       // Sperrt den Button während der Speicherung.
+                    erfolgsmeldung: "",     // Zeigt die Bestätigung nach dem Speichern an.
                 };
             },
             // Enthält Funktionen, die das Formular auslösen kann.
@@ -83,6 +93,39 @@
                     } finally {
                         // Gibt den Button nach Erfolg oder Fehler wieder frei.
                         this.laedt = false;
+                    }
+
+                },
+                // Sendet Link und bestätigten Titel an die Speicherroute.
+                // Eine Erfolgsmeldung erscheint erst, wenn Flask das Speichern bestätigt.
+                async stellenanzeige_speichern() {
+                    this.speichert = true;
+                    this.fehlermeldung = "";
+                    this.erfolgsmeldung = "";
+
+                    try {
+                        const antwort = await fetch("/api/stellenanzeigen", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                url: this.stellenlink,
+                                titel: this.stellentitel,
+                            }),
+                        });
+
+                        const daten = await antwort.json();
+
+                        if (!antwort.ok) {
+                            throw new Error(daten.fehler || "Speichern fehlgeschlagen.");
+                        }
+
+                        this.erfolgsmeldung = `Stellenanzeige gespeichert (ID: ${daten.id}).`;
+                        this.vorschau_vorhanden = false;
+                    } catch (fehler) {
+                        this.fehlermeldung = fehler.message;
+                    } finally {
+                        // Gibt den Button auch nach einem Fehler wieder frei.
+                        this.speichert = false;
                     }
                 },
             },
