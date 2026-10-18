@@ -5,9 +5,11 @@ description = "Web application project for the software development module"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "beautifulsoup4>=4.15.0", # Liest Informationen wie den Stellentitel aus dem HTML (LS)
     "flask>=3.1.3",
     "gunicorn>=26.0.0",
     "python-dotenv>=1.0",
+    "requests>=2.34.2", # Lädt den HTML-Inhalt einer Stellenanzeige herunter.
     "waitress>=3.0.2 ; sys_platform == 'win32'",
 ]
 

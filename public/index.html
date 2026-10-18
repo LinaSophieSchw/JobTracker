@@ -13,16 +13,78 @@
     <div id="app">
         <h1>JobTracker</h1>
         <p>Backend: {{ backend_status }}</p>
+        <h2>Stellenanzeige erfassen</h2>
+
+        <form @submit.prevent="stellenanzeige_laden">
+            <label for="stellenlink">Link zur jobs.ch-Stellenanzeige</label>
+            <input id="stellenlink" type="url" v-model="stellenlink" required>
+            <button type="submit" :disabled="laedt">
+                {{ laedt ? "Wird geladen …" : "Informationen laden" }}
+            </button>
+        </form>
+
+        <p v-if="fehlermeldung">{{ fehlermeldung }}</p>
+
+        <div v-if="vorschau_vorhanden">
+            <label for="stellentitel">Erkannter Stellentitel</label>
+            <input id="stellentitel" type="text" v-model="stellentitel">
+        </div>
+
     </div>
 
     <script>
         const { createApp } = Vue;
 
         createApp({
-            // data() enthält die Werte, die auf der Seite angezeigt werden.
-            // Ändert sich ein Wert, aktualisiert Vue die Seite automatisch.
+            // Speichert die Werte für die Anzeige und das Formular.
+            // v-model verbindet Eingabefelder mit diesen Werten.
+            // Ändern sich die Werte, aktualisiert Vue die Oberfläche automatisch.
             data() {
-                return { backend_status: "wird geprüft …" };
+                return {
+                    backend_status: "wird geprüft …",
+                    stellenlink: "",            // Eingegebener Link zur Stellenanzeige.
+                    stellentitel: "",           // Erkannter oder korrigierter Titel.
+                    laedt: false,               // Zeigt, ob der Abruf gerade läuft.
+                    fehlermeldung: "",          // Meldung bei einem Fehler.
+                    vorschau_vorhanden: false,  // Steuert die Sichtbarkeit des Titelfelds.
+                };
+            },
+            // Enthält Funktionen, die das Formular auslösen kann.
+            // Wird beim Abschicken des Formulars aufgerufen.
+            // Sendet den Link an Flask und wartet auf den erkannten Stellentitel.
+            // Zeigt danach den Titel oder eine Fehlermeldung an.
+            // async/await ermöglicht das Warten, ohne die Browseroberfläche zu blockieren.
+            // this greift auf unsere Werte aus data() zu; gespeichert wird noch nichts.
+            methods: {
+                async stellenanzeige_laden() {
+                    this.laedt = true;
+                    this.fehlermeldung = "";
+                    this.vorschau_vorhanden = false;
+
+                    try {
+                        // Schickt den eingegebenen Link als JSON an Flask.
+                        const antwort = await fetch("/api/stellenanzeigen/vorschau", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ url: this.stellenlink }),
+                        });
+
+                        const daten = await antwort.json();
+
+                        if (!antwort.ok) {
+                            throw new Error(daten.fehler || "Abruf fehlgeschlagen.");
+                        }
+
+                        // Zeigt den erkannten Titel im bearbeitbaren Feld an.
+                        this.stellentitel = daten.titel;
+                        this.vorschau_vorhanden = true;
+                    } catch (fehler) {
+                        this.fehlermeldung = fehler.message;
+                    } finally {
+                        // Gibt den Button nach Erfolg oder Fehler wieder frei.
+                        this.laedt = false;
+                    }
+                },
             },
             // mounted() läuft einmal, sobald die Seite geladen ist.
             async mounted() {
