@@ -200,3 +200,137 @@ und als Titel zurück ins Frontend?
 **Nächster Lernschritt**
 Nach der Pause Link und bestätigten Titel in SQLite speichern und gespeicherte
 Einträge anzeigen. Die User Story ist noch nicht abgeschlossen.
+
+## 2026-10-19 – PostgreSQL für die Speicherung beim Deployment
+
+**Was haben wir gemacht?**
+Für das Deployment auf Vercel wurde Neon PostgreSQL als künftige Datenbank
+gewählt. Das Neon-Projekt und der Datenbank-Branch `Test` wurden bereits
+eingerichtet. Die Umstellung des Python-Codes ist noch nicht abgeschlossen.
+
+**Warum haben wir das gemacht?**
+SQLite kann Daten dauerhaft speichern und eignet sich für die lokale
+Entwicklung. Unsere lokale SQLite-Datei innerhalb der Vercel-Laufzeit bietet
+jedoch keine verlässliche dauerhafte Speicherung über Aufrufe und Deployments
+hinweg. Deshalb soll eine externe PostgreSQL-Datenbank die Daten halten.
+
+**Welche Auswirkungen hat das?**
+Die Datenbankverbindung und SQLite-spezifische SQL-Befehle müssen angepasst
+werden. Zugangsdaten sollen über Umgebungsvariablen eingebunden werden.
+Test- und Produktionsverbindungen müssen noch getrennt zugeordnet und die
+Online-Speicherung anschliessend geprüft werden.
+
+**Welche Konzepte wurden behandelt?**
+Unterschied zwischen einer lokalen Datenbankdatei und einer extern betriebenen
+Datenbank sowie zwischen lokaler Entwicklung und Deployment.
+
+**Eigenleistung und KI-Unterstützung**
+Lina richtete Neon anhand der besprochenen Schritte ein und möchte die
+Verbindung schrittweise selbst umsetzen. Der Agent erklärte die Einschränkung
+der bisherigen Lösung und ergänzte diesen Eintrag auf ihren Wunsch.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+Warum funktioniert unsere lokale Datenbanklösung nicht unverändert auf Vercel?
+
+**Nächster Lernschritt**
+Den PostgreSQL-Treiber installieren und die lokale Anwendung zuerst mit dem
+Neon-Testbranch verbinden. Die erfolgreiche Verbindung ist noch nachzuweisen.
+
+## 2026-10-20 – Connection String für die Neon-Verbindung
+
+**Was haben wir gemacht?**
+Lina öffnete in Neon die Verbindungsdetails des Branches `Test`.
+Der Begriff „Connection String“ (Verbindungszeichenfolge) wurde besprochen.
+Diese Adresse bündelt Datenbanktyp, Benutzer, Passwort, Server,
+Datenbankname und Verbindungsoptionen.
+
+**Warum haben wir das gemacht?**
+Python benötigt diese Angaben, um die richtige PostgreSQL-Datenbank
+anzusprechen. Ein allgemeines Beispiel ohne echte Zugangsdaten lautet:
+`postgresql://BENUTZER:PASSWORT@SERVER/DATENBANK?sslmode=require`.
+
+**Welche Auswirkungen hat das?**
+Die echte Adresse gehört lokal in die ignorierte `.env` unter `DATABASE_URL`
+und online in die passenden Vercel-Umgebungsvariablen. Sie wird nicht im
+Learninglog oder Quellcode dokumentiert. Ein erfolgreicher Verbindungstest
+wurde bisher noch nicht bestätigt.
+
+**Welche Konzepte wurden behandelt?**
+Connection String, Umgebungsvariablen und Trennung von Zugangsdaten und Code.
+Die angezeigten Sternchen maskieren das Passwort; eine tatsächlich verwendete
+Verbindungsadresse benötigt das echte Passwort.
+
+**Eigenleistung und KI-Unterstützung**
+Lina zeigte die Neon-Verbindungsansicht und bat um Dokumentation.
+Der Agent ergänzte eine Erklärung mit Platzhaltern ohne echte Zugangsdaten.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+Welche Angaben stecken im Connection String, und warum bleibt er ausserhalb
+des Git-Repositorys?
+
+**Nächster Lernschritt**
+Die Verbindung der lokalen Flask-App zum Neon-Testbranch über `SELECT 1`
+prüfen, ohne dabei die Verbindungsadresse auszugeben.
+
+## 2026-10-20 – PostgreSQL-Verbindung lokal und auf Vercel geprüft
+
+**Was haben wir gemacht?**
+Lina stellte die Verbindungsfunktion von SQLite auf `psycopg` um.
+Die Flask-Konfiguration liest `DATABASE_URL`; lokal wird dafür die ignorierte
+`.env` geladen. Die Statusroute führt weiterhin `SELECT 1` aus.
+Lina bestätigte die Antwort `{"datenbank":"ok"}` lokal und anschliessend
+im Vercel-Preview `job-tracker-2gsmno016-swen-hausarbeit.vercel.app`.
+Elf automatische Tests bestanden; Ruff und Black meldeten zuletzt keine Fehler.
+
+**Warum haben wir das gemacht?**
+Die Anwendung benötigt für Vercel eine externe Datenbankverbindung.
+Die bisherigen SQLite-Tests wurden ersetzt: Die neuen Datenbanktests prüfen
+die fehlende Adresse, die Übergabe an psycopg sowie Statusabfrage und Schliessen
+der Verbindung mit simulierten Objekten. Sie benötigen keine Neon-Zugangsdaten.
+Die tatsächliche Verbindung wurde separat manuell geprüft.
+
+**Welche Auswirkungen hat das?**
+Die Verbindung funktioniert online, das Speichern von Bewerbungen ist in
+diesem Branch noch nicht umgesetzt. Für den Prototyp wurde vorerst eine
+gemeinsame Datenbank auf dem Neon-Branch `main` für Vercel vereinbart;
+Production wurde zusätzlich zu Preview und Development ausgewählt.
+Eine vollständige Trennung der Test- und Produktionsdaten bleibt offen.
+Der zuvor erstellte Branch `Test` bleibt bestehen. Welchen Branch die lokale
+`.env` aktuell verwendet, wurde nach dieser Vereinfachung nicht abschliessend
+bestätigt.
+
+Beim ersten Deployment importierte die App die alte SQLite-Funktion aus
+`_vendor/app/datenbank.py`. Relative interne Imports sorgen nun dafür,
+dass Module aus demselben Paket geladen werden. Ein weiterer Fehler zeigte
+SQLite-Code aus `src/app/datenbank.py`: Die PostgreSQL-Version dieser Datei,
+die angepassten Tests und `uv.lock` waren noch nicht im Commit enthalten.
+Nach deren Commit und Push funktionierte die Online-Statusabfrage.
+
+**Welche Konzepte wurden behandelt?**
+Relative Paketimporte, lokale Arbeitskopie gegenüber Commit und Deployment,
+Runtime-Logs, Umgebungsvariablen, simulierte Unittests und manuelle
+Integrationstests. Ein „Ready“-Deployment beweist noch keine funktionierende
+Datenbankverbindung. Die Reihenfolge der URL-Optionen `sslmode` und
+`channel_binding` verändert ihre Bedeutung nicht.
+
+In einem Fehlerprotokoll war eine vollständige Verbindungsadresse sichtbar.
+Der Agent erklärte das automatisch erzeugte Datenbankpasswort und empfahl
+dessen Zurücksetzen. Eine Änderung der lokalen `.env` wurde von Lina bestätigt;
+eine erfolgreiche Passwortrotation samt Aktualisierung aller betroffenen
+Verbindungen wurde nicht separat nachgewiesen. Zugangsdaten werden hier
+nicht übernommen.
+
+**Eigenleistung und KI-Unterstützung**
+Lina übernahm die Codeänderungen selbst, führte Tests, Codeprüfungen, Commits
+und Pushes aus, konfigurierte Vercel und zeigte die erfolgreichen Statusantworten.
+Der Agent lieferte kommentierte Beispiele, erklärte die Fehlerprotokolle und
+verglich lokale Dateien mit dem Git-Stand. Auf Wunsch ergänzt er diesen Eintrag.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+Wie erkenne ich, ob ein Fehler aus meinem lokalen Code, dem Commit oder der
+Deployment-Konfiguration stammt?
+
+**Nächster Lernschritt**
+Den Pull Request prüfen lassen und nach dem Merge die Verbindung in Production
+testen. Danach weitere Felder aus jobs.ch untersuchen und die Speicherung
+passend zum vereinbarten Datenmodell aufbauen.

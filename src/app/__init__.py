@@ -7,20 +7,27 @@ Der Browser schickt Anfragen hierher, und Flask antwortet mit JSON.
 Die Datenbank wird lokal im Ordner instance/ gespeichert. In der Datei datenbank.py
 ist die Funktion verbindung_oeffnen() implementiert,
 die die Verbindung zur SQLite-Datenbank öffnet.
-Die Datenbank wir lokal gespeichert.
+Die Datenbank wir lokal gespeichert. (LS)
+
+20.10.2026: Die oben beschriebene SQLite-Anbindung wurde durch PostgreSQL
+bei Neon ersetzt. datenbank.py öffnet jetzt die PostgreSQL-Verbindung.
+Die Verbindungsadresse wird über DATABASE_URL geladen:
+lokal aus der .env-Datei, online aus den Vercel-Umgebungsvariablen.
+Die Verbindung zu Neon muss noch getestet werden. (LS)
 """
 
 # closing schliesst die Datenbankverbindung automatisch; gehört zu Python. (LS)
+import os
 from contextlib import closing
 from pathlib import Path
 
+# Liest lokale Einstellungen aus der .env-Datei.
+from dotenv import load_dotenv
 from flask import Flask, jsonify
 
-# Lädt unsere eigene Funktion aus datenbank.py; keine Installation nötig. (LS)
-from app.datenbank import verbindung_oeffnen
-
-# Lädt die Sammlung unserer Stellenanzeigen-Routen.
-from app.stellenanzeigen_routes import stellenanzeigen
+# Importiert die Module aus demselben Paket wie diese Datei.
+from .datenbank import verbindung_oeffnen
+from .stellenanzeigen_routes import stellenanzeigen
 
 # Das Frontend liegt im Ordner public/ im Hauptordner des Projekts.
 # Online liefert Vercel diesen Ordner selbst aus. Damit es auf deinem
@@ -28,14 +35,23 @@ from app.stellenanzeigen_routes import stellenanzeigen
 # parents[0] ist src/app, parents[1] ist src, parents[2] der Projektordner.
 PUBLIC_ORDNER = Path(__file__).resolve().parents[2] / "public"
 
+# Lädt die .env aus dem Projektordner.
+# Zur Einrichtung der Verbindung zur Datenbank
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+
 app = Flask(__name__, static_folder=PUBLIC_ORDNER, static_url_path="")
 
 # Macht die Stellenanzeigen-Routen in dieser Flask-App erreichbar.
 app.register_blueprint(stellenanzeigen)
 
-# Die lokale Datenbank liegt im Hauptordner unter instance/. [LS]
-datenbank_ordner = Path(__file__).resolve().parents[2] / "instance"
-app.config["DATABASE"] = datenbank_ordner / "jobtracker.db"
+# Liest die PostgreSQL-Adresse aus den Umgebungsvariablen.
+# Lokal kommt sie aus der .env, online aus den Vercel-Einstellungen.
+app.config["DATABASE"] = os.getenv("DATABASE_URL")
+
+# ALT Ersatzt durch die andere Datenbankverbindung zu PostgreSQL am 20.10 (LS)
+#  Die lokale Datenbank liegt im Hauptordner unter instance/. [LS]
+# datenbank_ordner = Path(__file__).resolve().parents[2] / "instance"
+# app.config["DATABASE"] = datenbank_ordner / "jobtracker.db"
 
 
 @app.get("/")
