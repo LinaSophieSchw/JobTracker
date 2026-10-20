@@ -2,7 +2,7 @@
 
 from flask import Blueprint, jsonify, request
 
-from app.stellenanzeige_erfassen import stellentitel_auslesen
+from .stellenanzeige_erfassen import stellentitel_auslesen
 
 # Sammelt die zusammengehörigen Stellenanzeigen-Routen.
 stellenanzeigen = Blueprint("stellenanzeigen", __name__)
