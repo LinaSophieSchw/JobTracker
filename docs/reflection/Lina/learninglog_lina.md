@@ -200,3 +200,74 @@ und als Titel zurück ins Frontend?
 **Nächster Lernschritt**
 Nach der Pause Link und bestätigten Titel in SQLite speichern und gespeicherte
 Einträge anzeigen. Die User Story ist noch nicht abgeschlossen.
+
+## 2026-10-19 – PostgreSQL für die Speicherung beim Deployment
+
+**Was haben wir gemacht?**
+Für das Deployment auf Vercel wurde Neon PostgreSQL als künftige Datenbank
+gewählt. Das Neon-Projekt und der Datenbank-Branch `Test` wurden bereits
+eingerichtet. Die Umstellung des Python-Codes ist noch nicht abgeschlossen.
+
+**Warum haben wir das gemacht?**
+SQLite kann Daten dauerhaft speichern und eignet sich für die lokale
+Entwicklung. Unsere lokale SQLite-Datei innerhalb der Vercel-Laufzeit bietet
+jedoch keine verlässliche dauerhafte Speicherung über Aufrufe und Deployments
+hinweg. Deshalb soll eine externe PostgreSQL-Datenbank die Daten halten.
+
+**Welche Auswirkungen hat das?**
+Die Datenbankverbindung und SQLite-spezifische SQL-Befehle müssen angepasst
+werden. Zugangsdaten sollen über Umgebungsvariablen eingebunden werden.
+Test- und Produktionsverbindungen müssen noch getrennt zugeordnet und die
+Online-Speicherung anschliessend geprüft werden.
+
+**Welche Konzepte wurden behandelt?**
+Unterschied zwischen einer lokalen Datenbankdatei und einer extern betriebenen
+Datenbank sowie zwischen lokaler Entwicklung und Deployment.
+
+**Eigenleistung und KI-Unterstützung**
+Lina richtete Neon anhand der besprochenen Schritte ein und möchte die
+Verbindung schrittweise selbst umsetzen. Der Agent erklärte die Einschränkung
+der bisherigen Lösung und ergänzte diesen Eintrag auf ihren Wunsch.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+Warum funktioniert unsere lokale Datenbanklösung nicht unverändert auf Vercel?
+
+**Nächster Lernschritt**
+Den PostgreSQL-Treiber installieren und die lokale Anwendung zuerst mit dem
+Neon-Testbranch verbinden. Die erfolgreiche Verbindung ist noch nachzuweisen.
+
+## 2026-10-20 – Connection String für die Neon-Verbindung
+
+**Was haben wir gemacht?**
+Lina öffnete in Neon die Verbindungsdetails des Branches `Test`.
+Der Begriff „Connection String“ (Verbindungszeichenfolge) wurde besprochen.
+Diese Adresse bündelt Datenbanktyp, Benutzer, Passwort, Server,
+Datenbankname und Verbindungsoptionen.
+
+**Warum haben wir das gemacht?**
+Python benötigt diese Angaben, um die richtige PostgreSQL-Datenbank
+anzusprechen. Ein allgemeines Beispiel ohne echte Zugangsdaten lautet:
+`postgresql://BENUTZER:PASSWORT@SERVER/DATENBANK?sslmode=require`.
+
+**Welche Auswirkungen hat das?**
+Die echte Adresse gehört lokal in die ignorierte `.env` unter `DATABASE_URL`
+und online in die passenden Vercel-Umgebungsvariablen. Sie wird nicht im
+Learninglog oder Quellcode dokumentiert. Ein erfolgreicher Verbindungstest
+wurde bisher noch nicht bestätigt.
+
+**Welche Konzepte wurden behandelt?**
+Connection String, Umgebungsvariablen und Trennung von Zugangsdaten und Code.
+Die angezeigten Sternchen maskieren das Passwort; eine tatsächlich verwendete
+Verbindungsadresse benötigt das echte Passwort.
+
+**Eigenleistung und KI-Unterstützung**
+Lina zeigte die Neon-Verbindungsansicht und bat um Dokumentation.
+Der Agent ergänzte eine Erklärung mit Platzhaltern ohne echte Zugangsdaten.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+Welche Angaben stecken im Connection String, und warum bleibt er ausserhalb
+des Git-Repositorys?
+
+**Nächster Lernschritt**
+Die Verbindung der lokalen Flask-App zum Neon-Testbranch über `SELECT 1`
+prüfen, ohne dabei die Verbindungsadresse auszugeben.
