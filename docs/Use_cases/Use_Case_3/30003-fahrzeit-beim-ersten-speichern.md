@@ -10,7 +10,9 @@ Als Nutzer möchte ich beim erstmaligen Speichern einer Stelle die geschätzte A
 
 ## Umfang des ersten Vertical Slice
 
-Nach Umsetzung der Stories 30001 und 30002 und der grundlegenden Stellenerfassung wird beim erstmaligen Speichern einer Stelle die Autofahrzeit abgefragt, gespeichert und angezeigt. Der Slice umfasst den gesamten Ablauf vom Klick bis zur gespeicherten Anzeige einschliesslich des einheitlichen Berechnungsfehlers.
+Nach Umsetzung von Story 30001, der Arbeitsadressfelder aus Use Case 1 (ersatzweise Story 30002) und der grundlegenden Stellenerfassung wird beim erstmaligen Speichern einer Stelle die Autofahrzeit abgefragt, gespeichert und angezeigt. Der Slice umfasst den gesamten Ablauf vom Klick bis zur gespeicherten Anzeige einschliesslich des einheitlichen Berechnungsfehlers.
+
+Das Anzeigefeld für die Fahrzeit im Formular der neuen Stelle gehört zu Use Case 1. Diese Story füllt es beim Speichern mit dem berechneten Wert.
 
 Gemeinsame Festlegungen für diesen Slice:
 

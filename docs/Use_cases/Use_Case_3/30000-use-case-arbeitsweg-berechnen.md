@@ -11,12 +11,15 @@ Die gespeicherten Werte stehen für spätere Vergleiche zur Verfügung. Die Umse
 ## Voraussetzungen
 
 - Die grundlegende Profil- und Inseratserfassung ist vorhanden.
+- Das Formular der neuen Stelle aus Use Case 1 enthält die Felder für die Arbeitsadresse sowie die Anzeige von Strecke und Fahrzeit.
 - Die Wohnadresse wird vor der ersten Arbeitswegberechnung im Profil hinterlegt.
 - Der Nutzer erfasst ein Inserat oder speichert ein bestehendes Inserat erneut.
 - Für eine erfolgreiche Berechnung liegt eine konkrete Arbeitsadresse vor.
 - Im Studienprojekt werden erfundene Nutzerprofile mit existierenden Beispieladressen ohne Bezug zu realen Personen verwendet.
 
 ## Adresserfassung und Abgrenzung
+
+**Die Felder für die Arbeitsadresse und die Anzeige von Strecke und Fahrzeit im Formular der neuen Stelle gehören zu Use Case 1.** Wer dieses Formular umsetzt, nimmt diese Felder mit auf. Use Case 3 verwendet die Arbeitsadresse aus diesem Formular und füllt Strecke und Fahrzeit beim Speichern. Story 30002 wird nur umgesetzt, falls die Felder für die Arbeitsadresse in Use Case 1 nicht vorhanden sind.
 
 Die ergänzenden Adress-Stories umfassen die erstmalige Erfassung und Speicherung der Wohnadresse und der Arbeitsadresse. Beide Adressen werden jeweils über vier getrennte Textfelder erfasst: Strasse, Hausnummer, Postleitzahl und Ort.
 
@@ -59,7 +62,8 @@ Das Inserat ist gespeichert. Bei erfolgreicher Berechnung sind Strecke und gesch
 
 ## Gehört zum Umfang
 
-- Wohn- und Arbeitsadresse erstmalig über vier getrennte Textfelder erfassen, speichern und anschliessend anzeigen.
+- Wohnadresse erstmalig über vier getrennte Textfelder erfassen, speichern und anschliessend anzeigen.
+- Arbeitsadresse auf dieselbe Weise erfassen, nur falls die Felder nicht bereits aus Use Case 1 vorhanden sind (Story 30002).
 - Vorhandene Wohn- und Arbeitsadresse verwenden.
 - Adressen in Koordinaten umwandeln und den Arbeitsweg mit OpenRouteService berechnen.
 - Strecke und Fahrzeit speichern und anzeigen.
@@ -68,6 +72,7 @@ Das Inserat ist gespeichert. Bei erfolgreicher Berechnung sind Strecke und gesch
 
 ## Ausserhalb des Umfangs
 
+- Felder für die Arbeitsadresse und die Anzeige von Strecke und Fahrzeit im Formular der neuen Stelle; diese gehören zu Use Case 1.
 - Umsetzung einer Funktion zum Ändern, Korrigieren oder nachträglichen Ergänzen gespeicherter Wohn- und Arbeitsadressen. Die Neuberechnung beim Speichern eines Inserats bleibt Bestandteil dieses Use-Cases.
 - Eingabevalidierungen in Profil- und Inseratsformularen.
 - Aufbau der gesamten Profilverwaltung und Benutzeranmeldung.

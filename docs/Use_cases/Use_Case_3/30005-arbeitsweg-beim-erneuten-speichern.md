@@ -12,6 +12,8 @@ Als Nutzer möchte ich bei jedem erneuten Speichern eines Inserats den Arbeitswe
 
 Nach den Stories 30003 und 30004 den vollständigen Ablauf auch beim erneuten Speichern einer bestehenden Stelle ausführen. Ein entsprechender Speichervorgang wird als vorhanden vorausgesetzt. Die Berechnung verwendet die beim Speichern aktuellen Adressen und ersetzt oder leert die gespeicherten Ergebnisse. Eine Adressbearbeitungsfunktion wird hier nicht umgesetzt; anderweitig umgesetzte Adressänderungen werden beim Speichern berücksichtigt.
 
+Die Felder für die Arbeitsadresse und die Anzeigefelder für Strecke und Fahrzeit im Formular der Stelle gehören zu Use Case 1. Diese Story aktualisiert nur deren Werte beim Speichern.
+
 Gemeinsame Festlegungen für diesen Slice:
 
 - Wohnadresse und Arbeitsadresse werden jeweils über vier getrennte Textfelder erfasst: **Strasse, Hausnummer, Postleitzahl und Ort**.

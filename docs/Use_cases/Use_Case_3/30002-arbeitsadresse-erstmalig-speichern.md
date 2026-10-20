@@ -1,8 +1,10 @@
 # US 30002 – Arbeitsadresse erstmalig bei einer Stelle hinterlegen
 
-Status: Geplant
+Status: Abhängig von Use Case 1 – nur umsetzen, falls dort nicht vorhanden
 
 Datum: 2026-10-20
+
+> **Hinweis:** Die Felder für die Arbeitsadresse gehören zum Formular der neuen Stelle in Use Case 1. Wer dieses Formular umsetzt, nimmt sie mit auf. Diese Story beschreibt die Felder nur als Rückfallebene für den Fall, dass sie in Use Case 1 nicht umgesetzt werden.
 
 ## User Story
 

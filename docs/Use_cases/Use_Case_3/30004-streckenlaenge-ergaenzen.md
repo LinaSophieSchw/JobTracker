@@ -12,6 +12,8 @@ Als Nutzer möchte ich bei einer neu gespeicherten Stelle zusätzlich die Streck
 
 Nach Story 30003 denselben durchgängigen Ablauf um einen zweiten Ergebniswert erweitern: Die Streckenlänge wird aus derselben Routenberechnung übernommen, bei der Stelle gespeichert und zusätzlich zur Fahrzeit angezeigt.
 
+Das Anzeigefeld für die Strecke im Formular der neuen Stelle gehört zu Use Case 1. Diese Story füllt es beim Speichern mit dem berechneten Wert.
+
 Gemeinsame Festlegungen für diesen Slice:
 
 - Wohnadresse und Arbeitsadresse werden jeweils über vier getrennte Textfelder erfasst: **Strasse, Hausnummer, Postleitzahl und Ort**.
