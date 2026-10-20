@@ -542,3 +542,166 @@ JavaScript und Python geholfen?
 Codequalität abschliessend nachweisen, neue Vorschau auf Vercel prüfen und
 den Stand reviewen lassen. Datenmodell/Importdokumentation um die tatsächlich
 beobachteten Datenvarianten ergänzen. Danach US 10003 separat umsetzen.
+
+## 2026-10-20 – US 10003: Formularangaben in PostgreSQL speichern
+
+**Was haben wir gemacht?**
+
+Auf dem Branch `10003_stellenanzeige-speichern` wurde die Speicherung der
+bereits importierten und manuell bearbeitbaren Angaben ergänzt.
+Grundlage blieb das aktuelle `docs/datenmodell.md` mit zwei Tabellen und
+je einem zusammenhängenden Feld für Wohn- und Arbeitsadresse. Fabios
+noch nicht integrierte Entwürfe wurden auf Linas Wunsch nicht übernommen;
+Fahrzeit und Strecke wurden noch nicht als zusätzliche Spalten angelegt.
+
+### Vorgehen vom Tabellenaufbau bis zum Browser
+
+1. **Bestehende Datenbank prüfen:** Eine lesende Abfrage auf
+   `information_schema.tables` lieferte für das Schema `public` zunächst
+   eine leere Liste. So wurde vor dem Anlegen geprüft, ob Tabellen existieren.
+2. **Tabellenstruktur ergänzen:** `tabellen_erstellen()` in
+   `src/app/datenbank.py` legt `benutzer` und `stellenanzeigen` an.
+   Primärschlüssel, Fremdschlüssel, Pflichtfelder, Maximallängen,
+   zulässige Statuswerte und Eindeutigkeit pro Benutzer und URL werden
+   durch Datenbankregeln abgesichert. Zeitstempel verwenden `TIMESTAMPTZ`.
+   `CREATE TABLE IF NOT EXISTS` verändert keine bereits vorhandene Tabelle.
+3. **Demo-Benutzer anlegen:** Der Datensatz mit ID 1, Name „Demo-Benutzer“
+   und öffentlicher Beispieladresse wurde eingefügt. Ein erneuter Aufruf
+   überschreibt ihn nicht. Lina führte die Funktion in der Python-Konsole
+   aus und bestätigte beide Tabellen im Data Editor. Eine zunächst scheinbar
+   fehlende Tabelle war nach Prüfung der Tabellenauswahl sichtbar.
+4. **Benutzerzuordnung festlegen:** `aktuelle_benutzer_id()` liefert in Version 1
+   die ID 1. Die Zuordnung bestimmt das Backend; eine im Formular gesendete
+   andere Benutzer-ID wird nicht übernommen. Ohne Login bleibt die Anwendung
+   eine gemeinsame Demo, keine getrennte Umgebung für verschiedene Besucher.
+5. **Formularwerte prüfen:** `textfeld_pruefen()` entfernt äussere Leerzeichen,
+   prüft Texttyp, Pflichtangaben und Maximallänge. Leere optionale Werte werden
+   `None` und beim Speichern SQL-NULL. `stellenanzeige_eingaben_pruefen()`
+   prüft die sieben übertragenen Felder, normalisiert den jobs.ch-Link und
+   prüft bei vorhandener Adresse das vereinbarte Schweizer Adressmuster.
+   Das Muster beweist nicht die tatsächliche Existenz einer Adresse.
+6. **Speicherfunktion ergänzen:** `stellenanzeige_speichern()` prüft erneut,
+   setzt die Benutzer-ID und übergibt Werte über `%s`-Platzhalter getrennt
+   vom SQL-Befehl. `RETURNING id` liefert die neue ID. Die Transaktion wird
+   beim erfolgreichen Verlassen des Verbindungsblocks bestätigt, bei Fehlern
+   zurückgenommen; anschliessend wird die Verbindung geschlossen.
+   `ON CONFLICT (benutzer_id, url) DO NOTHING` verhindert doppelte Einträge.
+   Bei einem Duplikat wird die bestehende ID abgefragt und verständlich gemeldet.
+7. **Speichern unabhängig vom Browser prüfen:** Ein Testeintrag erhielt ID 1.
+   Über eine neue Verbindung wurden ID, Benutzerzuordnung, Titel, Firma,
+   Arbeitsort und der Standardstatus `gespeichert` erfolgreich zurückgelesen.
+   Das bestätigt eine abgeschlossene Transaktion, noch keinen gezielten
+   Wiederholungstest nach Serverneustart oder Deployment.
+8. **Flask-Route ergänzen:** `POST /api/stellenanzeigen` nimmt JSON entgegen,
+   verwendet die Datenbankadresse aus `current_app` und ruft die Speicherfunktion
+   auf. Erfolg liefert HTTP 201 und die ID; Eingabefehler und Duplikate HTTP 400.
+   Ein `psycopg.Error` wird mit einer allgemeinen Meldung und HTTP 503 beantwortet,
+   ohne technische Details an den Browser weiterzugeben.
+9. **Vue-Frontend verbinden:** In `public/index.html` kamen `speichert` und
+   `erfolgsmeldung` hinzu. Die neue Methode sendet die aktuellen Formularwerte,
+   einschliesslich manueller Korrekturen. Erfolg zeigt die ID und blendet die
+   Vorschau aus; bei Fehlern bleiben Eingaben sichtbar. Die Buttons werden
+   während des Speicherns entsprechend gesperrt. Eine alte Erfolgsmeldung
+   wird beim nächsten Abruf entfernt.
+10. **Bedienoberfläche prüfen:** Ein zunächst doppelter Abbrechen-Button wurde
+    besprochen und die Entfernung des zusätzlichen Blocks angeleitet.
+    Der bestehende Rega-Link wurde mit Hinweis auf ID 1 als Duplikat erkannt.
+    Ein weiterer Eintrag aus dem Browser war anschliessend mit ID 4 im
+    Data Editor sichtbar; Lina bestätigte die Werte. Lücken in IDs sind bei
+    abgelehnten Einfügeversuchen normal und bedeuten keinen Datenverlust.
+
+Zusätzlich ergänzte Lina Versionshistorien und Abschnittskommentare.
+Die Herkunft des ersten Frontend-Grundgerüsts wurde von ihr als MG angegeben.
+HTML-Kommentare blenden die Backendstatus-Anzeige aus, ohne die Prüfung in
+JavaScript zu entfernen. Kommentare erscheinen nicht in der gerenderten
+Oberfläche, bleiben aber im Seitenquelltext sichtbar.
+
+**Warum haben wir das gemacht?**
+
+Die Vorschau allein hält keine Daten dauerhaft fest. Erst die bewusste
+Bestätigung soll einen Datensatz erzeugen. Gemeinsame Prüfungen im Backend
+schützen auch bei Anfragen ausserhalb der vorgesehenen Oberfläche.
+Die Datenbank ergänzt dies durch eigene Regeln. Eine Übersicht gespeicherter
+Stellen wurde mit Blick auf Mirkos Use Case 2 vorerst nicht zusätzlich gebaut.
+
+**Welche Auswirkungen hat das?**
+
+Titel, Firma, Arbeitsort, Adresse, Pensum und Beschreibung können jetzt mit
+normalisiertem Link in der verbundenen Neon-Datenbank gespeichert werden.
+Status und Zeitstempel erhalten Standardwerte. Lohn, Bewerbungsdatum und
+Notizen bleiben ohne weitere Eingaben leer. Die initiale Tabellenerstellung
+wurde bewusst manuell ausgeführt; sie ist keine automatische Schema-Migration.
+Die Tabellenanlage bedeutet nicht, dass jede zukünftig konfigurierte Neon-Branch
+dieselbe Struktur schon besitzt.
+
+### Tests und Prüfungen
+
+Die separate Datei `tests/test_stellenanzeige_speichern.py` enthält elf neue
+Tests. Die bisherigen Verbindungstests bleiben in `test_datenbank.py`.
+Automatisierte Speichertests simulieren die Datenbank; sie schreiben keine
+echten Neon-Datensätze und prüfen nicht die tatsächliche SQL-Ausführung oder
+alle Constraints. Die echte Speicherung wurde separat manuell nachgewiesen.
+
+| Testfunktion | Geprüftes Verhalten |
+|---|---|
+| `test_textfeld_entfernt_aeussere_leerzeichen` | Randabstände werden entfernt |
+| `test_optionales_leeres_textfeld_wird_none` | Leere optionale Angaben werden None |
+| `test_leeres_pflichtfeld_wird_abgelehnt` | Pflichtfelder dürfen nicht leer sein |
+| `test_zu_langes_textfeld_wird_abgelehnt` | Maximallänge wird geprüft |
+| `test_formularwerte_werden_bereinigt` | Link normalisiert, Werte bereinigt und fremde Benutzer-ID ignoriert |
+| `test_unvollstaendige_adresse_wird_abgelehnt` | Angegebene Adresse muss das vereinbarte Muster erfüllen |
+| `test_speicherroute_bestaetigt_neuen_eintrag` | Route übergibt Daten und liefert HTTP 201 mit ID |
+| `test_speicherroute_meldet_eingabefehler` | ValueError führt zu HTTP 400 und verständlicher Meldung |
+| `test_speichern_liefert_id_und_verwendet_demo_benutzer` | Speicherfunktion liefert ID und verwendet bereinigte Parameter mit Benutzer 1 |
+| `test_speichern_meldet_bestehenden_eintrag` | Duplikat enthält bestehende ID; Suche bleibt auf Benutzer begrenzt |
+| `test_speicherroute_meldet_datenbankausfall` | Simulierter Ausfall liefert HTTP 503 ohne interne Fehlerdetails |
+
+Die Tests wurden schrittweise von 22 auf 28, 30, 32 und schliesslich
+**33 bestandene Tests** erweitert. Fehlende Imports von `Mock` und `app`
+führten zwischenzeitlich zu NameError und wurden ergänzt. `MagicMock`
+simuliert das Verhalten einer Verbindung im `with`-Block.
+Ruff meldete lange Versionszeilen, unsortierte und doppelte Imports;
+die Texte wurden umgebrochen und die Imports korrigiert. Bei Black fehlte
+zunächst der Zielpfad: Erst `uv run black .` bezieht den Projektordner ein.
+Lina bestätigte abschliessend erfolgreiche Tests sowie Ruff und Black.
+
+### Noch offene Nachweise
+
+- Speicherung mit dem neuen Code im Vercel-Preview prüfen; bisher erfolgte
+  der Browseraufruf lokal, die Datenbank selbst liegt bei Neon.
+- Daten nach einem gezielten Serverneustart beziehungsweise neuen Deployment
+  erneut lesen; die neue Verbindung allein ersetzt diesen Nachweis nicht.
+- Datenmodell-/README-Hinweise zu SQLite und Schemaänderungen auf den aktuellen
+  PostgreSQL-Stand abstimmen.
+- Commit, Push und Pull Request für diesen Zwischenstand stehen noch aus.
+
+**Welche Konzepte wurden behandelt?**
+
+DDL mit CREATE TABLE, Primär- und Fremdschlüssel, UNIQUE, CHECK, NULL,
+parametrisierte SQL-Abfragen, Transaktionen, RETURNING, Standardwerte,
+Zeitstempel, Benutzerzuordnung, Flask-Konfiguration, HTTP 201/400/503,
+Vue-Methoden und Anzeigezustände, Mock und MagicMock sowie die Unterschiede
+zwischen simuliertem Test und echter Datenbankprüfung.
+
+**Eigenleistung und KI-Unterstützung**
+
+Lina fügte die kommentierten Bausteine selbst ein, korrigierte Klammern,
+Einrückungen und Imports, führte die Tabellenanlage und Konsolenprüfungen
+aus und testete die Speicherung im Browser. Sie kontrollierte die Daten im
+Vercel Data Editor und führte pytest, Ruff und Black aus.
+Der Agent lieferte und erklärte die Bausteine und Tests, unterstützte die
+Fehlersuche und ergänzte auf Wunsch diesen Learninglog. Er führte in diesem
+Schritt keine Tests gegen Neon und keine Commits oder Pushes aus.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+
+Wie unterscheiden sich Vorschau, Eingabeprüfung, INSERT und bestätigte
+Transaktion? Warum bestimmt das Backend die Benutzer-ID und warum reicht
+ein erfolgreicher Mock-Test allein nicht zum Nachweis echter Speicherung?
+
+**Nächster Lernschritt**
+
+Den dokumentierten Stand auf dem Feature-Branch sichern, im Vercel-Preview
+prüfen und nach Review nach master übernehmen. Die Tabellenübersicht für
+Benutzer bleibt mit Use Case 2 abzustimmen; manuelle Neuerfassung folgt
+separat mit US 10004.
