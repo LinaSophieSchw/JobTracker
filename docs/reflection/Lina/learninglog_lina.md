@@ -334,3 +334,211 @@ Deployment-Konfiguration stammt?
 Den Pull Request prüfen lassen und nach dem Merge die Verbindung in Production
 testen. Danach weitere Felder aus jobs.ch untersuchen und die Speicherung
 passend zum vereinbarten Datenmodell aufbauen.
+
+## 2026-10-20 – US 10002: Weitere Importfelder und bearbeitbare Vorschau
+
+**Was haben wir gemacht?**
+
+Auf dem Branch `10002_weitere-importfelder-anzeigen-und-bearbeiten` wurde
+die Titelvorschau um Firma, Arbeitsort, Adresse, Pensum und Stellenbeschreibung
+erweitert. Grundlage sind US 10002 und Mirkos Datenmodell. Die Vorschau zeigt
+alle sechs fachlichen Importfelder bearbeitbar an; die normalisierte URL ist
+als Link sichtbar. Es wird noch nichts gespeichert (separate US 10003).
+
+### Vorgehen: erst verstehen, dann Backend und Frontend verbinden
+
+1. **Anzeigeninhalt untersuchen:** Lina rief die Rega-Anzeige mit `requests`
+   in der Python-Konsole ab (HTTP 200). BeautifulSoup fand zwei JSON-LD-Blöcke:
+   Navigation als `BreadcrumbList` und Stellenangaben als `JobPosting`.
+   Mit `json.loads()` wurden die Daten in Python-Werte umgewandelt. Statt die
+   lange Beschreibung auszugeben, wurden Feldnamen und relevante Werte geprüft.
+2. **Quellen den eigenen Feldern zuordnen:** Firma stammt aus
+   `hiringOrganization.name`; Beschreibung aus `description`.
+   Die konkrete Anzeige enthält `streetAddress`, `postalCode`,
+   `addressCountry` und den Ort in `addressRegion`. Andere Anzeigen können
+   `addressLocality` verwenden. Dieser Befund ergänzt Mirkos frühere Beobachtung,
+   in der keine standardisierte Strassenangabe gefunden worden war.
+   `employmentType` und Wochenstunden wurden nicht als Prozentpensum interpretiert.
+3. **Kleine Logikfunktionen ergänzen:** In
+   `src/app/stellenanzeige_erfassen.py` wurden Datenblockauswahl und Feldlesen
+   getrennt. Jede Hilfsfunktion wurde zunächst mit überschaubaren Beispieldaten
+   in der Konsole ausprobiert. Fehlende optionale Angaben bleiben leer.
+4. **Pensum gezielt untersuchen:** Eine Suche nach Prozentzeichen fand auch Titel
+   und fremde Stellenempfehlungen. Allgemeine CSS-Klassen führten zunächst zum
+   Veröffentlichungsdatum. Die Untersuchung des umgebenden Listeneintrags ergab
+   `li[data-cy="info-workload"]` als gezielte Fundstelle. Der Selektor wurde an
+   zwei Anzeigen manuell ausprobiert und bleibt abhängig vom jobs.ch-Seitenaufbau.
+5. **Hauptfunktion ergänzen:** `stellenanzeige_auslesen(url)` normalisiert den
+   Link, lädt die Detailseite einmal, wählt den Datenblock zur Stellen-ID und
+   verbindet die Hilfsfunktionen. Zurück kommt ein Dictionary mit `url`,
+   `titel`, `firma`, `arbeitsort`, `adresse`, `pensum` und
+   `stellenbeschreibung`. Der vollständige Abruf wurde in der Konsole bestätigt.
+6. **Flask-Route anpassen:** `stellenanzeigen_routes.py` ruft statt der alten
+   reinen Titelfunktion die neue Hauptfunktion auf. Die Route prüft weiterhin die
+   Eingabe und liefert das gesamte Dictionary als JSON an den Browser.
+7. **Frontend erweitern:** In `public/index.html` wurden Vue-Werte in `data()`
+   ergänzt. Die Lademethode übernimmt jedes Antwortfeld mit einem leeren Text
+   als Ersatz für fehlende Werte. Ein tabellarisch angeordnetes Formular zeigt
+   links Labels und rechts Eingabefelder; die Beschreibung verwendet ein
+   mehrzeiliges `textarea`. `v-model` verbindet Eingabe und Vue-Wert.
+   „Abbrechen“ blendet die Vorschau aus; es ist kein Datenbankspeichern.
+8. **Code lesbar strukturieren:** Lina ergänzte Abschnittskommentare für HTML
+   und JavaScript sowie innerhalb des Scripts für Vue-Vorbereitung, Daten,
+   Methoden und Seitenstart. Besprochen wurden `<!-- -->` in HTML,
+   `//` in JavaScript und `#` in Python. Die Datei wurde noch nicht aufgeteilt.
+
+### Funktionen und ihre Verantwortung
+
+| Funktion | Aufgabe |
+|---|---|
+| `anzeigenlink_bestimmen()` | Link prüfen und auf direkte Anzeigenadresse normalisieren |
+| `stellenanzeige_daten_finden()` | Passenden JobPosting-Block auswählen |
+| `stellentitel_aus_html_lesen()` | Titel aus der Hauptüberschrift lesen |
+| `firma_aus_daten_lesen()` | Firmennamen lesen und äussere Leerzeichen entfernen |
+| `ort_und_adresse_aus_daten_lesen()` | Orte sammeln und erste vollständige Schweizer Adresse getrennt liefern |
+| `beschreibung_aus_daten_lesen()` | HTML in Text mit Absatzumbrüchen umwandeln; Skript- und Style-Inhalte entfernen |
+| `pensum_aus_html_lesen()` | Gekennzeichnetes Pensum lesen, ohne beliebige Prozentwerte zu übernehmen |
+| `stellenanzeige_auslesen()` | Abruf und Hilfsfunktionen verbinden; alle Vorschaufelder zurückgeben |
+
+### Gelöste Probleme
+
+- **ImportError in der Konsole:** Nach Ergänzen einer Funktion war in der offenen
+  Python-Konsole noch die alte Modulversion geladen. Neustarten der Konsole
+  ermöglichte den Import.
+- **Neue Formularfelder blieben leer:** Zunächst fehlten Vue-Werte und
+  Zuweisungen aus der JSON-Antwort. Diese wurden ergänzt. Anschliessend zeigte
+  die Oberfläche noch eine alte Backend-Antwort mit nur Titel und Suchlink.
+  Nach einem Waitress-Neustart kamen alle Felder an. Waitress lädt geänderten
+  Python-Code nicht automatisch neu; aktualisiertes HTML kann dennoch schon
+  sichtbar sein.
+- **Zweite Anzeige ohne Kennung:** Ein JobPosting der Helikoptermechaniker-Anzeige
+  enthielt weder `identifier` noch `url`. Die kanonische Adresse passte zur
+  angefragten ID, und es gab genau einen JobPosting-Block. Ein kontrollierter
+  Ersatzweg akzeptiert diese Kombination. Eine fremde Kennung oder mehrere
+  kennungslose Anzeigen werden nicht übergangen.
+- **Alter Routentest:** Der Test ersetzte noch `stellentitel_auslesen`, während
+  die Route nun `stellenanzeige_auslesen` aufruft. Er wurde auf die neue Funktion
+  und die vollständige JSON-Antwort umgestellt.
+- **Einrückung im Test:** Beim Einfügen entstand ein IndentationError.
+  Nach Korrektur der Einrückung konnte pytest die Tests wieder sammeln.
+- **Importreihenfolge:** Ruff meldete zwei unsortierte Importblöcke. Die
+  automatische Korrektur und Formatierung wurden angeleitet.
+
+**Warum haben wir das gemacht?**
+
+Importierte Angaben sollen vor dem Speichern geprüft und korrigiert werden.
+HTML und strukturierte Daten wurden zuerst untersucht, statt Fundstellen zu
+erraten. Kleine Funktionen trennen Datenzuordnung, Feldlesen und Netzwerkabruf.
+Die Entwicklung erfolgte auf Linas Wunsch zuerst gemeinsam für alle
+Backend-Felder und danach für das Frontend, jeweils in erklärten Einzelschritten.
+
+**Welche Auswirkungen hat das?**
+
+Der lokale Ablauf Link → Abruf → vollständige Vorschau → manuelle Bearbeitung
+→ Abbrechen wurde von Lina bestätigt. Die bisher ausprobierten Anzeigen
+funktionierten nach dem Ersatzweg ebenfalls. Das beweist keine Unterstützung
+aller jobs.ch-Anzeigen. Ein neuer Online-Test dieser Story steht noch aus.
+Die Eingabefelder sind noch schmal; Textwerte werden dadurch nur optisch
+verdeckt, nicht automatisch gekürzt. Der Button heisst im zuletzt gezeigten
+Screenshot weiterhin „Informationen laden“; „Link bearbeiten“ war gewünscht.
+
+### Testing: Vorgehen und Ergebnis
+
+Die Konsolenversuche waren zunächst manuelle Funktionstests mit erfundenen
+Beispielwerten, später zusätzlich mit echten Anzeigen. Die Browserprüfung
+bestätigte den zusammenhängenden Ablauf und die Bearbeitbarkeit.
+Automatische Tests verwenden dagegen vorbereitete Daten und simulierte
+Verbindungen beziehungsweise Funktionsantworten, keine Live-Aufrufe von
+jobs.ch oder Neon.
+
+Der berichtete Teststand entwickelte sich von 11 über 13 und 15 auf
+**22 bestandene Tests**. Der letzte ausdrücklich gezeigte vollständige Lauf
+meldete `22 passed in 0.92s`. Die damals gezeigte Ruff-Ausgabe enthielt noch
+zwei Importfehler. Lina bestätigte danach allgemein den Erfolg; eine separate
+vollständige Ausgabe der abschliessenden Ruff-/Black-Prüfung liegt hier nicht vor.
+Eine aktuelle Gesamtabdeckung wird deshalb nicht behauptet.
+
+### Übersicht aller 22 automatischen Testfälle
+
+Die Namen entsprechen den am 20.10.2026 gelesenen Testdateien.
+
+| Nr. | Datei | Testfunktion | Geprüftes Verhalten |
+|---|---|---|---|
+| 1 | test_app.py | `test_status_route_antwortet_mit_ok` | Backendstatus liefert HTTP 200 und Status ok |
+| 2 | test_app.py | `test_startseite_wird_ausgeliefert` | Startseite wird ausgeliefert und enthält JobTracker |
+| 3 | test_datenbank.py | `test_verbindung_ohne_adresse` | Fehlende DATABASE_URL löst verständlichen Fehler aus |
+| 4 | test_datenbank.py | `test_verbindung_uebergibt_adresse` | Adresse und 15-Sekunden-Verbindungstimeout werden an psycopg übergeben |
+| 5 | test_datenbank.py | `test_datenbank_status_antwortet_mit_ok` | Simulierte Statusabfrage liefert ok, führt SELECT 1 aus und schliesst Verbindung |
+| 6 | test_stellenanzeige.py | `test_titel_wird_aus_hauptueberschrift_gelesen` | Titeltext wird aus h1 mit entfernten äusseren Leerzeichen gelesen |
+| 7 | test_stellenanzeige.py | `test_fehlender_titel_wird_gemeldet` | Fehlendes h1 löst ValueError aus |
+| 8 | test_stellenanzeige.py | `test_suchlink_wird_in_anzeigenlink_umgewandelt` | jobid aus Suchlink wird zur direkten Detailadresse |
+| 9 | test_stellenanzeige.py | `test_fremder_anbieter_wird_abgelehnt` | Nicht unterstützter Anbieter wird abgelehnt |
+| 10 | test_stellenanzeige.py | `test_route_liefert_alle_vorschaufelder` | Route liefert HTTP 200 und alle simulierten Vorschauwerte |
+| 11 | test_stellenanzeige.py | `test_route_lehnt_leeren_link_ab` | Leerer Link liefert HTTP 400 und Meldung |
+| 12 | test_stellenanzeige.py | `test_passende_stellen_id_wird_ausgewaehlt` | Passende Kennung wird trotz vorheriger fremder Anzeige gewählt |
+| 13 | test_stellenanzeige.py | `test_anzeige_ohne_kennung_mit_passender_seitenadresse` | Einzelner kennungsloser Block mit passender canonical-URL wird akzeptiert |
+| 14 | test_stellenanzeige.py | `test_fremde_stellen_id_wird_abgelehnt` | Fremde Kennung wird auch bei passender canonical-URL nicht ignoriert |
+| 15 | test_stellenanzeige.py | `test_mehrere_anzeigen_ohne_kennung_werden_abgelehnt` | Mehrere kennungslose Anzeigen werden als uneindeutig abgelehnt |
+| 16 | test_stellenanzeige.py | `test_firma_wird_gelesen` | Firmenname wird gelesen und getrimmt |
+| 17 | test_stellenanzeige.py | `test_fehlende_firma_bleibt_leer` | Fehlende Firma wird nicht erfunden |
+| 18 | test_stellenanzeige.py | `test_arbeitsort_und_adresse_werden_getrennt` | Samedan und vollständige Schweizer Adresse werden getrennt geliefert |
+| 19 | test_stellenanzeige.py | `test_adresse_ohne_strasse_bleibt_leer` | Ort bleibt verfügbar, unvollständige Adresse bleibt leer |
+| 20 | test_stellenanzeige.py | `test_beschreibung_enthaelt_text_und_absatzumbrueche` | HTML wird entfernt und Absätze bleiben getrennt |
+| 21 | test_stellenanzeige.py | `test_pensum_ignoriert_prozentangaben_anderer_stellen` | info-workload hat Vorrang vor fremden Prozentangaben |
+| 22 | test_stellenanzeige.py | `test_fehlendes_pensum_bleibt_leer` | Ohne gekennzeichnetes Feld wird kein fremder Prozentwert übernommen |
+
+### Manuelle Testfälle und Grenzen
+
+| Fall | Ergebnis laut Zusammenarbeit |
+|---|---|
+| Firma mit Beispieldaten auslesen | Bestätigt |
+| Arbeitsort und vollständige Adresse mit Beispieldaten lesen | Bestätigt |
+| HTML-Beschreibung in zwei Textabsätze umwandeln | Bestätigt |
+| Pensum aus zwei echten Anzeigen lesen | Bestätigt |
+| Alle Felder der Rega-Anzeige gemeinsam abrufen | Vollständige Ausgabe bestätigt |
+| Andere Datenstruktur ohne identifier verarbeiten | Nach Anpassung als erfolgreich bestätigt |
+| Alle sechs Felder im lokalen Browser anzeigen | Screenshot und Bestätigung vorhanden |
+| Formularwerte manuell ändern | Von Lina bestätigt |
+| Abbrechen blendet Formular aus | Von Lina bestätigt |
+| Speicherung und erneutes Lesen in PostgreSQL | Nicht Bestandteil dieser Story; noch offen |
+| Erweiterte Vorschau auf Vercel | Noch offen |
+
+Die automatischen Tests decken nicht alle Varianten externer Daten ab.
+Unter anderem sind ein kompletter simulierter Netzwerkabruf der Hauptfunktion,
+mehrere Arbeitsorte, weitere ungültige Datenformen sowie Browserinteraktionen
+noch nicht automatisiert geprüft. Der Routentest simuliert die Hauptfunktion
+und beweist daher nicht deren tatsächliche Ausleselogik.
+
+**Welche Konzepte wurden behandelt?**
+
+JSON-LD, Schema.org JobPosting, Dictionaries und Listen, Typprüfungen,
+Hilfs- und Hauptfunktionen, gezielte CSS-Selektoren, HTML-Textaufbereitung,
+Flask als Backend, Routen als Zuordnung von Adresse und Funktion,
+JSON-Antworten, Vue data/methods/mounted, v-model, async/await,
+try/catch/finally, getrennte manuelle und automatisierte Prüfungen.
+„Hauptfunktion“ bezeichnet hier die zusammenführende Funktion und ist
+kein besonderes Python-Schlüsselwort.
+
+**Eigenleistung und KI-Unterstützung**
+
+Lina fügte die erklärten Codebausteine selbst ein, führte Konsolenversuche,
+Browserprüfungen und pytest aus, korrigierte Einrückungen und gestaltete
+die Abschnittskommentare mit. Sie beschrieb das gewünschte Formular und
+brachte Schema.org als Informationsquelle ein. Der Agent untersuchte mit
+ihr die Ausgaben, lieferte kommentierte Code- und Testbeispiele und erklärte
+die Schichten sowie die Fehlersuche. Er las die aktuellen Dateien zur
+Diagnose und erstellte diesen Eintrag auf Wunsch.
+Die Aufgabenverteilung bedeutet keinen Nachweis vollständigen selbstständigen
+Verständnisses aller verwendeten Konzepte.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+
+Wie kann ich den Ablauf vom Link über Flask und die Auslesefunktionen bis zum
+bearbeitbaren Vue-Feld erklären? Was hat mir beim Unterschied zwischen HTML,
+JavaScript und Python geholfen?
+
+**Nächster Lernschritt**
+
+Codequalität abschliessend nachweisen, neue Vorschau auf Vercel prüfen und
+den Stand reviewen lassen. Datenmodell/Importdokumentation um die tatsächlich
+beobachteten Datenvarianten ergänzen. Danach US 10003 separat umsetzen.

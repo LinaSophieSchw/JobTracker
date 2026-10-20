@@ -9,6 +9,10 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
 
+<!-- ========================================
+     HTML: Seitenaufbau und Formular
+     ======================================== -->
+
 <body>
     <div id="app">
         <h1>JobTracker</h1>
@@ -25,67 +29,169 @@
 
         <p v-if="fehlermeldung">{{ fehlermeldung }}</p>
 
+        <!-- Erscheint erst nach einem erfolgreichen Abruf. -->
         <div v-if="vorschau_vorhanden">
-            <label for="stellentitel">Erkannter Stellentitel</label>
-            <input id="stellentitel" type="text" v-model="stellentitel">
+            <h2>Angaben prüfen und bearbeiten</h2>
+
+            <!-- Der geladene Link bleibt unverändert. -->
+            <p>
+                Geladene Anzeige:
+                <a :href="anzeigenlink" target="_blank" rel="noopener noreferrer">
+                    {{ anzeigenlink }}
+                </a>
+            </p>
+
+            <!-- Eine Zeile pro Feld: links Beschriftung, rechts Eingabe. -->
+            <table>
+                <tbody>
+                    <tr>
+                        <th scope="row"><label for="stellentitel">Titel</label></th>
+                        <td>
+                            <input id="stellentitel" type="text" v-model="stellentitel" maxlength="200">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="firma">Firma</label></th>
+                        <td>
+                            <input id="firma" type="text" v-model="firma" maxlength="200">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="arbeitsort">Arbeitsort</label></th>
+                        <td>
+                            <input id="arbeitsort" type="text" v-model="arbeitsort" maxlength="200">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="adresse">Adresse</label></th>
+                        <td>
+                            <input id="adresse" type="text" v-model="adresse" maxlength="200">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="pensum">Pensum</label></th>
+                        <td>
+                            <input id="pensum" type="text" v-model="pensum" maxlength="50">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="stellenbeschreibung">Stellenbeschreibung</label>
+                        </th>
+                        <td>
+                            <!-- Mehrzeiliges Eingabefeld für den langen Beschreibungstext. -->
+                            <textarea id="stellenbeschreibung" v-model="stellenbeschreibung" rows="12"
+                                cols="70"></textarea>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Blendet die ungespeicherte Vorschau aus. -->
+            <button type="button" @click="vorschau_vorhanden = false">
+                Abbrechen
+            </button>
         </div>
 
     </div>
 
+    <!-- ========================================
+     JavaScript: Vue-Daten und Funktionen
+     ======================================== -->
+
     <script>
+        // ========================================
+        // Vue-Anwendung vorbereiten
+        // ========================================
         const { createApp } = Vue;
 
         createApp({
-            // Speichert die Werte für die Anzeige und das Formular.
-            // v-model verbindet Eingabefelder mit diesen Werten.
-            // Ändern sich die Werte, aktualisiert Vue die Oberfläche automatisch.
+            // Enthält die Werte für unsere Oberfläche.
+            // v-model verbindet die Eingabefelder mit diesen Werten.
+            // Beim Bearbeiten aktualisiert Vue den jeweiligen Wert automatisch.
+
+            // ========================================
+            // Daten: Formularwerte und Anzeigezustand
+            // ========================================
             data() {
                 return {
-                    backend_status: "wird geprüft …",
-                    stellenlink: "",            // Eingegebener Link zur Stellenanzeige.
-                    stellentitel: "",           // Erkannter oder korrigierter Titel.
-                    laedt: false,               // Zeigt, ob der Abruf gerade läuft.
-                    fehlermeldung: "",          // Meldung bei einem Fehler.
-                    vorschau_vorhanden: false,  // Steuert die Sichtbarkeit des Titelfelds.
+                    backend_status: "wird geprüft …", // Erreichbarkeit des Backends.
+                    stellenlink: "",                 // Vom Benutzer eingegebener Link.
+                    anzeigenlink: "",                // Tatsächlich geladener, normalisierter Link.
+
+                    // Erkannte Angaben; im Formular manuell korrigierbar.
+                    stellentitel: "",                // Titel der Stelle.
+                    firma: "",                       // Name des Arbeitgebers.
+                    arbeitsort: "",                   // Ein oder mehrere Arbeitsorte.
+                    adresse: "",                     // Strasse, Hausnummer, PLZ und Ort.
+                    pensum: "",                      // Beschäftigungsumfang, z. B. „80–100 %“.
+                    stellenbeschreibung: "",         // Beschreibung als reiner Text.
+
+                    // Steuern Ladeanzeige, Fehlermeldung und Sichtbarkeit des Formulars.
+                    laedt: false,                    // Während des Abrufs ist der Button gesperrt.
+                    fehlermeldung: "",               // Meldung bei einem fehlgeschlagenen Abruf.
+                    vorschau_vorhanden: false,        // Zeigt oder verbirgt das gesamte Formular.
                 };
             },
-            // Enthält Funktionen, die das Formular auslösen kann.
-            // Wird beim Abschicken des Formulars aufgerufen.
-            // Sendet den Link an Flask und wartet auf den erkannten Stellentitel.
-            // Zeigt danach den Titel oder eine Fehlermeldung an.
-            // async/await ermöglicht das Warten, ohne die Browseroberfläche zu blockieren.
-            // this greift auf unsere Werte aus data() zu; gespeichert wird noch nichts.
+            // Enthält die Funktionen, die unsere Oberfläche auslösen kann.
+
+            // --------------------------------------------------
+            // Methoden: Stellenanzeige laden
+            // --------------------------------------------------
             methods: {
+                // async erlaubt es, auf die Antwort des Backends zu warten,
+                // während der Browser weiterhin bedienbar bleibt.
                 async stellenanzeige_laden() {
+                    // Sperrt den Ladebutton und blendet die bisherige Vorschau aus.
+                    // this greift auf die Werte aus data() zu.
                     this.laedt = true;
                     this.fehlermeldung = "";
                     this.vorschau_vorhanden = false;
 
                     try {
-                        // Schickt den eingegebenen Link als JSON an Flask.
+                        // Schickt den eingegebenen Link als JSON an die Flask-Route.
+                        // await wartet, bis die Antwort eingetroffen ist.
                         const antwort = await fetch("/api/stellenanzeigen/vorschau", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ url: this.stellenlink }),
                         });
 
+                        // Wandelt die JSON-Antwort in ein JavaScript-Objekt um.
                         const daten = await antwort.json();
 
+                        // Bei einem HTTP-Fehler verwenden wir die Meldung des Backends.
+                        // throw springt in den catch-Block weiter unten.
                         if (!antwort.ok) {
                             throw new Error(daten.fehler || "Abruf fehlgeschlagen.");
                         }
 
-                        // Zeigt den erkannten Titel im bearbeitbaren Feld an.
-                        this.stellentitel = daten.titel;
+                        // Übernimmt die erkannten Angaben in die Formularwerte.
+                        // || "" verwendet einen leeren Text, falls eine Angabe fehlt.
+                        this.anzeigenlink = daten.url || "";
+                        this.stellentitel = daten.titel || "";
+                        this.firma = daten.firma || "";
+                        this.arbeitsort = daten.arbeitsort || "";
+                        this.adresse = daten.adresse || "";
+                        this.pensum = daten.pensum || "";
+                        this.stellenbeschreibung = daten.stellenbeschreibung || "";
+
+                        // Zeigt das Formular mit den übernommenen Werten an.
+                        // Die Angaben sind bearbeitbar, aber noch nicht gespeichert.
                         this.vorschau_vorhanden = true;
                     } catch (fehler) {
+                        // Zeigt Fehler beim Abruf oder Verarbeiten der Antwort an.
                         this.fehlermeldung = fehler.message;
                     } finally {
-                        // Gibt den Button nach Erfolg oder Fehler wieder frei.
+                        // Läuft bei Erfolg und bei Fehlern: Der Button wird freigegeben.
                         this.laedt = false;
                     }
                 },
             },
+
+            // ========================================
+            // Seitenstart: Backend-Verbindung prüfen
+            // ========================================
             // mounted() läuft einmal, sobald die Seite geladen ist.
             async mounted() {
                 try {
