@@ -705,3 +705,80 @@ Den dokumentierten Stand auf dem Feature-Branch sichern, im Vercel-Preview
 prüfen und nach Review nach master übernehmen. Die Tabellenübersicht für
 Benutzer bleibt mit Use Case 2 abzustimmen; manuelle Neuerfassung folgt
 separat mit US 10004.
+
+## 2026-10-21 – Nachtrag zu US 10004: Manuelle Erfassung
+
+Nachträglich dokumentiert am 21.10.2026; die Umsetzung wurde in der
+vorherigen Arbeitssitzung am 20.10.2026 besprochen.
+
+**Was haben wir gemacht?**
+
+Auf dem Branch `10004_manuelle-erfassung` wurde in `public/index.html`
+der Einstieg „Von Hand erfassen“ ergänzt. Die bestehende Vorschau und
+Speicherung werden wiederverwendet; eine zweite Backend-Speicherfunktion
+oder eine neue Tabelle waren nicht erforderlich.
+
+1. Der Vue-Wert `manuelle_erfassung` unterscheidet Import und manuellen Modus.
+2. `stellenanzeige_manuell_erfassen()` leert die fachlichen Eingabefelder,
+   entfernt alte Meldungen und übernimmt einen bereits eingegebenen Link.
+   Die Methode blendet das Formular ein, ohne jobs.ch abzurufen.
+3. Im manuellen Modus erscheint ein über `v-model` bearbeitbares Linkfeld.
+   Nach erfolgreichem Import bleibt der normalisierte Link nur lesbar.
+4. Ein neuer Import setzt den manuellen Modus zurück.
+5. Der vorhandene Speicherbutton sendet die manuell eingegebenen Werte
+   über dieselbe Route und Eingabeprüfung an PostgreSQL.
+
+**Warum haben wir das gemacht?**
+
+Manuelle Bearbeitung nach einem erfolgreichen Import war bereits möglich.
+US 10004 ergänzt den davon verschiedenen Einstieg ohne erfolgreichen Import,
+beispielsweise wenn ein Inserat nicht ausgelesen werden kann. Dieser Ersatzweg
+ist in ADR 0005 vorgesehen. Nach Prüfung von Mirkos Projektunterlagen blieb
+die bisherige Vereinbarung bestehen: Auch manuell sind ein unterstützter
+jobs.ch-Link, Titel und Firma erforderlich. Erfassung ohne Link wurde als
+mögliche Erweiterung diskutiert, aber nicht umgesetzt.
+
+**Welche Auswirkungen hat das?**
+
+Importierte und manuell erfasste Anzeigen verwenden dasselbe Formular,
+dieselbe Datenstruktur und dieselben Backend-Regeln. Die Herkunft der
+Angaben verändert die Speicherlogik nicht. Die Datenbankstruktur wurde
+für diesen Schritt nicht geändert.
+
+**Prüfung und Stand**
+
+Lina bestätigte das Einfügen der Änderungen. Der aktuelle Code enthält
+Button, Moduswert, Umschaltmethode und bedingte Linkanzeige. Der Branch ist
+lokal mit seinem Remote-Branch verbunden und war vor diesem Nachtrag sauber.
+Ein erfolgreicher manueller Speicherversuch speziell über den neuen Einstieg
+wurde im Chat nicht ausdrücklich nachgewiesen. Ebenso liegen hier keine
+neuen Testausgaben oder ein bestätigter Vercel-Preview-Test für US 10004 vor.
+Die vorherigen 33 Tests beziehen sich auf den Stand der Speicher-Story und
+beweisen nicht automatisch die neue Browserinteraktion.
+
+**Welche Konzepte wurden behandelt?**
+
+Wiederverwendung eines Formulars, Vue-Anzeigezustand, bedingtes Rendern mit
+`v-if` und `v-else`, Datenbindung mit `v-model` sowie `type="button"`, damit
+der manuelle Einstieg nicht versehentlich das Importformular abschickt.
+Manuelle Erfassung und manuelle Korrektur sind unterschiedliche Abläufe.
+
+**Eigenleistung und KI-Unterstützung**
+
+Lina übernahm die erklärten Frontend-Bausteine selbst und wollte den Stand
+manuell über VS Code committen und veröffentlichen. Der Agent lieferte
+kommentierte Beispiele, erklärte die Abgrenzung zum Import und entwarf eine
+Pull-Request-Beschreibung. Auf Linas Wunsch ergänzt er diesen Nachtrag.
+Persönliche Lernerfahrungen werden nicht stellvertretend behauptet.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+
+Wie ermöglicht ein zusätzlicher Formularmodus einen neuen Ablauf, ohne die
+Speicherfunktion zu duplizieren? Warum bleibt der Link bei uns Pflicht?
+
+**Nächster Lernschritt**
+
+Manuellen Einstieg mit Pflichtfeldfehler, erfolgreicher Speicherung,
+Abbrechen und anschliessendem Import prüfen; Tests und Codequalität bestätigen.
+Den Ablauf ebenfalls im Vercel-Preview testen und mit Mirko für die
+Wiederverwendung des Formulars in Use Case 2 abstimmen.
