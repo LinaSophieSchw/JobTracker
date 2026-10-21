@@ -4,7 +4,10 @@ Datum: 2026-10-19
 
 ## Status
 
-Angenommen
+Angenommen. Änderung des Adressformats vorgeschlagen in
+[ADR 0009](0009-adresse-in-drei-feldern.md): drei Felder ohne Prüfung statt
+eines Felds «Strasse Nr, PLZ Ort». Die Trennung von Arbeitsort und Adresse
+bleibt.
 
 ## Kontext
 
