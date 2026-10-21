@@ -169,7 +169,7 @@ def test_fehlende_firma_bleibt_leer():
 
 
 def test_arbeitsort_und_adresse_werden_getrennt():
-    """Liest den Ort und setzt eine vollständige Adresse zusammen."""
+    """Liest Arbeitsort und drei getrennte Adressbestandteile."""
     daten = {
         "jobLocation": {
             "address": {
@@ -183,7 +183,9 @@ def test_arbeitsort_und_adresse_werden_getrennt():
 
     assert ort_und_adresse_aus_daten_lesen(daten) == (
         "Samedan",
-        "Plazza Aviatica 6, 7503 Samedan",
+        "Plazza Aviatica 6",
+        "7503",
+        "Samedan",
     )
 
 
@@ -199,7 +201,7 @@ def test_adresse_ohne_strasse_bleibt_leer():
         }
     }
 
-    assert ort_und_adresse_aus_daten_lesen(daten) == ("Bern", "")
+    assert ort_und_adresse_aus_daten_lesen(daten) == ("Bern", "", "", "")
 
 
 def test_beschreibung_enthaelt_text_und_absatzumbrueche():
