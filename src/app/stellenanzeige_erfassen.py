@@ -99,16 +99,18 @@ def firma_aus_daten_lesen(daten):
 # Arbeitsort ist für die Anzeige; die vollständige Adresse wird getrennt
 # zurückgegeben und später beispielsweise für die Fahrzeit verwendet.
 def ort_und_adresse_aus_daten_lesen(daten):
-    """Liest Arbeitsorte und die erste vollständige Schweizer Adresse."""
+    """Liest Arbeitsorte und die erste Adresse mit einer Strassenangabe."""
     standorte = daten.get("jobLocation", [])
     if isinstance(standorte, dict):
         standorte = [standorte]
 
     if not isinstance(standorte, list):
-        return "", ""
+        return "", "", "", ""
 
     arbeitsorte = []
-    adresse = ""
+    adresse_strasse = ""
+    adresse_postleitzahl = ""
+    adresse_ort = ""
 
     for standort in standorte:
         if not isinstance(standort, dict):
@@ -118,8 +120,7 @@ def ort_und_adresse_aus_daten_lesen(daten):
         if not isinstance(anschrift, dict):
             continue
 
-        # Normalerweise steht der Ort in addressLocality.
-        # In unserer Rega-Anzeige wird dafür addressRegion verwendet.
+        # Arbeitsort bleibt eine separate Angabe für die Anzeige.
         ort = anschrift.get("addressLocality") or anschrift.get("addressRegion")
         ort = ort.strip() if isinstance(ort, str) else ""
 
@@ -127,25 +128,22 @@ def ort_und_adresse_aus_daten_lesen(daten):
             arbeitsorte.append(ort)
 
         strasse = anschrift.get("streetAddress")
-        plz = anschrift.get("postalCode")
-        land = anschrift.get("addressCountry")
-
         strasse = strasse.strip() if isinstance(strasse, str) else ""
-        plz = str(plz).strip() if plz is not None else ""
 
-        # Nur eine vollständige Schweizer Adresse übernehmen.
-        if (
-            not adresse
-            and strasse
-            and len(plz) == 4
-            and plz.isascii()
-            and plz.isdigit()
-            and ort
-            and land == "CH"
-        ):
-            adresse = f"{strasse}, {plz} {ort}"
+        # Alle Adressbestandteile stammen vom selben Standort.
+        # Fehlende Angaben bleiben leer; das Format wird nicht geprüft.
+        if not adresse_strasse and strasse:
+            plz = anschrift.get("postalCode")
+            adresse_strasse = strasse
+            adresse_postleitzahl = str(plz).strip() if plz is not None else ""
+            adresse_ort = ort
 
-    return ", ".join(arbeitsorte), adresse
+    return (
+        ", ".join(arbeitsorte),
+        adresse_strasse,
+        adresse_postleitzahl,
+        adresse_ort,
+    )
 
 
 # Stellenbeschreibung
@@ -289,15 +287,24 @@ def stellenanzeige_auslesen(url):
         raise ValueError("Die Stellenanzeige ist nicht direkt erreichbar.")
 
     daten = stellenanzeige_daten_finden(antwort.text, job_id)
-    arbeitsort, adresse = ort_und_adresse_aus_daten_lesen(daten)
 
-    # Die Schlüsselnamen entsprechen unserem Datenmodell.
+    # Die Auslesefunktion liefert Arbeitsort und drei Adressbestandteile.
+    (
+        arbeitsort,
+        inseratadresse_strasse,
+        inseratadresse_postleitzahl,
+        inseratadresse_ort,
+    ) = ort_und_adresse_aus_daten_lesen(daten)
+
+    # Diese Feldnamen werden auch im Frontend und in der Datenbank verwendet.
     return {
         "url": anzeigenlink,
         "titel": stellentitel_aus_html_lesen(antwort.text),
         "firma": firma_aus_daten_lesen(daten),
         "arbeitsort": arbeitsort,
-        "adresse": adresse,
+        "inseratadresse_strasse": inseratadresse_strasse,
+        "inseratadresse_postleitzahl": inseratadresse_postleitzahl,
+        "inseratadresse_ort": inseratadresse_ort,
         "pensum": pensum_aus_html_lesen(antwort.text),
         "stellenbeschreibung": beschreibung_aus_daten_lesen(daten),
     }

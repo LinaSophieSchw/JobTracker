@@ -100,9 +100,31 @@ Während der Speicherung wird der Speicherbutton gesperrt.
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row"><label for="adresse">Adresse</label></th>
+                        <th scope="row">
+                            <label for="inseratadresse_strasse">Strasse mit Hausnummer</label>
+                        </th>
                         <td>
-                            <input id="adresse" type="text" v-model="adresse" maxlength="200">
+                            <input id="inseratadresse_strasse" type="text" v-model="inseratadresse_strasse"
+                                maxlength="200">
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">
+                            <label for="inseratadresse_postleitzahl">Postleitzahl</label>
+                        </th>
+                        <td>
+                            <input id="inseratadresse_postleitzahl" type="text" v-model="inseratadresse_postleitzahl"
+                                maxlength="20">
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">
+                            <label for="inseratadresse_ort">Adressort</label>
+                        </th>
+                        <td>
+                            <input id="inseratadresse_ort" type="text" v-model="inseratadresse_ort" maxlength="200">
                         </td>
                     </tr>
                     <tr>
@@ -169,7 +191,9 @@ Während der Speicherung wird der Speicherbutton gesperrt.
                     stellentitel: "",                // Titel der Stelle.
                     firma: "",                       // Name des Arbeitgebers.
                     arbeitsort: "",                   // Ein oder mehrere Arbeitsorte.
-                    adresse: "",                     // Strasse, Hausnummer, PLZ und Ort.
+                    inseratadresse_strasse: "",       // Strasse mit Hausnummer.
+                    inseratadresse_postleitzahl: "",  // Postleitzahl als Text.
+                    inseratadresse_ort: "",           // Ort der Arbeitsadresse.
                     pensum: "",                      // Beschäftigungsumfang, z. B. „80–100 %“.
                     stellenbeschreibung: "",         // Beschreibung als reiner Text.
 
@@ -201,7 +225,9 @@ Während der Speicherung wird der Speicherbutton gesperrt.
                     this.stellentitel = "";
                     this.firma = "";
                     this.arbeitsort = "";
-                    this.adresse = "";
+                    this.inseratadresse_strasse = "";
+                    this.inseratadresse_postleitzahl = "";
+                    this.inseratadresse_ort = "";
                     this.pensum = "";
                     this.stellenbeschreibung = "";
 
@@ -244,7 +270,9 @@ Während der Speicherung wird der Speicherbutton gesperrt.
                         this.stellentitel = daten.titel || "";
                         this.firma = daten.firma || "";
                         this.arbeitsort = daten.arbeitsort || "";
-                        this.adresse = daten.adresse || "";
+                        this.inseratadresse_strasse = daten.inseratadresse_strasse || "";
+                        this.inseratadresse_postleitzahl = daten.inseratadresse_postleitzahl || "";
+                        this.inseratadresse_ort = daten.inseratadresse_ort || "";
                         this.pensum = daten.pensum || "";
                         this.stellenbeschreibung = daten.stellenbeschreibung || "";
 
@@ -277,7 +305,9 @@ Während der Speicherung wird der Speicherbutton gesperrt.
                                 titel: this.stellentitel,
                                 firma: this.firma,
                                 arbeitsort: this.arbeitsort,
-                                adresse: this.adresse,
+                                inseratadresse_strasse: this.inseratadresse_strasse,
+                                inseratadresse_postleitzahl: this.inseratadresse_postleitzahl,
+                                inseratadresse_ort: this.inseratadresse_ort,
                                 pensum: this.pensum,
                                 stellenbeschreibung: this.stellenbeschreibung,
                             }),
