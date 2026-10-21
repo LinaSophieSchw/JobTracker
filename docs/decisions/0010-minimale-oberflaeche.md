@@ -1,10 +1,16 @@
-# Minimale Oberfläche mit drei Screens
+# Minimale Oberfläche
 
 Datum: 2026-10-20
 
 ## Status
 
 Vorgeschlagen.
+
+Geändert am 21.10.2026 (Teambesprechung): In Version 1 gibt es keinen
+Profil-Screen. Ein Demo-Benutzer mit Wohnadresse ist fest im System
+hinterlegt, «+ Neue Stelle» ist deshalb nie gesperrt
+([US 30004](../Use_cases/Use_Case_3/30004-demo-benutzer-fest-hinterlegen.md)).
+Die betroffenen Punkte unten sind angepasst.
 
 ## Kontext
 
@@ -25,9 +31,10 @@ Aufgabenstellung nicht bewertet; es muss die Applikation nur bedienbar machen.
 
 Option 2, vorgeschlagen von Fabio:
 
-- **Drei Screens:** Übersicht (Startseite), Stellen-Formular für neue und
-  bestehende Stellen ([ADR 0005](0005-ein-formular-fuer-erfassen-und-bearbeiten.md))
-  und Profil.
+- **Zwei Screens in Version 1:** Übersicht (Startseite) und Stellen-Formular
+  für neue und bestehende Stellen
+  ([ADR 0005](0005-ein-formular-fuer-erfassen-und-bearbeiten.md)). Ein
+  Profil-Screen kann später ergänzt werden.
 - **Übersicht:** reine Liste mit Titel, Firma, Arbeitsort, Status und
   Arbeitsweg. Kein Filter, keine Suche. Ein Klick auf eine Zeile öffnet die
   Stelle.
@@ -35,11 +42,11 @@ Option 2, vorgeschlagen von Fabio:
   eigener Screen.
 - **Ein Benutzer** ([ADR 0003](0003-benutzer-ohne-login.md)), keine
   Benutzerübersicht.
-- **Eine Stelle kann erst erfasst werden, wenn ein Profil existiert.** In der
-  Oberfläche ist «+ Neue Stelle» gesperrt, bis das Profil einmal gespeichert
-  wurde. Das Profil gilt als erfasst, auch wenn die Adressfelder leer sind.
-- **Keine Hinweis- oder Erfolgsmeldungen.** Ein gesperrter Button braucht
-  keine Erklärung; nach dem Speichern erscheint einfach die Übersicht.
+- **Der Benutzer ist fest hinterlegt.** Name und Wohnadresse des
+  Demo-Benutzers stehen im Code und werden beim Anlegen der Tabellen
+  eingefügt. «+ Neue Stelle» ist immer aktiv.
+- **Keine Hinweis- oder Erfolgsmeldungen.** Nach dem Speichern erscheint
+  einfach die Übersicht.
 - **Fehlermeldungen nur, wo Use Case 1 und das Datenmodell sie verlangen**, je
   ein kurzer Satz. Den Wortlaut legt die Person fest, die Use Case 1 umsetzt.
   Fest vorgegeben ist nur die Meldung aus Use Case 3.
@@ -48,7 +55,6 @@ Option 2, vorgeschlagen von Fabio:
   |---|---|---|
   | Ungültiger oder nicht unterstützter Link | US 10001, Regel S1 | legt Use Case 1 fest |
   | Titel oder Firma fehlt beim Speichern einer Stelle | US 10003/10004, Datenmodell | legt Use Case 1 fest |
-  | Name fehlt beim Speichern des Profils | Datenmodell | legt Use Case 1 fest |
   | Stelle ist schon erfasst | Regel S2, US 10003 | legt Use Case 1 fest |
   | Arbeitsweg nicht berechenbar | [ADR 0008](0008-arbeitsweg-mit-openrouteservice.md) | «Arbeitsweg konnte nicht berechnet werden.» |
 
@@ -62,19 +68,13 @@ werden. Der Aufwand gehört in Backend, Datenbank und externen Dienst.
 
 ## Konsequenzen
 
-- Damit der Button gesperrt werden kann, braucht die Übersicht eine Abfrage, ob
-  das Profil existiert. Der Datensatz in `benutzer` entsteht deshalb erst beim
-  ersten Speichern des Profils, nicht automatisch beim Anlegen der Tabellen
-  (siehe [Datenmodell](../datenmodell.md)).
-- Der gesperrte Button ist nur Komfort. Das Backend lehnt das Speichern einer
-  Stelle ab, solange kein Profil existiert (Regel B2 im
-  [Datenmodell](../datenmodell.md)); der Fremdschlüssel `benutzer_id` sichert
-  das zusätzlich in der Datenbank ab.
+- Der Datensatz in `benutzer` entsteht automatisch beim Anlegen der Tabellen
+  (Regel B2 im [Datenmodell](../datenmodell.md)). Die Übersicht braucht keine
+  Abfrage, ob ein Profil existiert.
 - Die Stories US 10002 und US 10003 sehen noch eine Bestätigung nach dem
   Speichern und ausführlichere Meldungen vor. Sie passt die Person an, die
   Use Case 1 bearbeitet.
-- Das Profil gehört zu Use Case 1: Screen, Name, Wohnadresse in drei Feldern,
-  erstes Speichern und die Sperre von «+ Neue Stelle». Das Ändern des Profils
-  gehört zu Use Case 2.
-- Die Wireframes in [docs/wireframes](../wireframes/README.md) zeigen den
-  Stand dieses Entscheids.
+- Der fest hinterlegte Demo-Benutzer gehört zu Use Case 3 (US 30004). Wer
+  einen Profil-Screen übernimmt, ist noch offen; bis dahin gibt es keinen.
+- Die Wireframes in [docs/wireframes](../wireframes/README.md) zeigen noch den
+  Stand vor dem 21.10.2026 mit Profil-Screen und gesperrtem «+ Neue Stelle».
