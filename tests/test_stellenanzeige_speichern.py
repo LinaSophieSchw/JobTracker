@@ -58,8 +58,8 @@ def test_formularwerte_werden_bereinigt():
     assert "benutzer_id" not in ergebnis
 
 
-def test_unvollstaendige_adresse_wird_abgelehnt():
-    """Eine angegebene Adresse muss das vereinbarte Format erfüllen."""
+def test_unvollstaendige_adresse_wird_gespeichert():
+    """Die Eingabeprüfung erlaubt unvollständige Adressangaben."""
     daten = {
         "url": (
             "https://www.jobs.ch/de/stellenangebote/detail/"
@@ -67,11 +67,14 @@ def test_unvollstaendige_adresse_wird_abgelehnt():
         ),
         "titel": "Pilot",
         "firma": "Rega",
-        "adresse": "Samedan",
+        "inseratadresse_ort": "Samedan",
     }
 
-    with pytest.raises(ValueError, match="Adresse"):
-        stellenanzeige_eingaben_pruefen(daten)
+    ergebnis = stellenanzeige_eingaben_pruefen(daten)
+
+    assert ergebnis["inseratadresse_strasse"] is None
+    assert ergebnis["inseratadresse_postleitzahl"] is None
+    assert ergebnis["inseratadresse_ort"] == "Samedan"
 
 
 # Requirement: Die Speicherroute bestätigt Erfolg und meldet Eingabefehler.
@@ -138,7 +141,18 @@ def test_speichern_liefert_id_und_verwendet_demo_benutzer(monkeypatch):
 
     # Prüft die übergebenen Werte statt der SQL-Formatierung.
     parameter = verbindung.execute.call_args.args[1]
-    assert parameter == (1, daten["url"], "Pilot", "Rega", None, None, None, None)
+    assert parameter == (
+        1,
+        daten["url"],
+        "Pilot",
+        "Rega",
+        None,  # Arbeitsort.
+        None,  # Strasse mit Hausnummer.
+        None,  # Postleitzahl.
+        None,  # Adressort.
+        None,  # Pensum.
+        None,  # Stellenbeschreibung.
+    )
 
 
 def test_speichern_meldet_bestehenden_eintrag(monkeypatch):

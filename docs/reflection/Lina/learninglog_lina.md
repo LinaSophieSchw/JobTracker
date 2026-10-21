@@ -782,3 +782,122 @@ Manuellen Einstieg mit Pflichtfeldfehler, erfolgreicher Speicherung,
 Abbrechen und anschliessendem Import prüfen; Tests und Codequalität bestätigen.
 Den Ablauf ebenfalls im Vercel-Preview testen und mit Mirko für die
 Wiederverwendung des Formulars in Use Case 2 abstimmen.
+
+## 2026-10-21 – US 10003a: Adressfelder und Arbeitswegspalten
+
+**Was haben wir gemacht?**
+
+Lina holte den aktuellen Master und eröffnete manuell den Branch
+`10003a_erweiterung-der-db`. Grundlage waren das aktualisierte Datenmodell
+und Fabios ADR 0008 und 0009. Die Umsetzung erfolgte gemeinsam in kleinen
+Schritten; Lina fügte die erklärten Codeblöcke selbst ein.
+
+1. In `src/app/datenbank.py` wurde die Tabellendefinition erweitert.
+   `benutzer` erhält `wohnadresse_strasse`, `wohnadresse_postleitzahl` und
+   `wohnadresse_ort`. `stellenanzeigen` erhält entsprechend
+   `inseratadresse_strasse`, `inseratadresse_postleitzahl` und
+   `inseratadresse_ort`. Strasse enthält jeweils auch die Hausnummer.
+2. Für den Arbeitsweg wurden die optionalen INTEGER-Spalten
+   `fahrzeit_auto_in_minuten` und `strecke_auto_in_metern` ergänzt.
+   CHECK-Bedingungen erlauben keine negativen Ergebnisse. NULL bleibt
+   möglich, solange keine erfolgreiche Berechnung vorliegt. Die spätere
+   Oberfläche rechnet Meter in Kilometer um.
+3. Die bestehenden Tabellen wurden zunächst mit `ALTER TABLE ...
+   ADD COLUMN IF NOT EXISTS` erweitert. Besprochen wurde, dass
+   `CREATE TABLE IF NOT EXISTS` bestehende Tabellen nicht verändert und
+   neue Spalten bei ALTER TABLE hinten angehängt werden.
+4. In `src/app/stellenanzeige_erfassen.py` liefert
+   `ort_und_adresse_aus_daten_lesen()` jetzt Arbeitsort und drei getrennte
+   Adressbestandteile. Sie stammen vom ersten Standort mit Strassenangabe.
+   Der Arbeitsort bleibt separat; Angaben verschiedener Standorte werden
+   nicht zu einer Adresse vermischt. `stellenanzeige_auslesen()` gibt die
+   neuen Feldnamen als JSON zurück.
+5. Eingabeprüfung und INSERT wurden auf die drei Felder umgestellt.
+   Das alte Adress-Prüfmuster wurde entfernt. Texttyp, Bereinigung und
+   Maximallängen bleiben gemäss Datenmodell bestehen; die Adresse ist
+   optional und wird nicht auf Format oder tatsächliche Existenz geprüft.
+   Das INSERT übergibt nun zehn Werte über getrennte SQL-Parameter.
+6. In `public/index.html` ersetzen drei Eingabefelder das bisherige
+   Adressfeld. Vue-Daten, Leeren bei manueller Erfassung, Übernahme der
+   Importvorschau und JSON-Speicheranfrage verwenden dieselben Namen.
+7. Nach der Codeumstellung wurden die alten Spalten `adresse` und
+   `wohnadresse` aus der Tabellendefinition entfernt. Der Demo-Benutzer
+   wird vorläufig weiterhin automatisch angelegt, jetzt mit drei
+   Adressbestandteilen. Die Profilerfassung übernimmt Fabio separat.
+8. Weil ausschliesslich entbehrliche Testdaten vorhanden waren, löschte
+   Lina die Tabellen und legte sie mit der fertigen Definition neu an:
+   zuerst `stellenanzeigen`, dann `benutzer` löschen, anschliessend
+   `tabellen_erstellen()` aufrufen. Die bisherigen Testeinträge gingen
+   dabei bewusst verloren. Das ist kein Vorgehen für erhaltenswerte Daten.
+
+**Gelöste Probleme und Prüfung**
+
+- Ein vom Agenten vorgeschlagener Python-Kommentar mit `#` innerhalb eines
+  SQL-Texts verursachte beim Neuanlegen einen PostgreSQL-Syntaxfehler.
+  Kommentare innerhalb von SQL verwenden `--`; Lina entfernte die
+  betroffenen Kommentare. Die Löschung war bereits bestätigt, während
+  der fehlgeschlagene Aufbau zurückgerollt wurde. Nach der Korrektur und
+  einem Neustart der Python-Sitzung genügte ein erneutes Anlegen ohne DROP.
+- Im Vercel-Dateneditor waren zunächst noch alte Spalten sichtbar.
+  Eine Abfrage auf `information_schema.columns`, sortiert nach
+  `ordinal_position`, bestätigte die korrekte Struktur. Nach Neuladen
+  zeigte auch der Dateneditor die neue Struktur und Reihenfolge.
+- Eine falsche Einrückung im Speichertest verhinderte zunächst das
+  Einsammeln der Tests. Der assert-Block wurde korrekt eingerückt.
+- Die Importtests erwarten vier Rückgabewerte statt einer zusammengesetzten
+  Adresse. Der Test ohne Strasse erwartet einen erhaltenen Arbeitsort und
+  drei leere Adresswerte. Der bisherige Ablehnungstest wurde durch einen
+  Test ersetzt, der unvollständige Adressen erlaubt. Der Speichertest
+  prüft die zehn übergebenen SQL-Parameter.
+- Lina bestätigte Import und Speicherung über die lokale Webapp sowie
+  die getrennten Adresswerte in der Datenbank.
+- Abschliessend meldete Linas Terminal: **33 Tests bestanden**, Ruff
+  **All checks passed**, Black **8 files would be left unchanged**.
+  Diese Tests beweisen noch keine Routenberechnung; diese ist nicht
+  implementiert. Ein Deployment dieses Branches ist noch nicht bestätigt.
+
+**Warum haben wir das gemacht?**
+
+Die Datenstruktur soll zu Fabios Arbeitswegberechnung passen. Getrennte
+Adressbestandteile vermeiden ein nachträgliches Zerlegen zusammengesetzter
+Adressen. Fahrzeit und Strecke erhalten eindeutige Einheiten im Spaltennamen.
+Die bisherige einzelne Adresse wurde schrittweise ersetzt, statt sie vor
+Anpassung ihrer Aufrufer zu entfernen.
+
+**Welche Auswirkungen hat das?**
+
+Import, Formular und Speicherung verwenden jetzt dieselben drei Adressfelder.
+Die Datenbank ist für Fahrzeit und Strecke vorbereitet. Routenaufruf,
+Ergebnisanzeige und Profilerfassung bleiben offen und werden mit Fabio
+abgestimmt. Alte Anwendungen, die noch `adresse` verwenden, sind mit dem
+neuen Schema nicht kompatibel; der neue Code muss deshalb zeitnah über
+Review auf Master und anschliessend ins Deployment gelangen.
+
+**Welche Konzepte wurden behandelt?**
+
+Tabellendefinition und Schemaänderung, CREATE TABLE gegenüber ALTER TABLE,
+Fremdschlüssel und Löschreihenfolge, Transaktionen und Rollback, NULL gegenüber
+0, Einheiten, SQL-Platzhalter, JSON-Feldnamen, Vue-Datenbindung, Python-
+Einrückung, Neustart einer Python-Sitzung und zwischengespeicherte Browseransichten.
+
+**Eigenleistung und KI-Unterstützung**
+
+Lina führte Git-Schritte, Codeänderungen, Datenbankbefehle und Tests manuell
+aus und bestätigte den Browserablauf. Der Agent las relevante Dateien,
+lieferte vollständige kommentierte Codebeispiele, erklärte die Änderungen
+und unterstützte bei Fehlersuche und Testanpassungen. Der Agent verursachte
+mit einem ungeeigneten SQL-Kommentar selbst einen Fehler und korrigierte
+seine Anleitung. Die abschliessenden erfolgreichen Testergebnisse stammen
+aus Linas Terminalausgabe.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+
+Warum verändert CREATE TABLE IF NOT EXISTS keine vorhandene Tabelle?
+Wann ist Neuanlegen vertretbar und wann braucht es eine Migration mit
+Erhalt bestehender Daten?
+
+**Nächster Lernschritt**
+
+Änderungen samt Lernlog committen, Branch veröffentlichen und nach Review
+auf Master übernehmen. Fabio die neuen Feldnamen und den vorläufigen
+Demo-Benutzer mitteilen. Nach dem Deployment den Online-Ablauf prüfen.
