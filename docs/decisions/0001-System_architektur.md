@@ -4,7 +4,10 @@ Datum: 2026-10-17
 
 ## Status
 
-Angenommen für die weitere Entwicklung: SQLite wird zunächst lokal verwendet;
+Datenbank ersetzt durch [ADR 0007](0007-postgresql-bei-neon.md):
+PostgreSQL bei Neon statt SQLite. Frontend, Backend und Hosting gelten weiter.
+
+Ursprünglicher Status: Angenommen für die weitere Entwicklung: SQLite wird zunächst lokal verwendet;
 Vercel bleibt das vorgesehene Hostingziel. Die Kombination ist noch nicht für
 den dauerhaften Onlinebetrieb mit gespeicherten Anwendungsdaten freigegeben.
 

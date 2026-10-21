@@ -1,6 +1,6 @@
 # Datenmodell JobTracker
 
-Stand: 2026-10-19
+Stand: 2026-10-20
 
 > **Wichtig für alle Agenten:** Dieses Dokument ist die Grundlage für das
 > Programmieren. Weicht etwas, das programmiert wird, von diesem Datenmodell
@@ -14,9 +14,9 @@ Stand: 2026-10-19
   [`code-stil.md`](../.agents/skills/learn-coding/references/code-stil.md):
   Deutsch, `snake_case`, ohne Umlaute, Einheit im Namen. Spaltennamen und
   JSON-Felder sind identisch.
-- Die Typen sind logisch angegeben, weil die Datenbank für den Onlinebetrieb
-  noch offen ist ([ADR 0001](decisions/0001-System_architektur.md)).
-  Abschnitt 7 zeigt die Umsetzung in SQLite und PostgreSQL.
+- Die Typen sind logisch angegeben. Die Datenbank ist PostgreSQL bei Neon
+  ([ADR 0007](decisions/0007-postgresql-bei-neon.md)); Abschnitt 7 zeigt die
+  Umsetzung, die Hinweise zu SQLite sind noch nachzuführen.
 - Das Schema wird an genau einer Stelle im Code angelegt (heute
   `tabellen_erstellen()` in `src/app/datenbank.py`).
 - Regeln, die die Daten schützen, prüft das Backend. Pflichtfelder, erlaubte
@@ -31,7 +31,9 @@ erDiagram
     benutzer {
         integer id PK
         text name
-        text wohnadresse
+        text wohnadresse_strasse
+        text wohnadresse_postleitzahl
+        text wohnadresse_ort
         text erstellt_am
         text geaendert_am
     }
@@ -42,14 +44,17 @@ erDiagram
         text titel
         text firma
         text arbeitsort
-        text adresse
+        text inseratadresse_strasse
+        text inseratadresse_postleitzahl
+        text inseratadresse_ort
         text pensum
         text stellenbeschreibung
         integer lohn_in_chf_pro_jahr
         text status
         text beworben_am
         text notizen
-        integer fahrzeit_in_minuten "offen, siehe Abschnitt 4"
+        integer fahrzeit_auto_in_minuten
+        integer strecke_auto_in_metern
         text erstellt_am
         text geaendert_am
     }
@@ -61,14 +66,17 @@ erDiagram
 |---|---|---|---|---|
 | `id` | Ganzzahl | ja | automatisch | Primärschlüssel |
 | `name` | Text, max. 100 Zeichen | ja | | Anzeigename (Regel S3) |
-| `wohnadresse` | Text, max. 200 Zeichen | nein | leer | Startpunkt der Fahrzeit. Wenn vorhanden, gilt Regel A1. |
+| `wohnadresse_strasse` | Text, max. 200 Zeichen | nein | leer | Strasse mit Hausnummer; Startpunkt des Arbeitswegs (Regel A1) |
+| `wohnadresse_postleitzahl` | Text, max. 20 Zeichen | nein | leer | Regel A1 |
+| `wohnadresse_ort` | Text, max. 200 Zeichen | nein | leer | Regel A1 |
 | `erstellt_am` | Zeitstempel | ja | vom Backend | Regel Z1 |
 | `geaendert_am` | Zeitstempel | ja | vom Backend | Regel Z1 |
 
-**Version 1:** genau ein Datensatz mit `id` 1. Er wird beim Anlegen der
-Tabellen erzeugt, falls er fehlt. Name «Demo-Benutzer», Wohnadresse eine
-öffentliche Adresse (Vorschlag: «Bundesplatz 3, 3005 Bern»). Es gibt keine
-Funktion zum Anlegen oder Löschen von Benutzern
+**Version 1:** höchstens ein Datensatz mit `id` 1. Er entsteht beim ersten
+Speichern des Profils, nicht beim Anlegen der Tabellen. Solange er fehlt,
+können keine Stellen gespeichert werden (Regel B2).
+Für die öffentliche Instanz eine öffentliche Adresse verwenden (Vorschlag:
+Bundesplatz 3, 3005 Bern). Es gibt keine Funktion zum Löschen von Benutzern
 ([ADR 0003](decisions/0003-benutzer-ohne-login.md)).
 
 ## 4 Tabelle `stellenanzeigen`
@@ -81,27 +89,25 @@ Funktion zum Anlegen oder Löschen von Benutzern
 | `titel` | Text, max. 200 Zeichen | ja | | Import oder manuell | Stellentitel |
 | `firma` | Text, max. 200 Zeichen | ja | | Import oder manuell | Name des Arbeitgebers |
 | `arbeitsort` | Text, max. 200 Zeichen | nein | leer | Import oder manuell | Nur zur Anzeige. Mehrere Orte durch Komma getrennt, z.B. «Bern, Zürich» ([ADR 0004](decisions/0004-adresse-getrennt-vom-arbeitsort.md)). |
-| `adresse` | Text, max. 200 Zeichen | nein | leer | Import oder manuell | Zielpunkt der Fahrzeit. Wenn vorhanden, gilt Regel A1. |
+| `inseratadresse_strasse` | Text, max. 200 Zeichen | nein | leer | Import oder manuell | Strasse mit Hausnummer der Arbeitsadresse; Ziel des Arbeitswegs (Regel A1) |
+| `inseratadresse_postleitzahl` | Text, max. 20 Zeichen | nein | leer | Import oder manuell | Regel A1 |
+| `inseratadresse_ort` | Text, max. 200 Zeichen | nein | leer | Import oder manuell | Regel A1 |
 | `pensum` | Text, max. 50 Zeichen | nein | leer | Import oder manuell | Freitext wie auf jobs.ch, z.B. «60-100%». Kein Filter, keine Berechnung. |
 | `stellenbeschreibung` | Text, unbegrenzt | nein | leer | Import oder manuell | Reiner Text ohne HTML (Regel S4) |
 | `lohn_in_chf_pro_jahr` | Ganzzahl, mindestens 0 | nein | leer | manuell | Bruttolohn pro Jahr laut Anzeige oder Angebot. Wird nicht importiert. |
 | `status` | Text | ja | `gespeichert` | Benutzer | Nur Werte aus Abschnitt 5 |
 | `beworben_am` | Datum | nein | leer | Benutzer | Datum der Bewerbung. Wird nicht automatisch gesetzt. |
 | `notizen` | Text, unbegrenzt | nein | leer | Benutzer | Freitext, z.B. Termin des Vorstellungsgesprächs. Wird nicht durchsucht. |
-| `fahrzeit_auto_in_minuten` oder `fahrzeit_oev_in_minuten` | Ganzzahl, mindestens 0 | nein | leer | Web Service | Siehe unten. |
+| `fahrzeit_auto_in_minuten` | Ganzzahl, mindestens 0 | nein | leer | Web Service | Geschätzte Fahrzeit mit dem Auto, einfacher Hinweg. Siehe unten. |
+| `strecke_auto_in_metern` | Ganzzahl, mindestens 0 | nein | leer | Web Service | Strecke mit dem Auto; die Oberfläche zeigt Kilometer. Siehe unten. |
 | `erstellt_am` | Zeitstempel | ja | vom Backend | System | Regel Z1 |
 | `geaendert_am` | Zeitstempel | ja | vom Backend | System | Regel Z1 |
 
-**Offen: Fahrzeit.** Die Person, die Use Case 3 bearbeitet, entscheidet:
-
-- welches Verkehrsmittel gilt und damit, ob die Spalte
-  `fahrzeit_auto_in_minuten` oder `fahrzeit_oev_in_minuten` heisst;
-- ob die Fahrzeit gespeichert oder bei Bedarf beim Web Service geholt wird.
-  Die Spalte existiert nur, wenn sie gespeichert wird.
-
-Leer heisst: noch nicht berechnet, keine Adresse oder Dienst nicht erreichbar.
-Nach dem Entscheid werden diese Zeile, das Diagramm und
-[ADR 0002](decisions/0002-externe-web-api.md) nachgeführt.
+**Arbeitsweg** ([ADR 0008](decisions/0008-arbeitsweg-mit-openrouteservice.md)):
+Das Backend berechnet Fahrzeit und Strecke bei jedem Speichern einer Stelle mit
+OpenRouteService und speichert beide Werte. Leer heisst: Berechnung
+gescheitert, zum Beispiel wegen einer unbrauchbaren Adresse oder weil der
+Dienst nicht erreichbar war. Die Stelle wird trotzdem gespeichert.
 
 ## 5 Status
 
@@ -138,10 +144,11 @@ ERLAUBTE_STATUS = (
 | S2 | **Eindeutigkeit.** Die Kombination `benutzer_id` und `url` ist eindeutig. Wer eine bereits erfasste Anzeige nochmals erfasst, erhält einen Hinweis mit der `id` des bestehenden Eintrags. |
 | S3 | **Textfelder.** Leerzeichen am Anfang und Ende werden entfernt. Eine danach leere Zeichenkette wird als leer (`NULL`) gespeichert. Pflichtfelder dürfen danach nicht leer sein. Maximallängen prüft das Backend. |
 | S4 | **Stellenbeschreibung.** HTML aus der Anzeige wird beim Import in reinen Text umgewandelt; Absätze bleiben als Zeilenumbrüche erhalten. Das Frontend zeigt Texte nie als HTML an (kein `v-html`). |
-| A1 | **Adressen** (`adresse`, `wohnadresse`) haben das Format «Strasse Nr, PLZ Ort». Nach einem Komma folgen eine vierstellige PLZ und der Ort; Prüfmuster `,\s*\d{4}\s+\S`. Version 1 kennt nur Schweizer Adressen ([ADR 0004](decisions/0004-adresse-getrennt-vom-arbeitsort.md)). |
+| A1 | **Adressen** (`inseratadresse_*`, `wohnadresse_*`) bestehen aus drei Feldern: Strasse mit Hausnummer (z.B. «Bahnhofstrasse 12»), Postleitzahl und Ort. Es gibt keine Pflicht-, Format- oder Plausibilitätsprüfung; nur die Maximallänge gilt (Regel S3). Version 1 kennt nur Schweizer Adressen ([ADR 0009](decisions/0009-adresse-in-drei-feldern.md)). |
 | Z1 | **Zeitstempel** setzt nur das Backend, in UTC. `erstellt_am` beim Anlegen, `geaendert_am` bei jeder Änderung, auch bei einer reinen Statusänderung. |
 | B1 | **Benutzerbezug.** Jede Abfrage und Änderung auf `stellenanzeigen` filtert über `benutzer_id = aktuelle_benutzer_id()`. Die Funktion liefert in Version 1 immer 1. Eine Stellenanzeige eines anderen Benutzers verhält sich wie nicht vorhanden ([ADR 0003](decisions/0003-benutzer-ohne-login.md)). |
-| U1 | **Nicht änderbar** nach dem Anlegen: `id`, `benutzer_id`, `url`, `erstellt_am`. Die Fahrzeit setzt nur das Backend. |
+| B2 | **Profil zuerst.** Eine Stellenanzeige kann erst gespeichert werden, wenn der Datensatz in `benutzer` existiert, also das Profil einmal gespeichert wurde. Fehlt er, lehnt das Backend das Speichern ab; der Fremdschlüssel `benutzer_id` sichert das zusätzlich ab. Die Oberfläche sperrt «+ Neue Stelle» ([ADR 0010](decisions/0010-minimale-oberflaeche.md)). |
+| U1 | **Nicht änderbar** nach dem Anlegen: `id`, `benutzer_id`, `url`, `erstellt_am`. Fahrzeit und Strecke setzt nur das Backend. |
 
 ## 7 Typen in SQLite und PostgreSQL
 
@@ -193,7 +200,7 @@ Grundlage: [ADR 0006](decisions/0006-import-nur-von-jobs-ch.md).
 | `titel` | erste Hauptüberschrift `h1` | umgesetzt ([Stellenlink erfassen](Use_cases/Use_Case_1/10001-stellenlink-erfassen.md)) |
 | `firma` | offen; Kandidat: strukturierte Daten `JobPosting`, Feld `hiringOrganization.name` | zu prüfen |
 | `arbeitsort` | Ortsangaben der Anzeige, Feld `city`; mehrere Orte durch Komma getrennt | zu prüfen |
-| `adresse` | erster Ort mit Feld `street`, zusammengesetzt als «street, postalCode city», z.B. «Bahnhofstrasse 12, 6300 Zug». Ohne `street` bleibt die Adresse leer. | zu prüfen |
+| `inseratadresse_*` | erster Ort mit Feld `street`: `street` unverändert als Strasse mit Hausnummer, dazu `postalCode` und `city`, z.B. «Bahnhofstrasse 12» · «6300» · «Zug». Ohne `street` bleiben die Felder leer. | zu prüfen |
 | `pensum` | offen; auf der Seite sichtbar | Fundstelle offen |
 | `stellenbeschreibung` | offen; Kandidat: `JobPosting`, Feld `description` (HTML, Regel S4) | zu prüfen |
 | `lohn_in_chf_pro_jahr`, `status`, `beworben_am`, `notizen` | nicht importiert | |
