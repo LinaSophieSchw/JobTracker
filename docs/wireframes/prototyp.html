@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>JobTracker Prototyp</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+  /* Layout: Hinweisband oben; darunter App-Rahmen und Backend-Protokoll nebeneinander, auf dem Handy untereinander */
+  :root {
+    --bg: #eceff3; --surface: #ffffff; --ink: #1c2330; --muted: #5d6878;
+    --line: #8792a2; --line-soft: #d0d6de; --field: #f7f8fa; --field-ro: #e3e7ec;
+    --chip-bg: #dbe5fa; --chip-fg: #1e3a74; --note-bg: #fff2c2; --note-line: #d4a400;
+    --err-bg: #fce2df; --err-line: #c2372c; --hover: #f1f5fd;
+    --btn: #e8ebef; --btn-strong: #1c2330; --btn-strong-fg: #ffffff; --link: #2352c0;
+    --log-bg: #1a2130; --log-fg: #d4dbe5; --log-ext: #efc266; --log-line: #2d3646;
+    --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #11151c; --surface: #19202a; --ink: #e2e7ee; --muted: #9ba6b5;
+    --line: #5a6576; --line-soft: #313a47; --field: #212935; --field-ro: #2a3340;
+    --chip-bg: #243458; --chip-fg: #c8d7fa; --note-bg: #372f14; --note-line: #c39511;
+    --err-bg: #3c1f1c; --err-line: #e06a5f; --hover: #222c3b;
+    --btn: #29313d; --btn-strong: #e2e7ee; --btn-strong-fg: #11151c; --link: #8eb0ff;
+    --log-bg: #0b0f15; --log-fg: #c8d0db; --log-ext: #efc266; --log-line: #222a36;
+    color-scheme: dark; } }
+  :root[data-theme="dark"] {
+    --bg: #11151c; --surface: #19202a; --ink: #e2e7ee; --muted: #9ba6b5;
+    --line: #5a6576; --line-soft: #313a47; --field: #212935; --field-ro: #2a3340;
+    --chip-bg: #243458; --chip-fg: #c8d7fa; --note-bg: #372f14; --note-line: #c39511;
+    --err-bg: #3c1f1c; --err-line: #e06a5f; --hover: #222c3b;
+    --btn: #29313d; --btn-strong: #e2e7ee; --btn-strong-fg: #11151c; --link: #8eb0ff;
+    --log-bg: #0b0f15; --log-fg: #c8d0db; --log-ext: #efc266; --log-line: #222a36;
+    color-scheme: dark;
+  }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 var(--font-body); }
+  .gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .proto { background: var(--note-bg); border-bottom: 1px solid var(--note-line); padding-block: 10px; font-size: 13px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+  .proto span { flex: 1 1 320px; min-width: 0; }
+  .wrap { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; max-width: 1150px; margin: 0 auto; padding-block: 16px; box-sizing: border-box; }
+  @media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); } }
+  .app { background: var(--surface); border: 2px solid var(--line); border-radius: 6px; padding: 16px; min-height: 420px; min-width: 0; }
+  .bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line-soft); padding-bottom: 8px; margin-bottom: 12px; gap: 8px; }
+  .bar h1 { font-size: 17px; margin: 0; text-wrap: balance; }
+  .bar > span { display: flex; gap: 6px; }
+  button { font: inherit; font-size: 13px; color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 4px 12px; background: var(--btn); cursor: pointer; }
+  button.primary { background: var(--btn-strong); color: var(--btn-strong-fg); border-color: var(--btn-strong); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+  .tabelle { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  td, th { border: 1px solid var(--line-soft); padding: 6px 8px; text-align: left; }
+  th { background: var(--field-ro); font-weight: 600; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: var(--hover); }
+  .fld { display: flex; gap: 8px; margin: 6px 0; align-items: center; }
+  .fld > label { flex: 0 0 150px; color: var(--muted); font-size: 13px; }
+  .fld > a { overflow-wrap: anywhere; min-width: 0; }
+  .nach-label { margin: 2px 0 10px 158px; }
+  @media (max-width: 520px) { .fld { flex-wrap: wrap; } .fld > label { flex-basis: 100%; } .nach-label { margin-left: 0; } }
+  input, select, textarea { font: inherit; font-size: 13px; color: var(--ink); flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 3px; padding: 4px 6px; background: var(--field); }
+  input.short { flex: 0 0 64px; }
+  textarea { height: 56px; resize: vertical; }
+  input[readonly] { background: var(--field-ro); color: var(--muted); }
+  .grp { border: 1px dashed var(--line); padding: 6px 10px; margin: 10px 0; border-radius: 4px; }
+  .grp > b { font-size: 12px; color: var(--muted); }
+  .msg { padding: 8px 10px; border-radius: 4px; margin-bottom: 12px; font-size: 13px; }
+  .msg.err { background: var(--err-bg); border-left: 4px solid var(--err-line); }
+  .uc { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 8px; background: var(--chip-bg); color: var(--chip-fg); font-weight: 600; margin-left: 4px; letter-spacing: .02em; }
+  .log { background: var(--log-bg); color: var(--log-fg); border-radius: 6px; padding: 12px; font-family: var(--font-mono); font-size: 12px; height: fit-content; max-height: 80vh; overflow: auto; min-width: 0; }
+  .log h2 { font-family: var(--font-body); font-size: 13px; margin: 0 0 8px; color: var(--log-fg); }
+  .log div { border-top: 1px solid var(--log-line); padding: 6px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .log .ext { color: var(--log-ext); }
+  .log .uc { background: var(--log-line); color: var(--log-fg); }
+  .actions { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .actions .right { margin-left: auto; }
+  .loeschfrage { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-left: auto; padding: 4px 8px; border-radius: 4px; background: var(--err-bg); }
+  a { color: var(--link); }
+</style>
+
+<div class="proto gutter">
+  <span><b>Klickbarer Prototyp</b> (Stand 20.10.2026, ADR 0010) – Wegwerf-Prototyp, kein Teil der App. Daten nur im Browser, jobs.ch und OpenRouteService werden simuliert.</span>
+  <label><input type="checkbox" id="simFehler"> Arbeitsweg-Fehler simulieren</label>
+  <button id="reset">Alles zurücksetzen (erster Start)</button>
+</div>
+
+<div class="wrap gutter">
+  <main class="app" id="app"></main>
+  <aside class="log" id="log"><h2>Was im Backend passieren würde</h2></aside>
+</div>
+
+<script>
+const LEER_PROFIL = { name: "", strasse: "", plz: "", ort: "" };
+const STATUS = [
+  ["gespeichert", "Gespeichert"], ["beworben", "Beworben"], ["interview", "Vorstellungsgespräch"],
+  ["zusage", "Zusage"], ["absage", "Absage"], ["zurueckgezogen", "Zurückgezogen"],
+];
+const BEISPIELE = [
+  { titel: "Praktikum Informatik", firma: "Muster AG", arbeitsort: "Bern", pensum: "100 %", lohn: "", beschreibung: "Du unterstützt unser Entwicklungsteam …" },
+  { titel: "Junior Python Developer", firma: "Beispiel GmbH", arbeitsort: "Zürich", pensum: "80–100 %", lohn: "85000", beschreibung: "Wir suchen eine motivierte Person …" },
+  { titel: "Helikopterpilotin / Helikopterpilot", firma: "Air Demo SA", arbeitsort: "Sion", pensum: "100 %", lohn: "", beschreibung: "Für Rettungs- und Transportflüge …" },
+];
+
+let zustand;
+function neuStarten() {
+  zustand = { profil: null, stellen: [], naechsteId: 1, ansicht: "liste", stelleId: null, meldungen: [], entwurf: null };
+}
+neuStarten();
+
+const app = document.getElementById("app");
+const log = document.getElementById("log");
+
+function esc(text) {
+  return String(text ?? "").replace(/[&<>"']/g, z => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[z]));
+}
+function protokoll(text, uc, extern) {
+  const zeile = document.createElement("div");
+  zeile.innerHTML = (extern ? '<span class="ext">' : "<span>") + esc(text) + "</span>" + (uc ? ' <span class="uc">' + esc(uc) + "</span>" : "");
+  log.insertBefore(zeile, log.children[1] || null);
+}
+function meldungenHtml() {
+  const html = zustand.meldungen.map(m => `<div class="msg ${m.art}">${esc(m.text)}</div>`).join("");
+  zustand.meldungen = [];
+  return html;
+}
+function arbeitswegText(s) {
+  if (s.strecke_in_km == null) return "–";
+  const h = Math.floor(s.fahrzeit_in_minuten / 60), m = s.fahrzeit_in_minuten % 60;
+  return `${s.strecke_in_km} km · ${h ? h + " h " : ""}${m} min`;
+}
+function statusText(wert) { return (STATUS.find(s => s[0] === wert) || [, wert])[1]; }
+
+// Link-Normalform nach Regel S1 im Datenmodell
+function anzeigenlinkBestimmen(url) {
+  const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+  let treffer = url.match(new RegExp("^https://www\\.jobs\\.ch/de/stellenangebote/detail/(" + uuid + ")/?", "i"));
+  if (!treffer) treffer = url.match(new RegExp("^https://www\\.jobs\\.ch/de/stellenangebote/\\?.*jobid=(" + uuid + ")", "i"));
+  return treffer ? `https://www.jobs.ch/de/stellenangebote/detail/${treffer[1].toLowerCase()}/` : null;
+}
+
+// Simuliert OpenRouteService: Geocoding beider Adressen + Autoroute
+function arbeitswegBerechnen(arbeit) {
+  const p = zustand.profil;
+  const wohn = [p.strasse, p.plz, p.ort].join(" ").trim();
+  const ziel = [arbeit.strasse, arbeit.plz, arbeit.ort].join(" ").trim();
+  protokoll(`OpenRouteService Geocoding (CH):\n  Start «${wohn}»\n  Ziel «${ziel}»`, "UC 3", true);
+  if (document.getElementById("simFehler").checked || !p.ort.trim() || !arbeit.ort.trim()) {
+    protokoll("→ keine verwendbare Adresse / Route: Strecke und Fahrzeit leeren", "UC 3", true);
+    return null;
+  }
+  let summe = 0;
+  for (const z of wohn + ziel) summe = (summe * 31 + z.charCodeAt(0)) % 9973;
+  const km = 3 + (summe % 140);
+  const minuten = Math.round(km * 1.05 + 6);
+  protokoll(`OpenRouteService Route (Auto): ${km} km, ${minuten} min`, "UC 3", true);
+  return { strecke_in_km: km, fahrzeit_in_minuten: minuten };
+}
+
+// ---------- Ansichten ----------
+function zeigen() {
+  if (zustand.ansicht === "liste") zeigeListe();
+  else if (zustand.ansicht === "profil") zeigeProfil();
+  else zeigeFormular();
+}
+
+function zeigeListe() {
+  const hatProfil = zustand.profil !== null;
+  const zeilen = zustand.stellen.map(s => `
+    <tr data-id="${s.id}"><td>${esc(s.titel)}</td><td>${esc(s.firma)}</td><td>${esc(s.arbeitsort)}</td>
+    <td>${esc(statusText(s.status))}</td><td>${esc(arbeitswegText(s))}</td></tr>`).join("");
+  app.innerHTML = `
+    <div class="bar"><h1>JobTracker <span class="uc">UC 2</span></h1>
+      <span><button id="zumProfil" class="${hatProfil ? "" : "primary"}">Profil</button>
+      <button id="neu" class="primary" ${hatProfil ? "" : "disabled"}>+ Neue Stelle</button></span></div>
+    ${meldungenHtml()}
+    ${zustand.stellen.length === 0 ? "" : `
+      <div class="tabelle"><table><thead><tr><th>Titel</th><th>Firma</th><th>Arbeitsort</th><th>Status</th><th>Arbeitsweg</th></tr></thead>
+      <tbody>${zeilen}</tbody></table></div>`}`;
+  document.getElementById("zumProfil").onclick = () => {
+    protokoll("GET /api/profil", zustand.profil ? "UC 2" : "UC 1");
+    zustand.ansicht = "profil"; zeigen();
+  };
+  document.getElementById("neu").onclick = () => {
+    zustand.ansicht = "formular"; zustand.stelleId = null; zustand.entwurf = null; zeigen();
+  };
+  app.querySelectorAll("tbody tr").forEach(tr => tr.onclick = () => {
+    const id = Number(tr.dataset.id);
+    protokoll(`GET /api/stellenanzeigen/${id}  (keine Neuberechnung)`, "UC 2");
+    zustand.ansicht = "formular"; zustand.stelleId = id; zustand.entwurf = null; zeigen();
+  });
+}
+
+function zeigeProfil() { zeigeProfilMit(zustand.profil || LEER_PROFIL); }
+
+function zeigeProfilMit(p) {
+  const erstmals = zustand.profil === null;
+  app.innerHTML = `
+    <div class="bar"><h1>Profil <span class="uc">${erstmals ? "UC 1 erfassen" : "UC 2 ändern"}</span></h1><button id="zurueck">← Zurück</button></div>
+    ${meldungenHtml()}
+    <div class="fld"><label>Name *</label><input id="name" value="${esc(p.name)}" placeholder="z.B. Demo-Benutzer"></div>
+    <div class="grp"><b>Wohnadresse (Start des Arbeitswegs)</b>
+      <div class="fld"><label>Strasse und Nr.</label><input id="strasse" value="${esc(p.strasse)}" placeholder="Bundesplatz 3"></div>
+      <div class="fld"><label>PLZ / Ort</label><input id="plz" class="short" value="${esc(p.plz)}" placeholder="3005"><input id="ort" value="${esc(p.ort)}" placeholder="Bern"></div>
+    </div>
+    <div class="actions"><button class="primary" id="speichern">Speichern</button></div>`;
+  document.getElementById("zurueck").onclick = () => { zustand.ansicht = "liste"; zeigen(); };
+  document.getElementById("speichern").onclick = () => {
+    const neu = {};
+    for (const feld of Object.keys(LEER_PROFIL)) neu[feld] = document.getElementById(feld).value;
+    if (!neu.name.trim()) { zustand.meldungen.push({ art: "err", text: "Name fehlt." }); return zeigeProfilMit(neu); }
+    zustand.profil = neu;
+    protokoll(erstmals ? "PUT /api/profil  → legt benutzer id 1 an, Adresse ohne Prüfung" : "PUT /api/profil  (Adresse ohne Prüfung)",
+              erstmals ? "UC 1" : "UC 2");
+    zustand.ansicht = "liste"; zeigen();
+  };
+}
+
+function leereStelle() {
+  return { url: "", titel: "", firma: "", arbeitsort: "", pensum: "", strasse: "", plz: "", ort: "",
+           stellenbeschreibung: "", lohn_in_chf_pro_jahr: "", status: "gespeichert", beworben_am: "", notizen: "",
+           strecke_in_km: null, fahrzeit_in_minuten: null };
+}
+
+function zeigeFormular() {
+  const bestehend = zustand.stellen.find(s => s.id === zustand.stelleId);
+  const s = zustand.entwurf || (bestehend ? { ...bestehend } : leereStelle());
+  zustand.entwurf = s;
+  const feld = (id, label, extra = "") => `<div class="fld"><label>${label}</label><input id="${id}" value="${esc(s[id])}" ${extra}></div>`;
+  app.innerHTML = `
+    <div class="bar"><h1>${bestehend ? "Stelle bearbeiten" : "Neue Stelle"} <span class="uc">${bestehend ? "UC 2" : "UC 1"}</span></h1><button id="zurueck">← Zurück</button></div>
+    ${meldungenHtml()}
+    ${bestehend
+      ? `<div class="fld"><label>Link</label>${/^https?:\/\//i.test(s.url)
+          ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url)}</a>`
+          : `<span>${esc(s.url) || "–"}</span>`}</div>`
+      : `<div class="fld"><label>Link</label><input id="url" value="${esc(s.url)}" ${s.geladen ? "readonly" : ""} placeholder="https://www.jobs.ch/de/stellenangebote/detail/…"></div>
+         ${s.geladen ? "" : '<div class="nach-label"><button id="laden">Informationen laden</button></div>'}`}
+    ${feld("titel", "Titel *")}
+    ${feld("firma", "Firma *")}
+    ${feld("arbeitsort", "Arbeitsort", 'placeholder="z.B. Bern"')}
+    ${feld("pensum", "Pensum", 'placeholder="z.B. 80–100 %"')}
+    <div class="grp"><b>Arbeitsadresse <span class="uc">${bestehend ? "UC 2 ändern" : "UC 1 erfassen"}</span></b>
+      <div class="fld"><label>Strasse und Nr.</label><input id="strasse" value="${esc(s.strasse)}" placeholder="z.B. Bahnhofstrasse 12"></div>
+      <div class="fld"><label>PLZ / Ort</label><input id="plz" class="short" value="${esc(s.plz)}"><input id="ort" value="${esc(s.ort)}"></div>
+    </div>
+    <div class="fld"><label>Stellenbeschreibung</label><textarea id="stellenbeschreibung">${esc(s.stellenbeschreibung)}</textarea></div>
+    ${feld("lohn_in_chf_pro_jahr", "Lohn CHF/Jahr", 'inputmode="numeric"')}
+    <div class="fld"><label>Status</label><select id="status">${STATUS.map(([w, t]) => `<option value="${w}" ${w === s.status ? "selected" : ""}>${t}</option>`).join("")}</select></div>
+    ${feld("beworben_am", "Beworben am", 'type="date"')}
+    <div class="fld"><label>Notizen</label><textarea id="notizen">${esc(s.notizen)}</textarea></div>
+    <div class="grp"><b>Arbeitsweg mit dem Auto <span class="uc">Feld: UC 1</span><span class="uc">Wert: UC 3</span> – nur lesbar</b>
+      <div class="fld"><label>Strecke</label><input readonly value="${s.strecke_in_km == null ? "" : s.strecke_in_km + " km"}"></div>
+      <div class="fld"><label>Fahrzeit</label><input readonly value="${s.fahrzeit_in_minuten == null ? "" : s.fahrzeit_in_minuten + " min"}"></div>
+    </div>
+    <div class="actions">
+      <button class="primary" id="speichern">Speichern</button>
+      <button id="abbrechen">Abbrechen</button>
+      ${bestehend ? `<button class="right" id="loeschen">Löschen</button>
+        <span class="loeschfrage" id="loeschfrage" hidden>Diese Stelle wirklich löschen?
+          <button id="jaLoeschen">Ja, löschen</button><button id="neinLoeschen">Nein</button></span>` : ""}
+    </div>`;
+
+  const formularLesen = () => {
+    for (const id of ["url", "titel", "firma", "arbeitsort", "pensum", "strasse", "plz", "ort",
+                      "stellenbeschreibung", "lohn_in_chf_pro_jahr", "status", "beworben_am", "notizen"]) {
+      const el = document.getElementById(id);
+      if (el) s[id] = el.value;
+    }
+  };
+  const zurListe = () => { zustand.entwurf = null; zustand.ansicht = "liste"; zeigen(); };
+  document.getElementById("zurueck").onclick = zurListe;
+  document.getElementById("abbrechen").onclick = zurListe;
+
+  const laden = document.getElementById("laden");
+  if (laden) laden.onclick = () => {
+    formularLesen();
+    protokoll(`POST /api/stellenanzeigen/vorschau  url=${s.url || "(leer)"}`, "UC 1");
+    const link = anzeigenlinkBestimmen(s.url.trim());
+    if (!link) {
+      protokoll("→ 400: Link nicht unterstützt", "UC 1");
+      zustand.meldungen.push({ art: "err", text: "Link wird nicht unterstützt." });
+    } else {
+      protokoll(`jobs.ch Anzeige abrufen: ${link}`, "UC 1", true);
+      const b = BEISPIELE[link.charCodeAt(link.length - 2) % BEISPIELE.length];
+      Object.assign(s, { geladen: true, url: link, titel: b.titel, firma: b.firma, arbeitsort: b.arbeitsort, pensum: b.pensum,
+                         lohn_in_chf_pro_jahr: b.lohn, stellenbeschreibung: b.beschreibung });
+    }
+    zeigen();
+  };
+
+  document.getElementById("speichern").onclick = () => {
+    formularLesen();
+    if (!bestehend) {
+      s.url = anzeigenlinkBestimmen(s.url.trim()) || s.url.trim();
+      const doppelt = s.url && zustand.stellen.find(x => x.url === s.url);
+      if (doppelt) { zustand.meldungen.push({ art: "err", text: "Stelle ist bereits erfasst." }); return zeigen(); }
+    }
+    if (!s.titel.trim()) { zustand.meldungen.push({ art: "err", text: "Titel fehlt." }); return zeigen(); }
+    if (!s.firma.trim()) { zustand.meldungen.push({ art: "err", text: "Firma fehlt." }); return zeigen(); }
+
+    protokoll(bestehend ? `PUT /api/stellenanzeigen/${bestehend.id}` : "POST /api/stellenanzeigen",
+              bestehend ? "UC 2 + UC 3 · 30003" : "UC 1 · 10003 + UC 3 · 30001–30002");
+    const weg = arbeitswegBerechnen(s);
+    s.strecke_in_km = weg ? weg.strecke_in_km : null;
+    s.fahrzeit_in_minuten = weg ? weg.fahrzeit_in_minuten : null;
+    protokoll(`DB: Stelle speichern, Strecke=${s.strecke_in_km ?? "NULL"}, Fahrzeit=${s.fahrzeit_in_minuten ?? "NULL"}`);
+
+    if (bestehend) Object.assign(bestehend, s);
+    else zustand.stellen.push({ ...s, id: zustand.naechsteId++ });
+    if (!weg) zustand.meldungen.push({ art: "err", text: "Arbeitsweg konnte nicht berechnet werden." });
+    zurListe();
+  };
+
+  const loeschen = document.getElementById("loeschen");
+  const frage = document.getElementById("loeschfrage");
+  if (loeschen) loeschen.onclick = () => { loeschen.hidden = true; frage.hidden = false; };
+  if (frage) document.getElementById("neinLoeschen").onclick = () => { frage.hidden = true; loeschen.hidden = false; };
+  if (frage) document.getElementById("jaLoeschen").onclick = () => {
+    zustand.stellen = zustand.stellen.filter(x => x.id !== bestehend.id);
+    protokoll(`DELETE /api/stellenanzeigen/${bestehend.id}`, "UC 2");
+    zurListe();
+  };
+}
+
+document.getElementById("reset").onclick = () => {
+  neuStarten();
+  log.innerHTML = "<h2>Was im Backend passieren würde</h2>";
+  zeigen();
+};
+
+protokoll("App geöffnet: GET /api/profil → kein Profil · GET /api/stellenanzeigen → []", "UC 2");
+zeigen();
+</script>
+</body>
+</html>

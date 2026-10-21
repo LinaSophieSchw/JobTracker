@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>JobTracker Wireframes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+  /* Layout: Ablaufzeilen oben, darunter die drei Screens in zwei Spalten (Handy: eine), unten die Tabellen */
+  :root {
+    --bg: #eceff3; --surface: #ffffff; --ink: #1c2330; --muted: #5d6878;
+    --line: #8792a2; --line-soft: #d0d6de; --field: #f7f8fa; --field-ro: #e3e7ec; --placeholder: #9aa3b0;
+    --chip-bg: #dbe5fa; --chip-fg: #1e3a74; --open-bg: #fff2c2; --open-fg: #6b5200;
+    --err-fg: #b0302a; --have: #23743a; --btn: #e8ebef; --btn-strong: #1c2330; --btn-strong-fg: #ffffff; --link: #2352c0;
+    --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #11151c; --surface: #19202a; --ink: #e2e7ee; --muted: #9ba6b5;
+    --line: #5a6576; --line-soft: #313a47; --field: #212935; --field-ro: #2a3340; --placeholder: #6f7a8a;
+    --chip-bg: #243458; --chip-fg: #c8d7fa; --open-bg: #3a3115; --open-fg: #f2d27a;
+    --err-fg: #f08a80; --have: #6fd08a; --btn: #29313d; --btn-strong: #e2e7ee; --btn-strong-fg: #11151c; --link: #8eb0ff;
+    color-scheme: dark; } }
+  :root[data-theme="dark"] {
+    --bg: #11151c; --surface: #19202a; --ink: #e2e7ee; --muted: #9ba6b5;
+    --line: #5a6576; --line-soft: #313a47; --field: #212935; --field-ro: #2a3340; --placeholder: #6f7a8a;
+    --chip-bg: #243458; --chip-fg: #c8d7fa; --open-bg: #3a3115; --open-fg: #f2d27a;
+    --err-fg: #f08a80; --have: #6fd08a; --btn: #29313d; --btn-strong: #e2e7ee; --btn-strong-fg: #11151c; --link: #8eb0ff;
+    color-scheme: dark;
+  }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 var(--font-body); }
+  .page { max-width: 1150px; margin: 0 auto; padding-block: 24px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  h2 { margin: 0 0 4px; font-size: 22px; text-wrap: balance; }
+  h3 { margin: 22px 0 8px; font-size: 16px; text-wrap: balance; }
+  .subtitle { color: var(--muted); margin: 0 0 12px; max-width: 72ch; }
+  a { color: var(--link); }
+  .wf { border: 2px solid var(--line); border-radius: 6px; background: var(--surface); padding: 14px; font-size: 14px; min-width: 0; }
+  .wf h4 { margin: 0 0 10px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .wf .bar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line-soft); padding-bottom: 8px; margin-bottom: 12px; }
+  .wf .btn { display: inline-block; border: 1px solid var(--line); border-radius: 4px; padding: 3px 10px; background: var(--btn); font-size: 13px; margin-right: 6px; }
+  .wf .btn.primary { background: var(--btn-strong); color: var(--btn-strong-fg); border-color: var(--btn-strong); }
+  .wf .btn.off { opacity: .4; }
+  .wf .fld { display: flex; gap: 8px; margin: 5px 0; align-items: center; }
+  .wf .fld span { color: var(--muted); font-size: 13px; flex: 0 0 150px; }
+  .wf .box { flex: 1; min-width: 0; border: 1px solid var(--line); height: 22px; border-radius: 3px; background: var(--field); font-size: 12px; color: var(--placeholder); padding: 2px 6px; box-sizing: border-box; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .wf .box.ro { background: var(--field-ro); color: var(--muted); }
+  .wf .box.big { height: 56px; }
+  .wf .nach-label { margin: 4px 0 10px 158px; }
+  @media (max-width: 520px) { .wf .fld { flex-wrap: wrap; } .wf .fld span { flex-basis: 100%; } .wf .nach-label { margin-left: 0; } }
+  .scroll { overflow-x: auto; }
+  .wf table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .wf td, .wf th { border: 1px solid var(--line-soft); padding: 4px 6px; text-align: left; }
+  .wf th { background: var(--field-ro); font-weight: 600; }
+  .wf .grp { border: 1px dashed var(--line); padding: 6px 8px; margin: 8px 0; border-radius: 4px; }
+  .wf .grp > b { font-size: 12px; color: var(--muted); }
+  .fehler { font-size: 12px; color: var(--err-fg); margin: 4px 0 0; }
+  .note { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+  .uc { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 8px; background: var(--chip-bg); color: var(--chip-fg); margin-left: 4px; font-weight: 600; letter-spacing: .02em; }
+  .uc.offen { background: var(--open-bg); color: var(--open-fg); }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0; }
+  .flow .n { border: 2px solid var(--line); border-radius: 6px; padding: 6px 10px; background: var(--surface); font-weight: 600; font-size: 13px; }
+  .flow .a { font-size: 13px; color: var(--muted); }
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+  .grid2 > div { min-width: 0; }
+  .num { display: inline-block; width: 22px; height: 22px; border-radius: 50%; background: var(--btn-strong); color: var(--btn-strong-fg); text-align: center; line-height: 22px; font-size: 12px; margin-right: 6px; font-variant-numeric: tabular-nums; }
+  .states { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; font-size: 12px; margin-top: 10px; }
+  @media (max-width: 600px) { .states { grid-template-columns: minmax(0, 1fr); } }
+  .states div { border: 1px solid var(--line-soft); border-radius: 4px; padding: 6px; background: var(--field); }
+  table.need { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 8px; background: var(--surface); }
+  table.need td, table.need th { border: 1px solid var(--line-soft); padding: 5px 8px; text-align: left; vertical-align: top; }
+  table.need th { background: var(--field-ro); font-weight: 600; }
+  .have { color: var(--have); font-weight: 600; }
+  code { font-family: var(--font-mono); font-size: 12px; }
+</style>
+
+<div class="page">
+<h2>JobTracker – Minimal-Wireframes, Stand 20.10.2026</h2>
+<p class="subtitle">Grundlage für <a href="../decisions/0010-minimale-oberflaeche.md">ADR 0010</a>: 3 Screens, 1 Benutzer, keine Filter, keine Hinweis- oder Erfolgsmeldungen. Blau = Use Case. Klickbare Version: <a href="prototyp.html">prototyp.html</a>.</p>
+
+<h3>Wege durch die App</h3>
+<div class="flow"><div class="n">Erster Start: ① leer, «+ Neue Stelle» gesperrt</div><span class="a">→ Profil →</span><div class="n">③ Profil</div><span class="a">→ Speichern (auch leer) → ① Button aktiv</span></div>
+<div class="flow"><div class="n">① Übersicht</div><span class="a">→ + Neue Stelle →</span><div class="n">② Formular (neu)</div><span class="a">→ Link laden oder von Hand → Speichern → ①</span></div>
+<div class="flow"><div class="n">① Übersicht</div><span class="a">→ Klick auf Zeile →</span><div class="n">② Formular (bestehend)</div><span class="a">→ Speichern / Löschen → ①</span></div>
+
+<div class="grid2" style="margin-top:16px">
+
+<div>
+  <h3><span class="num">1</span>Übersicht <span class="uc">UC 2</span></h3>
+  <div class="wf">
+    <h4>mit Profil</h4>
+    <div class="bar"><b>JobTracker</b><span><span class="btn">Profil</span><span class="btn primary">+ Neue Stelle</span></span></div>
+    <div class="scroll"><table>
+      <tr><th>Titel</th><th>Firma</th><th>Arbeitsort</th><th>Status</th><th>Arbeitsweg</th></tr>
+      <tr><td>Praktikum Informatik</td><td>Muster AG</td><td>Bern</td><td>Beworben</td><td>14 km · 18 min</td></tr>
+      <tr><td>Junior Developer</td><td>Beispiel GmbH</td><td>Zürich</td><td>Gespeichert</td><td>–</td></tr>
+    </table></div>
+    <p class="note">Reine Liste, kein Filter, keine Suche. Klick auf Zeile → ②. Ohne Stellen ist die Liste einfach leer.</p>
+  </div>
+  <div class="wf" style="margin-top:12px">
+    <h4>erster Start, noch kein Profil</h4>
+    <div class="bar"><b>JobTracker</b><span><span class="btn primary">Profil</span><span class="btn off">+ Neue Stelle</span></span></div>
+    <p class="note">«+ Neue Stelle» ist gesperrt, ohne Hinweis. Liste leer, kein Text.</p>
+  </div>
+
+  <h3 style="margin-top:22px"><span class="num">3</span>Profil <span class="uc">UC 1</span> erfassen · <span class="uc">UC 2</span> ändern</h3>
+  <div class="wf">
+    <div class="bar"><b>Profil</b><span class="btn">← Zurück</span></div>
+    <div class="fld"><span>Name *</span><div class="box">Demo-Benutzer</div></div>
+    <div class="grp"><b>Wohnadresse (Start Arbeitsweg)</b>
+      <div class="fld"><span>Strasse und Nr.</span><div class="box">Bundesplatz 3</div></div>
+      <div class="fld"><span>PLZ / Ort</span><div class="box" style="flex:0 0 56px">3005</div><div class="box">Bern</div></div>
+    </div>
+    <div style="margin-top:10px"><span class="btn primary">Speichern</span></div>
+    <p class="note">Genau ein Benutzer. Erstes Speichern = Profil gilt als erfasst, auch mit leeren Feldern (UC 1). Späteres Ändern = UC 2. Speichern im Profil berechnet keinen Arbeitsweg.</p>
+  </div>
+</div>
+
+<div>
+  <h3><span class="num">2</span>Stellen-Formular <span class="uc">UC 1</span><span class="uc">UC 2</span><span class="uc">UC 3</span></h3>
+  <div class="wf">
+    <div class="bar"><b>Stelle</b><span class="btn">← Zurück</span></div>
+    <div class="fld"><span>Link *</span><div class="box">https://www.jobs.ch/de/stellenangebote/detail/…</div></div>
+    <div class="nach-label"><span class="btn">Informationen laden</span></div>
+    <div class="fld"><span>Titel *</span><div class="box">aus jobs.ch, korrigierbar</div></div>
+    <div class="fld"><span>Firma *</span><div class="box"></div></div>
+    <div class="fld"><span>Arbeitsort</span><div class="box">z.B. «Bern»</div></div>
+    <div class="fld"><span>Pensum</span><div class="box">z.B. 80–100 %</div></div>
+    <div class="grp"><b>Arbeitsadresse <span class="uc">UC 1</span> erfassen · <span class="uc">UC 2</span> ändern</b>
+      <div class="fld"><span>Strasse und Nr.</span><div class="box">z.B. Bahnhofstrasse 12</div></div>
+      <div class="fld"><span>PLZ / Ort</span><div class="box" style="flex:0 0 56px"></div><div class="box"></div></div>
+    </div>
+    <div class="fld"><span>Stellenbeschreibung</span><div class="box big"></div></div>
+    <div class="fld"><span>Lohn CHF/Jahr</span><div class="box"></div></div>
+    <div class="fld"><span>Status</span><div class="box">▼ Gespeichert</div></div>
+    <div class="fld"><span>Beworben am</span><div class="box">TT.MM.JJJJ</div></div>
+    <div class="fld"><span>Notizen</span><div class="box big"></div></div>
+    <div class="grp"><b>Arbeitsweg – Feld <span class="uc">UC 1</span>, Wert <span class="uc">UC 3</span>, nur lesbar</b>
+      <div class="fld"><span>Strecke</span><div class="box ro">14 km</div></div>
+      <div class="fld"><span>Fahrzeit Auto</span><div class="box ro">18 min</div></div>
+      <p class="fehler">bei Fehler: «Arbeitsweg konnte nicht berechnet werden.»</p>
+    </div>
+    <div style="margin-top:10px"><span class="btn primary">Speichern</span><span class="btn">Abbrechen</span><span class="btn" style="float:right">Löschen</span></div>
+    <div class="states">
+      <div><b>Neu, leer</b><br>Link bearbeitbar, «Informationen laden» sichtbar. Man kann auch einfach von Hand ausfüllen.</div>
+      <div><b>Neu, nach Laden</b><br>Felder vorausgefüllt und korrigierbar. Link nur lesbar (ADR 0005). Fremder Link → kurze Fehlermeldung, Felder bleiben leer.</div>
+      <div><b>Bestehend</b><br>Link nur lesbar (anklickbar, wenn http/https), alles andere bearbeitbar, «Löschen» sichtbar.</div>
+    </div>
+    <p class="note">Jedes «Speichern» = Stelle speichern + Arbeitsweg über OpenRouteService neu berechnen. Scheitert die Berechnung, wird trotzdem gespeichert.</p>
+  </div>
+</div>
+</div>
+
+<h3 style="margin-top:26px">Was es dafür alles braucht</h3>
+<p class="subtitle" style="margin-top:0">Abgeleitet aus den Screens. Die Backend-Aufrufe sind mein Vorschlag nach eurer Konvention <code>/api/…</code>; grün = existiert schon im Code.</p>
+<div class="scroll"><table class="need">
+  <tr><th>Wer klickt was</th><th>Screen</th><th>Use Case</th><th>Backend-Aufruf</th></tr>
+  <tr><td>App öffnen: Liste anzeigen</td><td>①</td><td>UC 2</td><td><code>GET /api/stellenanzeigen</code></td></tr>
+  <tr><td>App öffnen: Gibt es schon ein Profil? (Button sperren)</td><td>①</td><td>UC 1</td><td><code>GET /api/profil</code></td></tr>
+  <tr><td>Profil zum ersten Mal speichern</td><td>③</td><td>UC 1</td><td><code>PUT /api/profil</code></td></tr>
+  <tr><td>Profil später ändern</td><td>③</td><td>UC 2</td><td><code>PUT /api/profil</code></td></tr>
+  <tr><td>«Informationen laden»</td><td>②</td><td>UC 1</td><td class="have"><code>POST /api/stellenanzeigen/vorschau</code> ✓</td></tr>
+  <tr><td>Neue Stelle speichern (+ Arbeitsweg)</td><td>②</td><td>UC 1 (US 10003) + UC 3 (30001–30002, Berechnung)</td><td><code>POST /api/stellenanzeigen</code></td></tr>
+  <tr><td>Zeile anklicken: Stelle öffnen</td><td>②</td><td>UC 2</td><td><code>GET /api/stellenanzeigen/&lt;id&gt;</code></td></tr>
+  <tr><td>Bestehende Stelle speichern (+ Arbeitsweg neu)</td><td>②</td><td>UC 2 + UC 3 (30003)</td><td><code>PUT /api/stellenanzeigen/&lt;id&gt;</code></td></tr>
+  <tr><td>Stelle löschen</td><td>②</td><td>UC 2</td><td><code>DELETE /api/stellenanzeigen/&lt;id&gt;</code></td></tr>
+</table></div>
+<p class="note">Im Hintergrund, ohne eigenen Button: Adressen → Koordinaten → Route (OpenRouteService), nur im Backend, mit Zeitlimit; API-Schlüssel nur serverseitig.</p>
+<h3 style="margin-top:26px">Meldungen in der App</h3>
+<p class="note">Keine Erfolgs- oder Hinweismeldungen. Fehlermeldungen nur, wo Use Case 1 und das Datenmodell sie verlangen, je ein kurzer Satz. Den Wortlaut legt Use Case 1 fest; die Texte im Prototyp sind nur Beispiele.</p>
+<div class="scroll"><table class="need">
+  <tr><th>Fall</th><th>Grundlage</th><th>Wortlaut</th></tr>
+  <tr><td>Ungültiger oder nicht unterstützter Link</td><td>US 10001, Regel S1</td><td>legt UC 1 fest</td></tr>
+  <tr><td>Titel oder Firma fehlt beim Speichern einer Stelle</td><td>US 10003/10004, Datenmodell</td><td>legt UC 1 fest</td></tr>
+  <tr><td>Name fehlt beim Speichern des Profils</td><td>Datenmodell</td><td>legt UC 1 fest</td></tr>
+  <tr><td>Stelle ist schon erfasst</td><td>Regel S2, US 10003</td><td>legt UC 1 fest</td></tr>
+  <tr><td>Arbeitsweg nicht berechenbar</td><td>UC 3, ADR 0008</td><td>«Arbeitsweg konnte nicht berechnet werden.»</td></tr>
+  <tr><td>Rückfrage vor dem Löschen</td><td>UC 2</td><td>legt UC 2 fest</td></tr>
+</table></div>
+<p class="note">Entscheide dazu: ADR 0008 (Arbeitsweg), ADR 0009 (Adresse in drei Feldern), ADR 0010 (minimale Oberfläche).</p>
+</div>
+</body>
+</html>
