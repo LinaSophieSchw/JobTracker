@@ -4,7 +4,10 @@ Datum: 2026-10-17
 
 ## Status
 
-Angenommen: Google Maps Routes API wurde als externe Web-API ausgewählt.
+Ersetzt durch [ADR 0008](0008-arbeitsweg-mit-openrouteservice.md):
+Der Arbeitsweg wird mit OpenRouteService berechnet.
+
+Ursprünglicher Status: Angenommen: Google Maps Routes API wurde als externe Web-API ausgewählt.
 Der genaue fachliche Ablauf der Integration wird noch festgelegt.
 
 ## Kontext
