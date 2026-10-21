@@ -100,3 +100,64 @@ bemerken?
 **Nächster Lernschritt**
 Mit Lina klären, wer die Umstellung der Wohnadresse auf drei Spalten übernimmt
 und wer Datenmodell und ADR 0010 anpasst.
+
+## 2026-10-21 – US 30004 umgesetzt, Merge-Konflikt mit Linas Stand gelöst
+
+**Was haben wir gemacht?**
+US 30004 wurde auf dem Branch `feature/30004-demo-benutzer` umgesetzt und als
+Pull Request #17 eröffnet. Neu ist die Funktion `wohnadresse_lesen()` in
+`src/app/datenbank.py`; sie liest die Wohnadresse des Demo-Benutzers in drei
+Teilen aus der Datenbank. Dazu kamen drei Unittests in
+`tests/test_datenbank.py`, Anpassungen an `docs/datenmodell.md` (Abschnitt 3,
+Regel B2) und ADR 0010 sowie ein
+[Spickzettel für die Präsentation](../../Use_cases/Use_Case_3/30004-spickzettel.md).
+Mit der Verbindungsadresse von Lina in der lokalen `.env` wurde die Funktion
+einmal gegen die Neon-Datenbank geprüft (nur lesend).
+
+Während der Arbeit hatte Lina mit PR #16 die Tabelle `benutzer` ebenfalls auf
+drei Adressspalten umgestellt. Beim Mergen von `master` in den Branch entstand
+ein Merge-Konflikt in `tabellen_erstellen()`. Beide Versionen waren inhaltlich
+gleich; übernommen wurde Linas Version, dazu kam nur `wohnadresse_lesen()`.
+Damit ist der offene Punkt aus dem vorherigen Eintrag (Wohnadresse in einer
+Spalte) erledigt.
+
+**Warum haben wir das gemacht?**
+Die Arbeitswegberechnung braucht einen Startpunkt. Die Arbeitsadresse kommt
+beim Speichern aus dem Formular, die Wohnadresse steht nur in der Datenbank.
+Eine eigene Funktion ist einzeln testbar und in US 30001 und 30003
+wiederverwendbar. Linas Version wurde übernommen, weil sie bereits auf
+`master` war; so ändert der Pull Request ihren Code nicht.
+
+**Welche Auswirkungen hat das?**
+Die Wohnadresse kann für US 30001 gelesen werden. Mit PR #16 sind auch die
+Felder der Arbeitsadresse und die Spalten für Fahrzeit und Strecke vorhanden;
+US 30001 ist damit nicht mehr blockiert. Offen: Linas Code-Kommentar spricht
+von «Fabios Profilerfassung», die es laut US 30004 vorläufig nicht gibt. Die
+Verbindungsadresse wurde im Chat mit dem Agenten geteilt; Lina sollte das
+Neon-Passwort zurücksetzen. Unklar ist, ob die verwendete Datenbank Linas
+gemeinsame ist; vor dem Speichern von Testdaten klären.
+
+**Welche Konzepte wurden behandelt?**
+Merge-Konflikt: Zwei Personen ändern dieselben Zeilen, Git markiert die Stelle
+mit `<<<<<<<`, `=======` und `>>>>>>>` und ein Mensch entscheidet. Idempotenz
+(`CREATE TABLE IF NOT EXISTS`, `ON CONFLICT DO NOTHING`). SQL-Platzhalter
+`%s` gegen SQL-Injection. Mocks in Tests und ihre Grenzen. Connection String
+und `.env` als Ort für Geheimnisse.
+
+**Eigenleistung und KI-Unterstützung**
+Fabio sprach den Umbau mit Lina ab, gab die Freigaben für Plan, Commit, Merge
+und Pull Request und richtete die `.env` mit der Verbindungsadresse ein. Er
+fragte nach, ob beim Start jedes Mal ein neuer Benutzer entsteht und wozu
+`wohnadresse_lesen()` nötig ist. Er liess einen Test löschen, der ohne echte
+Datenbank kaum etwas prüft, verlangte eine Beschreibung des Zwecks im
+Testcode und gab Form und Inhalt des Spickzettels vor. Der Agent schrieb Code,
+Tests und Doku, erklärte die Schritte, löste den Merge-Konflikt und prüfte,
+dass der Pull Request Linas Code nicht verändert.
+
+**Persönliche Reflexion – von Fabio zu ergänzen**
+Wie hätte das Team vermeiden können, dass zwei Personen gleichzeitig dieselbe
+Tabelle umbauen?
+
+**Nächster Lernschritt**
+Für US 30001 einen API-Schlüssel bei OpenRouteService anlegen und eine erste
+Abfrage mit den Beispieladressen ausprobieren.
