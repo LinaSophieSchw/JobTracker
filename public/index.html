@@ -1,4 +1,25 @@
 <!DOCTYPE html>
+
+<!--Versionshistorie Frontend
+
+Version 01 (MG): 
+Grundgerüst der Startseite erstellt.
+
+Version 02 – 18.10.2026 (LS):
+Linkfeld und Abruf der Titelvorschau ergänzt.
+Der erkannte Stellentitel kann im Formular bearbeitet werden.
+
+Version 03 – 20.10.2026 (LS):
+Vorschau um Firma, Arbeitsort, Adresse, Pensum und Beschreibung erweitert.
+Die Angaben erscheinen in einem bearbeitbaren Formular.
+Der geladene Anzeigenlink wird angezeigt; Abbrechen blendet die Vorschau aus.
+HTML und JavaScript durch Abschnittskommentare gegliedert.
+
+Version 04 – 20.10.2026 (LS):
+Speicherbutton und JavaScript-Methode zur Übermittlung der Formularwerte
+an das Backend ergänzt. Ladezustand, Erfolgs- und Fehlermeldungen eingebaut.
+Während der Speicherung wird der Speicherbutton gesperrt.
+-->
 <html lang="de">
 
 <head>
@@ -16,7 +37,9 @@
 <body>
     <div id="app">
         <h1>JobTracker</h1>
+        <!-- Backend-Status vorerst ausgeblendet:
         <p>Backend: {{ backend_status }}</p>
+        -->
         <h2>Stellenanzeige erfassen</h2>
 
         <form @submit.prevent="stellenanzeige_laden">
@@ -25,9 +48,15 @@
             <button type="submit" :disabled="laedt">
                 {{ laedt ? "Wird geladen …" : "Informationen laden" }}
             </button>
+            <!-- Öffnet das Formular ohne Import. -->
+            <button type="button" @click="stellenanzeige_manuell_erfassen" :disabled="laedt || speichert">
+                Von Hand erfassen
+            </button>
         </form>
 
         <p v-if="fehlermeldung">{{ fehlermeldung }}</p>
+        <!-- Erscheint erst nach einer erfolgreichen Speicherung. -->
+        <p v-if="erfolgsmeldung">{{ erfolgsmeldung }}</p>
 
         <!-- Erscheint erst nach einem erfolgreichen Abruf. -->
         <div v-if="vorschau_vorhanden">
@@ -35,6 +64,14 @@
 
             <!-- Der geladene Link bleibt unverändert. -->
             <p>
+                <!-- Bei manueller Erfassung ist der Link bearbeitbar. -->
+            <p v-if="manuelle_erfassung">
+                <label for="manueller_link">jobs.ch-Link (Pflichtfeld)</label>
+                <input id="manueller_link" type="url" v-model="anzeigenlink">
+            </p>
+
+            <!-- Nach einem Import bleibt der normalisierte Link nur lesbar. -->
+            <p v-else>
                 Geladene Anzeige:
                 <a :href="anzeigenlink" target="_blank" rel="noopener noreferrer">
                     {{ anzeigenlink }}
@@ -87,11 +124,20 @@
                 </tbody>
             </table>
 
+            </table>
+
+            <!-- Speichert die bearbeiteten Angaben. -->
+            <button type="button" @click="stellenanzeige_speichern" :disabled="speichert || laedt">
+                {{ speichert ? "Wird gespeichert …" : "Speichern" }}
+            </button>
+
             <!-- Blendet die ungespeicherte Vorschau aus. -->
-            <button type="button" @click="vorschau_vorhanden = false">
+            <button type="button" @click="vorschau_vorhanden = false" :disabled="speichert">
                 Abbrechen
             </button>
         </div>
+
+    </div>
 
     </div>
 
@@ -130,7 +176,10 @@
                     // Steuern Ladeanzeige, Fehlermeldung und Sichtbarkeit des Formulars.
                     laedt: false,                    // Während des Abrufs ist der Button gesperrt.
                     fehlermeldung: "",               // Meldung bei einem fehlgeschlagenen Abruf.
+                    speichert: false,                // Verhindert mehrfaches Klicken während der Speicherung.
+                    erfolgsmeldung: "",                 // Zeigt die Bestätigung nach erfolgreicher Speicherung.
                     vorschau_vorhanden: false,        // Zeigt oder verbirgt das gesamte Formular.
+                    manuelle_erfassung: false, // Unterscheidet manuelle Neuerfassung von einer importierten Vorschau.
                 };
             },
             // Enthält die Funktionen, die unsere Oberfläche auslösen kann.
@@ -139,11 +188,34 @@
             // Methoden: Stellenanzeige laden
             // --------------------------------------------------
             methods: {
+                // Öffnet das vorhandene Formular ohne Abruf von jobs.ch.
+                stellenanzeige_manuell_erfassen() {
+                    this.manuelle_erfassung = true;
+                    this.fehlermeldung = "";
+                    this.erfolgsmeldung = "";
+
+                    // Einen bereits eingegebenen Link behalten wir bei.
+                    this.anzeigenlink = this.stellenlink.trim();
+
+                    // Die Angaben werden diesmal von Hand eingegeben.
+                    this.stellentitel = "";
+                    this.firma = "";
+                    this.arbeitsort = "";
+                    this.adresse = "";
+                    this.pensum = "";
+                    this.stellenbeschreibung = "";
+
+                    this.vorschau_vorhanden = true;
+                },
                 // async erlaubt es, auf die Antwort des Backends zu warten,
                 // während der Browser weiterhin bedienbar bleibt.
                 async stellenanzeige_laden() {
                     // Sperrt den Ladebutton und blendet die bisherige Vorschau aus.
                     // this greift auf die Werte aus data() zu.
+                    // Entfernt die Bestätigung der vorherigen Speicherung.
+                    // Ein neuer Import verwendet wieder den Vorschau-Modus.
+                    this.manuelle_erfassung = false;
+                    this.erfolgsmeldung = "";
                     this.laedt = true;
                     this.fehlermeldung = "";
                     this.vorschau_vorhanden = false;
@@ -185,6 +257,48 @@
                     } finally {
                         // Läuft bei Erfolg und bei Fehlern: Der Button wird freigegeben.
                         this.laedt = false;
+                    }
+                },
+                // Sendet die aktuell bearbeiteten Formularwerte an die Speicherroute.
+                async stellenanzeige_speichern() {
+                    this.speichert = true;
+                    this.fehlermeldung = "";
+                    this.erfolgsmeldung = "";
+
+                    try {
+                        const antwort = await fetch("/api/stellenanzeigen", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+
+                            // Verwendet die Formularwerte einschliesslich deiner Korrekturen.
+                            // Die Benutzer-ID bestimmt das Backend selbst.
+                            body: JSON.stringify({
+                                url: this.anzeigenlink,
+                                titel: this.stellentitel,
+                                firma: this.firma,
+                                arbeitsort: this.arbeitsort,
+                                adresse: this.adresse,
+                                pensum: this.pensum,
+                                stellenbeschreibung: this.stellenbeschreibung,
+                            }),
+                        });
+
+                        const daten = await antwort.json();
+
+                        if (!antwort.ok) {
+                            throw new Error(daten.fehler || "Speichern fehlgeschlagen.");
+                        }
+
+                        // Erst nach erfolgreicher Antwort die Bestätigung anzeigen.
+                        this.erfolgsmeldung =
+                            `Stellenanzeige gespeichert (ID: ${daten.id}).`;
+                        this.vorschau_vorhanden = false;
+                    } catch (fehler) {
+                        // Bei Fehlern bleibt das Formular mit deinen Eingaben sichtbar.
+                        this.fehlermeldung = fehler.message;
+                    } finally {
+                        // Gibt den Speicherbutton auch nach einem Fehler wieder frei.
+                        this.speichert = false;
                     }
                 },
             },
