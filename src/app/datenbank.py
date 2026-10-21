@@ -10,10 +10,8 @@ Version 03  20.10.2026:
 Tabellenaufbau, Eingabeprüfung und Speicherung ergänzt. (LS)
 
 Version 04  21.10.2026:
-Wohnadresse des Demo-Benutzers auf drei Spalten aufgeteilt (US 30004). (FH)
+wohnadresse_lesen() für die Arbeitswegberechnung ergänzt (US 30004). (FH)
 """
-
-import re
 
 import psycopg
 
@@ -62,13 +60,12 @@ def tabellen_erstellen(datenbank_url):
 
         # Version 1 verwendet einen gemeinsamen Demo-Benutzer.
         # Wiederholtes Ausführen verändert ein vorhandenes Profil nicht.
-        # Die Wohnadresse steht in drei Feldern, damit die Arbeitswegberechnung
-        # Strasse, Postleitzahl und Ort gezielt verwenden kann (ADR 0009). (FH)
+        # Der Demo-Benutzer bleibt bis zu Fabios Profilerfassung bestehen. (LS)
         verbindung.execute(
             """
             INSERT INTO benutzer (
-                id, name,
-                wohnadresse_strasse, wohnadresse_postleitzahl, wohnadresse_ort
+                id, name, wohnadresse_strasse,
+                wohnadresse_postleitzahl, wohnadresse_ort
             )
             VALUES (%s, %s, %s, %s, %s)
             ON CONFLICT (id) DO NOTHING
@@ -86,7 +83,9 @@ def tabellen_erstellen(datenbank_url):
                 titel VARCHAR(200) NOT NULL CHECK (length(trim(titel)) > 0),
                 firma VARCHAR(200) NOT NULL CHECK (length(trim(firma)) > 0),
                 arbeitsort VARCHAR(200),
-                adresse VARCHAR(200),
+                inseratadresse_strasse VARCHAR(200),
+                inseratadresse_postleitzahl VARCHAR(20),
+                inseratadresse_ort VARCHAR(200),
                 pensum VARCHAR(50),
                 stellenbeschreibung TEXT,
 
@@ -103,6 +102,10 @@ def tabellen_erstellen(datenbank_url):
                     )),
                 beworben_am DATE,
                 notizen TEXT,
+                fahrzeit_auto_in_minuten INTEGER
+                    CHECK (fahrzeit_auto_in_minuten >= 0),
+                strecke_auto_in_metern INTEGER
+                    CHECK (strecke_auto_in_metern >= 0),
 
                 erstellt_am TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 geaendert_am TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -192,8 +195,7 @@ def stellenanzeige_eingaben_pruefen(daten):
 
     url = textfeld_pruefen(daten.get("url"), "Link", pflicht=True)
 
-    # Verwendet dieselbe Linkprüfung wie der Import.
-    geprueft = {
+    return {
         "url": anzeigenlink_bestimmen(url),
         "titel": textfeld_pruefen(
             daten.get("titel"), "Titel", pflicht=True, maximale_laenge=200
@@ -204,21 +206,28 @@ def stellenanzeige_eingaben_pruefen(daten):
         "arbeitsort": textfeld_pruefen(
             daten.get("arbeitsort"), "Arbeitsort", maximale_laenge=200
         ),
-        "adresse": textfeld_pruefen(
-            daten.get("adresse"), "Adresse", maximale_laenge=200
+        # Adressen sind optional. Nur Texttyp und Maximallänge werden geprüft.
+        # Es gibt keine Prüfung auf ein bestimmtes Adressformat.
+        "inseratadresse_strasse": textfeld_pruefen(
+            daten.get("inseratadresse_strasse"),
+            "Strasse mit Hausnummer",
+            maximale_laenge=200,
+        ),
+        "inseratadresse_postleitzahl": textfeld_pruefen(
+            daten.get("inseratadresse_postleitzahl"),
+            "Postleitzahl",
+            maximale_laenge=20,
+        ),
+        "inseratadresse_ort": textfeld_pruefen(
+            daten.get("inseratadresse_ort"),
+            "Adressort",
+            maximale_laenge=200,
         ),
         "pensum": textfeld_pruefen(daten.get("pensum"), "Pensum", maximale_laenge=50),
         "stellenbeschreibung": textfeld_pruefen(
             daten.get("stellenbeschreibung"), "Stellenbeschreibung"
         ),
     }
-
-    # Prüft das vereinbarte Format, nicht die tatsächliche Existenz der Adresse.
-    adresse = geprueft["adresse"]
-    if adresse and not re.search(r",\s*[0-9]{4}\s+\S", adresse):
-        raise ValueError("Bitte die Adresse als «Strasse Nr, PLZ Ort» eingeben.")
-
-    return geprueft
 
 
 # ==================================================
@@ -234,9 +243,12 @@ def stellenanzeige_speichern(datenbank_url, daten):
             """
             INSERT INTO stellenanzeigen (
                 benutzer_id, url, titel, firma, arbeitsort,
-                adresse, pensum, stellenbeschreibung
+                inseratadresse_strasse,
+                inseratadresse_postleitzahl,
+                inseratadresse_ort,
+                pensum, stellenbeschreibung
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (benutzer_id, url) DO NOTHING
             RETURNING id
             """,
@@ -246,7 +258,9 @@ def stellenanzeige_speichern(datenbank_url, daten):
                 geprueft["titel"],
                 geprueft["firma"],
                 geprueft["arbeitsort"],
-                geprueft["adresse"],
+                geprueft["inseratadresse_strasse"],
+                geprueft["inseratadresse_postleitzahl"],
+                geprueft["inseratadresse_ort"],
                 geprueft["pensum"],
                 geprueft["stellenbeschreibung"],
             ),
