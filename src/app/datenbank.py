@@ -8,6 +8,9 @@ PostgreSQL-Anbindung ergänzt; Verbindungsadresse aus DATABASE_URL. (LS)
 
 Version 03  20.10.2026:
 Tabellenaufbau, Eingabeprüfung und Speicherung ergänzt. (LS)
+
+Version 04  21.10.2026:
+wohnadresse_lesen() für die Arbeitswegberechnung ergänzt (US 30004). (FH)
 """
 
 import psycopg
@@ -120,6 +123,41 @@ def aktuelle_benutzer_id():
     # Später kann hier der angemeldete Benutzer bestimmt werden.
     # Die ID übernehmen wir nicht aus den Formulareingaben.
     return 1
+
+
+# ==================================================
+# Wohnadresse des aktuellen Benutzers lesen (FH)
+# ==================================================
+# Die Arbeitswegberechnung braucht einen Startpunkt. Die Arbeitsadresse
+# kommt beim Speichern aus dem Formular, die Wohnadresse aber nicht:
+# Sie steht nur beim Benutzer in der Datenbank und wird hier geholt.
+def wohnadresse_lesen(datenbank_url):
+    """Liefert die Wohnadresse des aktuellen Benutzers in drei Teilen.
+
+    Gibt None zurück, wenn kein Benutzer gefunden wird.
+    """
+    with verbindung_oeffnen(datenbank_url) as verbindung:
+        ergebnis = verbindung.execute(
+            """
+            SELECT wohnadresse_strasse, wohnadresse_postleitzahl, wohnadresse_ort
+            FROM benutzer
+            WHERE id = %s
+            """,
+            (aktuelle_benutzer_id(),),
+        ).fetchone()
+
+    # fetchone() liefert None, wenn keine Zeile passt. Ohne diese Prüfung
+    # würde ergebnis[0] mit einem schwer verständlichen Fehler abbrechen.
+    if ergebnis is None:
+        return None
+
+    # Ein Dictionary mit Namen ist leichter lesbar als ergebnis[0] bis [2]:
+    # Später steht im Code wohnadresse["ort"] statt wohnadresse[2].
+    return {
+        "strasse": ergebnis[0],
+        "postleitzahl": ergebnis[1],
+        "ort": ergebnis[2],
+    }
 
 
 # ==================================================

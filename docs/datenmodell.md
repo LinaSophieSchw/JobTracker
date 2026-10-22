@@ -72,11 +72,13 @@ erDiagram
 | `erstellt_am` | Zeitstempel | ja | vom Backend | Regel Z1 |
 | `geaendert_am` | Zeitstempel | ja | vom Backend | Regel Z1 |
 
-**Version 1:** höchstens ein Datensatz mit `id` 1. Er entsteht beim ersten
-Speichern des Profils, nicht beim Anlegen der Tabellen. Solange er fehlt,
-können keine Stellen gespeichert werden (Regel B2).
-Für die öffentliche Instanz eine öffentliche Adresse verwenden (Vorschlag:
-Bundesplatz 3, 3005 Bern). Es gibt keine Funktion zum Löschen von Benutzern
+**Version 1:** genau ein Datensatz mit `id` 1, der Demo-Benutzer. Er wird
+beim Anlegen der Tabellen automatisch mit Name und Wohnadresse eingefügt
+(«Demo-Benutzer», Bundesplatz 3, 3005 Bern); wiederholtes Anlegen ändert ihn
+nicht (Regel B2). Es gibt keine Maske, um Name oder Wohnadresse zu erfassen
+oder zu ändern ([US 30004](Use_cases/Use_Case_3/30004-demo-benutzer-fest-hinterlegen.md)).
+Die Adresse ist öffentlich und hat keinen Bezug zu realen Personen. Es gibt
+keine Funktion zum Löschen von Benutzern
 ([ADR 0003](decisions/0003-benutzer-ohne-login.md)).
 
 ## 4 Tabelle `stellenanzeigen`
@@ -147,7 +149,7 @@ ERLAUBTE_STATUS = (
 | A1 | **Adressen** (`inseratadresse_*`, `wohnadresse_*`) bestehen aus drei Feldern: Strasse mit Hausnummer (z.B. «Bahnhofstrasse 12»), Postleitzahl und Ort. Es gibt keine Pflicht-, Format- oder Plausibilitätsprüfung; nur die Maximallänge gilt (Regel S3). Version 1 kennt nur Schweizer Adressen ([ADR 0009](decisions/0009-adresse-in-drei-feldern.md)). |
 | Z1 | **Zeitstempel** setzt nur das Backend, in UTC. `erstellt_am` beim Anlegen, `geaendert_am` bei jeder Änderung, auch bei einer reinen Statusänderung. |
 | B1 | **Benutzerbezug.** Jede Abfrage und Änderung auf `stellenanzeigen` filtert über `benutzer_id = aktuelle_benutzer_id()`. Die Funktion liefert in Version 1 immer 1. Eine Stellenanzeige eines anderen Benutzers verhält sich wie nicht vorhanden ([ADR 0003](decisions/0003-benutzer-ohne-login.md)). |
-| B2 | **Profil zuerst.** Eine Stellenanzeige kann erst gespeichert werden, wenn der Datensatz in `benutzer` existiert, also das Profil einmal gespeichert wurde. Fehlt er, lehnt das Backend das Speichern ab; der Fremdschlüssel `benutzer_id` sichert das zusätzlich ab. Die Oberfläche sperrt «+ Neue Stelle» ([ADR 0010](decisions/0010-minimale-oberflaeche.md)). |
+| B2 | **Demo-Benutzer fest hinterlegt.** `tabellen_erstellen()` fügt den Datensatz mit `id` 1 samt Wohnadresse ein, falls er fehlt. Stellen können deshalb sofort gespeichert werden; vorher muss kein Profil erfasst werden. Der Fremdschlüssel `benutzer_id` stellt sicher, dass jede Stelle zu einem vorhandenen Benutzer gehört ([US 30004](Use_cases/Use_Case_3/30004-demo-benutzer-fest-hinterlegen.md)). |
 | U1 | **Nicht änderbar** nach dem Anlegen: `id`, `benutzer_id`, `url`, `erstellt_am`. Fahrzeit und Strecke setzt nur das Backend. |
 
 ## 7 Typen in SQLite und PostgreSQL

@@ -14,21 +14,22 @@ Nach den Stories 30001 und 30002 den vollständigen Ablauf auch beim erneuten Sp
 
 Gemeinsame Festlegungen für diesen Slice:
 
-- Wohnadresse und Arbeitsadresse werden jeweils über drei getrennte Textfelder erfasst: **Strasse mit Hausnummer, Postleitzahl und Ort** ([ADR 0009](../../decisions/0009-adresse-in-drei-feldern.md)).
+- Wohnadresse und Arbeitsadresse bestehen jeweils aus drei Feldern: **Strasse mit Hausnummer, Postleitzahl und Ort** ([ADR 0009](../../decisions/0009-adresse-in-drei-feldern.md)). Die Wohnadresse ist beim Demo-Benutzer fest im System hinterlegt ([US 30004](30004-demo-benutzer-fest-hinterlegen.md)); die Arbeitsadresse wird über drei Textfelder erfasst.
+- **Es gibt keine Maske zur Erfassung des Nutzers.** Alle Stellen gehören zum fest hinterlegten Demo-Benutzer.
 - Die Felder für Arbeitsadresse und Arbeitsweg gehören zum Stellen-Formular von **Use Case 1**. Use Case 3 berechnet nur die Werte des Arbeitswegs.
 - Es werden **keine Eingabevalidierungen** vorgenommen: keine Pflichtfeld-, Format-, Längen- oder Plausibilitätsprüfungen.
 - **Die Umsetzung einer Funktion zum Bearbeiten gespeicherter Adressen gehört zu einem anderen Use-Case.** Bei jedem Speichern eines Inserats verwendet die Berechnung die für diesen Speichervorgang aktuellen Adressen, auch wenn diese über eine anderweitig umgesetzte Bearbeitungsfunktion geändert wurden.
 - **Schweiz ist fest vorgegeben.** Es gibt keine Länderauswahl; die Adresssuche wird auf die Schweiz beschränkt.
 - Berechnet werden Strecke und geschätzte Fahrzeit für den **einfachen Hinweg mit dem Auto**, ohne Live-Verkehrsdaten.
 - Die Anwendung verwendet **OpenRouteService** zur Adresssuche und Routenberechnung ([ADR 0008](../../decisions/0008-arbeitsweg-mit-openrouteservice.md)).
-- Berechnungen werden ausschliesslich durch den Klick auf **«Speichern» im Inseratsformular** ausgelöst. Eingaben, Profil-Speichern und das Öffnen einer Stelle lösen keine Berechnung aus.
+- Berechnungen werden ausschliesslich durch den Klick auf **«Speichern» im Inseratsformular** ausgelöst. Eingaben und das Öffnen einer Stelle lösen keine Berechnung aus.
 - Scheitert die Arbeitswegberechnung, verhindert dies nicht das Speichern des Inserats. Es erscheint ausschliesslich: **«Arbeitsweg konnte nicht berechnet werden.»**
-- Im Studienprojekt werden erfundene Nutzerprofile mit existierenden Beispieladressen ohne Bezug zu realen Personen verwendet.
+- Im Studienprojekt wird für den Demo-Benutzer eine öffentliche Beispieladresse ohne Bezug zu realen Personen verwendet.
 
 ## Ablauf
 
 1. Der Nutzer öffnet eine bestehende Stelle und klickt auf «Speichern».
-2. Das Backend verwendet die aktuell hinterlegte Wohnadresse und die für den Speichervorgang aktuelle Arbeitsadresse. Diese kann aus einer in einem anderen Use-Case umgesetzten Bearbeitungsfunktion stammen.
+2. Das Backend verwendet die fest hinterlegte Wohnadresse des Demo-Benutzers und die für den Speichervorgang aktuelle Arbeitsadresse. Diese kann aus einer in einem anderen Use-Case umgesetzten Bearbeitungsfunktion stammen.
 3. Es führt dieselbe Arbeitswegberechnung wie beim erstmaligen Speichern aus.
 4. Bei Erfolg ersetzt es die gespeicherten Ergebniswerte und zeigt sie an.
 5. Bei einem Berechnungsfehler leert es beide Ergebniswerte und zeigt den allgemeinen Hinweis; das Inserat bleibt speicherbar.
@@ -58,7 +59,8 @@ Gemeinsame Festlegungen für diesen Slice:
 - Umsetzung einer Funktion zum Ändern oder Ergänzen gespeicherter Adressen.
 - Aufbau einer allgemeinen Inseratsbearbeitung.
 - Automatische Wiederholung ohne erneuten Klick auf «Speichern».
-- Eingabevalidierungen in Profil- und Inseratsformularen.
+- Eingabevalidierungen im Inseratsformular.
+- Maske zur Erfassung des Nutzers oder zum Ändern der Wohnadresse.
 - Umsetzung einer Funktion zum Ändern, Korrigieren oder nachträglichen Ergänzen gespeicherter Adressangaben; dies gehört zu einem anderen Use-Case.
 - Vergleichsfunktion, Karten, Navigation, andere Verkehrsmittel, Rückweg und Live-Verkehrsdaten.
 - Berechnungen während der Eingabe und regelmässige Aktualisierung im Hintergrund.
