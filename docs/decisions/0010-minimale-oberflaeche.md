@@ -12,6 +12,12 @@ hinterlegt, «+ Neue Stelle» ist deshalb nie gesperrt
 ([US 30004](../Use_cases/Use_Case_3/30004-demo-benutzer-fest-hinterlegen.md)).
 Die betroffenen Punkte unten sind angepasst.
 
+Geändert am 24.10.2026 (Mirko, US 20001): Nach dem Speichern bleibt das
+Formular offen, damit Arbeitsweg oder Hinweis sichtbar sind
+([US 30006](../Use_cases/Use_Case_3/30006-arbeitsweg-im-formular-anzeigen.md)).
+Zur Übersicht führt «← Zurück zur Übersicht». Der betroffene Punkt unten ist
+angepasst.
+
 ## Kontext
 
 Die Use Cases standen bisher einzeln nebeneinander. Um zu sehen, welche
@@ -45,8 +51,8 @@ Option 2, vorgeschlagen von Fabio:
 - **Der Benutzer ist fest hinterlegt.** Name und Wohnadresse des
   Demo-Benutzers stehen im Code und werden beim Anlegen der Tabellen
   eingefügt. «+ Neue Stelle» ist immer aktiv.
-- **Keine Hinweis- oder Erfolgsmeldungen.** Nach dem Speichern erscheint
-  einfach die Übersicht.
+- **Keine Hinweis- oder Erfolgsmeldungen.** Nach dem Speichern bleibt das
+  Formular offen; «← Zurück zur Übersicht» führt zur Übersicht.
 - **Fehlermeldungen nur, wo Use Case 1 und das Datenmodell sie verlangen**, je
   ein kurzer Satz. Den Wortlaut legt die Person fest, die Use Case 1 umsetzt.
   Fest vorgegeben ist nur die Meldung aus Use Case 3.

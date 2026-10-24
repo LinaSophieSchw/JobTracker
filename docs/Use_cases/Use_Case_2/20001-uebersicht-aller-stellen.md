@@ -31,7 +31,12 @@ Gemeinsame Festlegungen für diesen Slice:
   Kilometern und Fahrzeit in Minuten. Sind sie leer, bleibt die Zelle leer.
   Die Übersicht löst keine Berechnung aus.
 - Die Schaltfläche **«+ Neue Stelle»** öffnet das bestehende Stellen-Formular
-  aus Use Case 1.
+  aus Use Case 1. **«← Zurück zur Übersicht»** im Formular führt zurück und
+  lädt die Übersicht neu.
+- Nach dem Speichern bleibt das Formular offen, damit Arbeitsweg oder Hinweis
+  sichtbar bleiben ([US 30006](../Use_Case_3/30006-arbeitsweg-im-formular-anzeigen.md)).
+  Entschieden am 24.10.2026 (Mirko); ersetzt den ursprünglichen Plan, nach dem
+  Speichern direkt zur Übersicht zu wechseln.
 - Ist noch keine Stelle gespeichert, bleibt die Liste leer. Es erscheint keine
   zusätzliche Meldung.
 
@@ -57,8 +62,8 @@ Gemeinsame Festlegungen für diesen Slice:
       bleibt die Zelle leer.
 - [ ] Ohne gespeicherte Stellen liefert das Backend eine leere Liste, und die
       Übersicht zeigt keine Zeilen.
-- [ ] Eine neu gespeicherte Stelle erscheint nach dem Speichern oben in der
-      Übersicht.
+- [ ] Eine neu gespeicherte Stelle erscheint nach «← Zurück zur Übersicht»
+      oben in der Übersicht.
 - [ ] «+ Neue Stelle» öffnet das Stellen-Formular.
 - [ ] Das Laden der Übersicht ändert keine Daten und löst keine
       Arbeitswegberechnung aus.
@@ -76,8 +81,8 @@ Gemeinsame Festlegungen für diesen Slice:
    und Firma.
 5. **Frontend:** Die übrigen Spalten ergänzen, mit Anzeigetext für den Status
    und Kilometern für die Strecke.
-6. **Frontend:** Übersicht als Startseite einrichten und «+ Neue Stelle» mit
-   dem Formular verbinden. Nach dem Speichern erscheint wieder die Übersicht.
+6. **Frontend:** Übersicht als Startseite einrichten, «+ Neue Stelle» mit dem
+   Formular verbinden und «← Zurück zur Übersicht» ergänzen.
 
 ## Noch nicht enthalten
 
