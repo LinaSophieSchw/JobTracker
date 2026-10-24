@@ -257,9 +257,9 @@ Browser angezeigt («Fahrzeit mit dem Auto: 95 Minuten, Strecke: 138.3 km»).
   `fahrzeit_speichern()`) in `src/app/datenbank.py`, `arbeitsweg_eintragen()`
   und die Antwort der Speicherroute in `src/app/stellenanzeigen_routes.py`,
   Anzeige in `public/index.html`.
-- Tests: ein neuer Test für die Umrechnung und die einzige Routenabfrage, drei
-  angepasste Tests in `tests/test_arbeitsweg.py`, ein angepasster Test von
-  Lina in `tests/test_stellenanzeige_speichern.py`.
+- Tests: drei angepasste Tests in `tests/test_arbeitsweg.py` (der Test der
+  Speicherroute prüft auch Umrechnung und einzige Routenabfrage), ein
+  angepasster Test von Lina in `tests/test_stellenanzeige_speichern.py`.
 - Doku: Befund in der Story,
   [Spickzettel](../../Use_cases/Use_Case_3/30002-spickzettel.md), Hinweis im
   Spickzettel von US 30001, Stand in der Übersicht von Use Case 3.
@@ -277,7 +277,7 @@ umbenannt, weil sie nicht mehr nur die Fahrzeit liefern.
 **Welche Auswirkungen hat das?**
 Strecke und Fahrzeit werden zusammen berechnet, in einem `UPDATE`
 gespeichert und angezeigt; scheitert die Berechnung, bleiben beide leer.
-40 Tests laufen durch. Eine echte Abfrage Bern–Zug ergab 95 Minuten und
+39 Tests laufen durch. Eine echte Abfrage Bern–Zug ergab 95 Minuten und
 138268 Meter. Die Anzeige wurde im Browser mit simulierten Serverantworten
 (Erfolg und Fehler) geprüft; ein Durchlauf gegen Neon fand diesmal nicht
 statt. Offen:
@@ -294,7 +294,12 @@ Tests und Doku; mit einem Mock prüfen, wie oft eine Funktion aufgerufen wurde
 
 **Eigenleistung und KI-Unterstützung**
 Fabio gab den Plan mit den Entscheiden (Meter speichern, Kilometer anzeigen,
-Dictionary) frei und erlaubte die Anpassung an Linas Test. Der Agent schrieb
+Dictionary) frei und erlaubte die Anpassung an Linas Test. Danach wünschte er
+möglichst schlanken Code, weil er jede Codestelle erklären können muss, und
+wählte aus vier Vorschlägen zwei aus: `raise_for_status()` entfernen und den
+eigenen Umrechnungstest in den Test der Speicherroute einbauen. Das Einbauen
+von `route_abfragen()` in die Hauptfunktion wollte er zuerst im Vergleich
+sehen. Er verzichtete auf ein Review durch Lina. Der Agent schrieb
 Code, Tests und Doku, prüfte die Anzeige im Browser mit simulierten Antworten
 und machte eine echte Abfrage beim Kartendienst.
 

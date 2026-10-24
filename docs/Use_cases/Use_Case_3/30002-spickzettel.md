@@ -63,7 +63,7 @@ haben sie neue Namen bekommen.
 | `src/app/datenbank.py` | `arbeitsweg_speichern()` schreibt beide Spalten |
 | `src/app/stellenanzeigen_routes.py` | Imports, `arbeitsweg_eintragen()`, Antwort der Route |
 | `public/index.html` | Kilometer an die Meldung anhängen |
-| `tests/test_arbeitsweg.py` | 1 neuer Test, 3 angepasste |
+| `tests/test_arbeitsweg.py` | 3 angepasste Tests |
 | `tests/test_stellenanzeige_speichern.py` | 1 angepasster Test von Lina |
 
 Die Datenbank musste **nicht** geändert werden: Die Spalte
@@ -73,7 +73,7 @@ Die Datenbank musste **nicht** geändert werden: Die Spalte
 
 ## 1. Route abfragen: die ganze Zusammenfassung zurückgeben
 
-[`src/app/arbeitsweg.py`, Zeilen 117–144](../../../src/app/arbeitsweg.py#L117-L144)
+[`src/app/arbeitsweg.py`, Zeilen 119–143](../../../src/app/arbeitsweg.py#L119-L143)
 
 **Wozu:** Fragt den Kartendienst nach der Autoroute von A nach B. Neu gibt sie
 nicht nur die Sekunden zurück, sondern die ganze Zusammenfassung mit Dauer
@@ -88,26 +88,29 @@ def route_abfragen(start, ziel, api_schluessel):              # ← neu (Name)
         timeout=ZEITLIMIT_IN_SEKUNDEN,
     )
 
-    antwort.raise_for_status()
-
     return antwort.json()["routes"][0]["summary"]              # ← neu
 ```
 
 **Der Reihe nach:**
 1. `requests.post(...)` → schickt die zwei Punkte an den Kartendienst, wie
    bisher.
-2. `antwort.raise_for_status()` → bricht ab, wenn der Dienst einen Fehler
-   meldet, wie bisher.
-3. `return antwort.json()["routes"][0]["summary"]` → **neu:** Vorher stand am
+2. `return antwort.json()["routes"][0]["summary"]` → **neu:** Vorher stand am
    Schluss noch `["duration"]`. Jetzt hören wir eine Stufe früher auf und
    geben das ganze Dictionary zurück: `{"distance": 138267.6, "duration": 5682.0}`.
 
 *Warum:* So bekommen wir beide Werte aus **einer** Anfrage. Die Story schliesst
 eine zusätzliche Abfrage nur für die Strecke ausdrücklich aus.
 
+*Kein `raise_for_status()` mehr:* Früher stand vor dem `return` noch
+`antwort.raise_for_status()`, auch in `koordinaten_suchen()`. Es ist
+weggefallen, weil es nichts mehr beiträgt. Meldet der Dienst einen Fehler
+(falscher Schlüssel, keine Route), schickt er `{"error": ...}`. Dann fehlt
+`routes` bzw. `features`, die Funktion bricht ab, und das `except` in
+`arbeitsweg_berechnen()` fängt es auf. Das Ergebnis ist dasselbe.
+
 ## 2. Hauptfunktion: beide Werte umrechnen
 
-[`src/app/arbeitsweg.py`, Zeilen 151–189](../../../src/app/arbeitsweg.py#L151-L189)
+[`src/app/arbeitsweg.py`, Zeilen 150–188](../../../src/app/arbeitsweg.py#L150-L188)
 
 **Wozu:** Setzt Adresssuche und Routenabfrage zusammen. Neu gibt sie ein
 Dictionary mit beiden Werten zurück statt nur der Minuten.
@@ -298,13 +301,9 @@ if (daten.fahrzeit_auto_in_minuten === null) {
 
 | Test | Prüft |
 |---|---|
-| `test_fahrzeit_und_strecke_werden_aus_einer_antwort_umgerechnet` | **neu:** 5682 s → 95 Minuten, 138267.6 m → 138268 Meter, und es gibt nur **eine** Routenabfrage |
 | `test_treffer_mit_nur_einem_ort_ergibt_keine_fahrzeit` | angepasst: bei nur einem Ort sind **beide** Werte leer |
-| `test_speicherroute_liefert_und_speichert_den_arbeitsweg` | angepasst: Route speichert beide Werte und schickt beide an den Browser |
+| `test_speicherroute_liefert_und_speichert_den_arbeitsweg` | angepasst: 5682 s → 95 Minuten, 138267.6 m → 138268 Meter, Route speichert beide Werte, schickt beide an den Browser, und es gibt nur **eine** Routenabfrage (`routenberechnung.assert_called_once()`) |
 | `test_gescheiterte_berechnung_verhindert_das_speichern_nicht` | angepasst: bei Zeitlimit bleiben **beide** leer, Stelle trotzdem gespeichert (201) |
-
-Neue Hilfsfunktion `adresssuche_bern_zug()`: Attrappe der Adresssuche, die
-zuerst Bern und dann Zug liefert. Zwei Tests brauchen genau das.
 
 `routenantwort()` nimmt jetzt neben der Dauer auch die Strecke entgegen.
 
@@ -324,5 +323,5 @@ den genauen Wert noch.
 
 **«Macht ihr für die Strecke eine zweite Anfrage an den Kartendienst?»**
 Nein. Die Routenantwort enthält Dauer und Strecke zusammen in `summary`. Wir
-lesen einfach beide aus. Ein Test prüft, dass es bei einer Berechnung genau
-eine Routenabfrage gibt.
+lesen einfach beide aus. Der Test der Speicherroute prüft, dass es bei einer
+Berechnung genau eine Routenabfrage gibt.
