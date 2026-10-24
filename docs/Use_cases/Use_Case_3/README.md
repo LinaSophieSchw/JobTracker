@@ -1,6 +1,6 @@
 # Use Case 3 – Arbeitsweg berechnen und anzeigen
 
-Stand: 2026-10-21
+Stand: 2026-10-24
 
 **Status:** Inhaltlich abgestimmt
 
@@ -17,8 +17,8 @@ Umsetzung einer Vergleichsfunktion gehört nicht zu diesem Use Case.
 
 | Reihenfolge | User Story | Stand |
 |---|---|---|
-| 1 | [US 30004 – Demo-Benutzer mit Wohnadresse fest im System hinterlegen](30004-demo-benutzer-fest-hinterlegen.md) | Geplant |
-| 2 | [US 30001 – Fahrzeit beim erstmaligen Speichern sehen](30001-fahrzeit-beim-ersten-speichern.md) | Geplant |
+| 1 | [US 30004 – Demo-Benutzer mit Wohnadresse fest im System hinterlegen](30004-demo-benutzer-fest-hinterlegen.md) | Umgesetzt (PR #17) |
+| 2 | [US 30001 – Fahrzeit beim erstmaligen Speichern sehen](30001-fahrzeit-beim-ersten-speichern.md) | Umgesetzt |
 | 3 | [US 30002 – Zusätzlich die Streckenlänge sehen](30002-streckenlaenge-ergaenzen.md) | Geplant |
 | 4 | [US 30003 – Arbeitsweg beim erneuten Speichern neu berechnen](30003-arbeitsweg-beim-erneuten-speichern.md) | Geplant |
 

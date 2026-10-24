@@ -4,7 +4,8 @@ Datum: 2026-10-20
 
 ## Status
 
-Angenommen. Ersetzt [ADR 0002](0002-externe-web-api.md).
+Angenommen. Ersetzt [ADR 0002](0002-externe-web-api.md). Die Adresssuche
+wird durch [ADR 0011](0011-strukturierte-adresssuche.md) präzisiert.
 
 ## Kontext
 
@@ -52,7 +53,8 @@ ergänzen.*
   `strecke_auto_in_metern` (siehe [Datenmodell](../datenmodell.md)). Die
   Oberfläche zeigt Minuten und Kilometer.
 - Laut Dokumentation liefert die Route die Strecke in Metern und die Dauer in
-  Sekunden. Das ist vor der Umsetzung mit einer echten Antwort zu prüfen.
+  Sekunden. Mit einer echten Antwort bestätigt am 22.10.2026 (Bern–Zug:
+  5682 Sekunden, 138 268 Meter).
 - Der API-Schlüssel bleibt serverseitig in einer Umgebungsvariable, nie in Git.
   Netzwerkaufrufe erhalten ein Zeitlimit.
 - Automatische Tests verwenden simulierte Antworten statt Live-Abfragen.

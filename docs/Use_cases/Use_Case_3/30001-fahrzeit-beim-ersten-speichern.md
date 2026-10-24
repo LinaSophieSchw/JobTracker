@@ -1,8 +1,10 @@
 # US 30001 – Fahrzeit beim erstmaligen Speichern einer Stelle sehen
 
-Status: Geplant
+Status: Umgesetzt (Branch `feature/30001-fahrzeit`)
 
-Datum: 2026-10-20
+Datum: 2026-10-20, umgesetzt 2026-10-24
+
+Spickzettel zur Umsetzung: [30001-spickzettel.md](30001-spickzettel.md)
 
 ## User Story
 
@@ -30,22 +32,22 @@ Gemeinsame Festlegungen für diesen Slice:
 
 1. Der Nutzer klickt bei einer neuen Stelle auf «Speichern».
 2. Das Backend verwendet die fest hinterlegte Wohnadresse des Demo-Benutzers und die erstmalig erfasste Arbeitsadresse.
-3. Es führt die Bestandteile je Adresse für die auf die Schweiz begrenzte Adresssuche zusammen und ermittelt die Koordinaten.
+3. Es übergibt die drei Bestandteile je Adresse getrennt an die auf die Schweiz begrenzte Adresssuche und ermittelt die Koordinaten ([ADR 0011](../../decisions/0011-strukturierte-adresssuche.md)).
 4. Es lässt die Autofahrzeit für den einfachen Hinweg berechnen.
 5. Bei Erfolg wird die Fahrzeit bei der Stelle gespeichert und in Minuten angezeigt.
 6. Scheitert die Berechnung, bleibt die Stelle speicherbar; die Fahrzeit bleibt leer und der allgemeine Hinweis erscheint.
 
 ## Akzeptanzkriterien
 
-- [ ] Der Klick auf «Speichern» bei einem neuen Inserat löst die Berechnung aus.
-- [ ] Die Anwendung verwendet die fest hinterlegte Wohnadresse des Demo-Benutzers und die erstmalig erfasste Arbeitsadresse.
-- [ ] Die Adressbestandteile werden für die Adresssuche zusammengeführt. Beide Adressen werden mit auf die Schweiz begrenzter Suche in Koordinaten umgewandelt.
-- [ ] Die Anwendung lässt die geschätzte Autofahrzeit für den einfachen Hinweg berechnen.
-- [ ] Die Fahrzeit wird dauerhaft bei der Stelle in der Datenbank gespeichert und in Minuten angezeigt.
-- [ ] Nach erneutem Öffnen wird die gespeicherte Fahrzeit angezeigt, ohne eine neue Berechnung auszulösen.
-- [ ] Kann keine verwendbare Adresse oder Route ermittelt werden oder scheitert die Anfrage, bleibt das Inserat speicherbar. Die Fahrzeit bleibt leer und der vereinbarte allgemeine Hinweis erscheint.
-- [ ] Technische Fehlerursachen werden nicht angezeigt.
-- [ ] Es werden keine Eingabevalidierungen und keine Funktionen zur Bearbeitung gespeicherter Adressen ergänzt.
+- [x] Der Klick auf «Speichern» bei einem neuen Inserat löst die Berechnung aus.
+- [x] Die Anwendung verwendet die fest hinterlegte Wohnadresse des Demo-Benutzers und die erstmalig erfasste Arbeitsadresse.
+- [x] Die Adressbestandteile werden getrennt an die strukturierte Adresssuche übergeben ([ADR 0011](../../decisions/0011-strukturierte-adresssuche.md)). Beide Adressen werden mit auf die Schweiz begrenzter Suche in Koordinaten umgewandelt.
+- [x] Die Anwendung lässt die geschätzte Autofahrzeit für den einfachen Hinweg berechnen.
+- [x] Die Fahrzeit wird dauerhaft bei der Stelle in der Datenbank gespeichert und in Minuten angezeigt.
+- [ ] Nach erneutem Öffnen wird die gespeicherte Fahrzeit angezeigt, ohne eine neue Berechnung auszulösen. *Teilweise:* Die Fahrzeit steht dauerhaft in `fahrzeit_auto_in_minuten`. Eine Ansicht zum Öffnen einer Stelle gibt es noch nicht; sie gehört zur Detailansicht von Use Case 2, die diese Spalte nur mitlesen muss.
+- [x] Kann keine verwendbare Adresse oder Route ermittelt werden oder scheitert die Anfrage, bleibt das Inserat speicherbar. Die Fahrzeit bleibt leer und der vereinbarte allgemeine Hinweis erscheint.
+- [x] Technische Fehlerursachen werden nicht angezeigt.
+- [x] Es werden keine Eingabevalidierungen und keine Funktionen zur Bearbeitung gespeicherter Adressen ergänzt.
 
 ## Schrittweise Umsetzung
 
@@ -68,4 +70,18 @@ Gemeinsame Festlegungen für diesen Slice:
 
 ## Technische Prüfung vor der Umsetzung
 
-Die Dokumentation bestätigt Freitext-Adresssuche, Länderfilter und Autorouting. Ein authentifizierter Test mit den vorgesehenen Schweizer Beispieladressen steht noch aus. Vor der Umsetzung API-Zugang, Ergebnisstruktur, Zeiteinheit sowie den Umgang mit ungeeigneten Adresstreffern prüfen. Ein bloss zurückgegebener Ort genügt nicht als konkrete Adresse. Der API-Schlüssel bleibt serverseitig; Netzwerkaufrufe erhalten ein Zeitlimit. Automatische Tests verwenden simulierte Antworten statt Live-Abfragen. Die Prüfung der API-Ergebnisse ist keine Eingabevalidierung der Formulare.
+Die Dokumentation bestätigt Freitext-Adresssuche, Länderfilter und Autorouting. Vor der Umsetzung API-Zugang, Ergebnisstruktur, Zeiteinheit sowie den Umgang mit ungeeigneten Adresstreffern prüfen. Ein bloss zurückgegebener Ort genügt nicht als konkrete Adresse. Der API-Schlüssel bleibt serverseitig; Netzwerkaufrufe erhalten ein Zeitlimit. Automatische Tests verwenden simulierte Antworten statt Live-Abfragen. Die Prüfung der API-Ergebnisse ist keine Eingabevalidierung der Formulare.
+
+### Befund vom 22.10.2026
+
+Geprüft mit öffentlichen Beispieladressen (Bundesplatz 3 Bern, Bahnhofstrasse 12 Zug, Suurstoffi 1 Rotkreuz):
+
+| Frage | Befund |
+|---|---|
+| API-Zugang | Funktioniert. Der Schlüssel geht im Header `Authorization` mit, nicht in der URL. Ein falscher Schlüssel ergibt Statuscode 403. |
+| Ergebnisstruktur Adresssuche | GeoJSON: `features[0].geometry.coordinates` = `[Längengrad, Breitengrad]`, `features[0].properties.layer` = Art des Treffers. |
+| Ergebnisstruktur Route | `routes[0].summary` mit `duration` und `distance`, z. B. Bern–Zug `{'distance': 138267.6, 'duration': 5682.0}`. |
+| Zeiteinheit | `duration` in Sekunden (5682 s ≈ 95 Min.), `distance` in Metern. |
+| Ungeeignete Treffer | «Luzern» allein ergibt `layer` `locality`. Nur `address` ist eine konkrete Adresse. Die Freitext-Suche fand für die erfundene Adresse «Gibtsnichtweg 999, 9999 Nirgendwo» eine Adresse in Chur; deshalb strukturierte Suche ([ADR 0011](../../decisions/0011-strukturierte-adresssuche.md)). |
+| Punkt ohne Strasse | Route antwortet mit Statuscode 404 (Code 2010). |
+| Gleiche Start- und Zieladresse | `duration` 0.0, also 0 Minuten, kein Fehler. |
