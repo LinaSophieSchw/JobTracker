@@ -19,6 +19,10 @@ Version 04 – 20.10.2026 (LS):
 Speicherbutton und JavaScript-Methode zur Übermittlung der Formularwerte
 an das Backend ergänzt. Ladezustand, Erfolgs- und Fehlermeldungen eingebaut.
 Während der Speicherung wird der Speicherbutton gesperrt.
+
+Version 05 – 24.10.2026 (FH):
+Nach dem Speichern erscheint die Fahrzeit mit dem Auto in Minuten oder der
+Hinweis «Arbeitsweg konnte nicht berechnet werden.» (US 30001).
 -->
 <html lang="de">
 
@@ -322,6 +326,16 @@ Während der Speicherung wird der Speicherbutton gesperrt.
                         // Erst nach erfolgreicher Antwort die Bestätigung anzeigen.
                         this.erfolgsmeldung =
                             `Stellenanzeige gespeichert (ID: ${daten.id}).`;
+
+                        // Fahrzeit oder Hinweis an die Bestätigung anhängen (FH).
+                        // Das Backend schickt null, wenn der Arbeitsweg nicht
+                        // berechnet werden konnte.
+                        if (daten.fahrzeit_auto_in_minuten === null) {
+                            this.erfolgsmeldung += " Arbeitsweg konnte nicht berechnet werden.";
+                        } else {
+                            this.erfolgsmeldung +=
+                                ` Fahrzeit mit dem Auto: ${daten.fahrzeit_auto_in_minuten} Minuten`;
+                        }
                         this.vorschau_vorhanden = false;
                     } catch (fehler) {
                         // Bei Fehlern bleibt das Formular mit deinen Eingaben sichtbar.

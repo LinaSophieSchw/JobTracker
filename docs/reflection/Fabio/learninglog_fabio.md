@@ -161,3 +161,84 @@ Tabelle umbauen?
 **Nächster Lernschritt**
 Für US 30001 einen API-Schlüssel bei OpenRouteService anlegen und eine erste
 Abfrage mit den Beispieladressen ausprobieren.
+
+## 2026-10-24 – US 30001 umgesetzt: Fahrzeit beim ersten Speichern
+
+**Was haben wir gemacht?**
+US 30001 wurde auf dem Branch `feature/30001-fahrzeit` als Vertical Slice
+umgesetzt (Arbeit vom 22. bis 24.10.2026). Beim Klick auf «Speichern» wird
+die Stelle gespeichert, danach die Autofahrzeit von der Wohnadresse des
+Demo-Benutzers zur Arbeitsadresse über OpenRouteService berechnet, in
+`fahrzeit_auto_in_minuten` eingetragen und im Browser angezeigt («Fahrzeit mit
+dem Auto: 95 Minuten» oder «Arbeitsweg konnte nicht berechnet werden.»).
+
+- Neu: `src/app/arbeitsweg.py` (`koordinaten_suchen()`,
+  `fahrzeit_in_sekunden_abfragen()`, `fahrzeit_berechnen()`),
+  `fahrzeit_speichern()` in `src/app/datenbank.py`,
+  `arbeitsweg_eintragen()` in `src/app/stellenanzeigen_routes.py`,
+  `tests/test_arbeitsweg.py` mit drei Tests.
+- Geändert in Linas Code: ein Aufruf in der Speicherroute, eine Stelle in
+  `public/index.html`, ein angepasster Test.
+- Doku: Befund der technischen Prüfung in der Story,
+  [ADR 0011](../../decisions/0011-strukturierte-adresssuche.md),
+  Nachtrag in ADR 0008,
+  [Spickzettel](../../Use_cases/Use_Case_3/30001-spickzettel.md).
+
+**Warum haben wir das gemacht?**
+Die Story verlangt die Fahrzeit beim ersten Speichern. Vor dem Programmieren
+wurde der Kartendienst mit öffentlichen Beispieladressen geprüft. Dabei zeigte
+sich, dass die Freitext-Suche eine erfundene Adresse als echte Adresse in Chur
+erkennt. Deshalb wurde auf die strukturierte Suche gewechselt und nur ein
+Treffer vom Typ `address` verwendet (ADR 0011). Zuerst speichern, dann
+rechnen: So bleibt die Stelle auch bei einem Berechnungsfehler gespeichert,
+und Linas Speicherfunktion musste nicht geändert werden.
+
+Nach der ersten Fassung liess Fabio den Code verschlanken, damit er jede
+Codestelle in der Präsentation erklären kann: Hilfsfunktionen, Testteil,
+Vorabprüfungen und ein Test fielen weg; Fehler werden mit einem einzigen
+`except Exception` aufgefangen.
+
+**Welche Auswirkungen hat das?**
+Die Fahrzeit wird beim Speichern berechnet, gespeichert und angezeigt.
+39 Tests laufen durch. Im Browser und gegen Neon wurde der Ablauf mit
+Teststellen geprüft; diese wurden danach gelöscht. Offen:
+- Anzeige beim erneuten Öffnen gehört zur Detailansicht von Use Case 2.
+- Der Schlüssel muss online in den Vercel-Einstellungen eingetragen werden.
+- Fällt die Datenbank genau zwischen Speichern und Eintragen aus, erscheint
+  ein Fehler, obwohl die Stelle gespeichert ist (bewusst in Kauf genommen).
+- Commit und Pull Request stehen noch aus.
+
+**Welche Konzepte wurden behandelt?**
+Externer Web Service mit API-Schlüssel; Geocoding (Adresse → Koordinaten);
+HTTP-Anfragen mit `requests.get` und `requests.post`; Parameter in der URL
+(`params`) und Header; Statuscodes (200, 403, 404) und `raise_for_status()`;
+Zeitlimit; JSON; Fehler auslösen und auffangen (`raise`, `try`/`except`);
+`None` in Python und `null` in JSON; `UPDATE` statt `INSERT`;
+Umgebungsvariablen und `.env`; Mocks und `monkeypatch` in Tests; Gegenprobe,
+ob Tests bei eingebauten Fehlern rot werden.
+
+**Eigenleistung und KI-Unterstützung**
+Fabio legte das OpenRouteService-Konto an und trug den Schlüssel selbst in die
+`.env` ein. Er mergte PR #17 und gab den Plan frei. Er übernahm die
+Empfehlungen zur strukturierten Suche und zum Umgang mit «erneut öffnen». Er
+strich drei geplante Tests, fragte nach, ob eine Adresse beim ersten Speichern
+sofort berechnet wird, und liess sich `antwort`, `raise_for_status()` und
+`params` erklären. Er legte fest, wie Erklärungen aussehen sollen (Zweck,
+Schritte in Reihenfolge mit Codestück, Warum, nicht zu detailliert) und dass
+sie auch als Kommentare in den Code gehören. Er bestimmte die Teamregel, Code
+anderer nur nach Absprache zu ändern, und gab an, dass die Änderungen an
+Linas Code mit ihr abgesprochen sind. Er wählte die neun Vereinfachungen und
+erlaubte Teststellen in Neon.
+
+Der Agent führte die technische Prüfung durch, schrieb Code, Tests und Doku,
+erklärte die Schritte, prüfte den Ablauf im Browser und gegen Neon und machte
+die Gegenprobe der Tests.
+
+**Persönliche Reflexion – von Fabio zu ergänzen**
+Welche Codestellen kann ich jetzt ohne Spickzettel erklären, und bei welchen
+brauche ich ihn noch?
+
+**Nächster Lernschritt**
+Änderungen mit dem Skill `end-coding` committen und als Pull Request
+eröffnen; mit Lina klären, dass die Detailansicht von Use Case 2 die Spalte
+`fahrzeit_auto_in_minuten` anzeigt.
