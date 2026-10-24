@@ -34,7 +34,8 @@ Speichern offen, damit die Werte sichtbar sind (US 30006, mit LS abgesprochen).
 
 Version 08 – 24.10.2026 (MG):
 Übersicht aller Stellen mit Titel, Firma, Arbeitsort, Status und Arbeitsweg
-ergänzt (US 20001).
+ergänzt (US 20001). Die Übersicht ist die Startseite; «+ Neue Stelle» öffnet
+das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesprochen).
 -->
 <html lang="de">
 
@@ -57,10 +58,22 @@ ergänzt (US 20001).
         <p>Backend: {{ backend_status }}</p>
         -->
 
-        <!-- Übersicht (MG): eine Tabellenzeile pro gespeicherter Stelle.
+        <!-- ========================================
+             Screen 1: Übersicht (MG)
+             ======================================== -->
+        <!-- v-if zeigt diesen Block nur, wenn «ansicht» den Wert
+             "uebersicht" hat. Sonst zeigt Vue den Block mit v-else weiter
+             unten. So gibt es zwei Screens in einer einzigen Datei (ADR 0010). -->
+        <div v-if="ansicht === 'uebersicht'">
+        <h2>Übersicht</h2>
+
+        <button type="button" @click="neue_stelle_oeffnen">+ Neue Stelle</button>
+
+        <p v-if="fehlermeldung">{{ fehlermeldung }}</p>
+
+        <!-- Eine Tabellenzeile pro gespeicherter Stelle.
              v-for wiederholt die Zeile <tr> für jede Stelle in der Liste
              «stellen». :key gibt Vue die id, damit es die Zeilen auseinanderhält. -->
-        <h2>Übersicht</h2>
         <table>
             <thead>
                 <tr>
@@ -81,6 +94,18 @@ ergänzt (US 20001).
                 </tr>
             </tbody>
         </table>
+        </div>
+
+        <!-- ========================================
+             Screen 2: Stellen-Formular
+             ======================================== -->
+        <div v-else>
+        <!-- Führt zurück zur Übersicht und lädt sie neu (MG). Das Formular
+             bleibt nach dem Speichern offen (US 30006); mit diesem Button
+             kehrt man danach selbst zurück. -->
+        <button type="button" @click="zur_uebersicht" :disabled="laedt || speichert">
+            ← Zurück zur Übersicht
+        </button>
 
         <h2>Stellenanzeige erfassen</h2>
 
@@ -224,6 +249,8 @@ ergänzt (US 20001).
                 Abbrechen
             </button>
         </div>
+        </div>
+        <!-- Ende Screen 2: Stellen-Formular -->
 
     </div>
 
@@ -291,6 +318,9 @@ ergänzt (US 20001).
                     // Übersicht (MG): alle gespeicherten Stellen vom Backend.
                     // Startet leer und wird beim Laden der Seite gefüllt.
                     stellen: [],
+                    // Welcher Screen sichtbar ist: "uebersicht" oder "formular".
+                    // Die Übersicht ist die Startseite (ADR 0010).
+                    ansicht: "uebersicht",
                 };
             },
             // Enthält die Funktionen, die unsere Oberfläche auslösen kann.
@@ -317,6 +347,25 @@ ergänzt (US 20001).
                     } catch (fehler) {
                         this.fehlermeldung = fehler.message;
                     }
+                },
+
+                // Wechselt von der Übersicht zum leeren Stellen-Formular (MG).
+                neue_stelle_oeffnen() {
+                    // Reste einer früheren Erfassung entfernen, damit das
+                    // Formular wirklich leer beginnt.
+                    this.stellenlink = "";
+                    this.vorschau_vorhanden = false;
+                    this.fehlermeldung = "";
+                    this.erfolgsmeldung = "";
+                    this.ansicht = "formular";
+                },
+
+                // Wechselt zurück zur Übersicht und lädt die Liste neu (MG).
+                zur_uebersicht() {
+                    this.fehlermeldung = "";
+                    this.ansicht = "uebersicht";
+                    // Neu laden, damit eine eben gespeicherte Stelle oben erscheint.
+                    this.stellen_laden();
                 },
 
                 // Liefert zum gespeicherten Status den Anzeigetext (MG).
