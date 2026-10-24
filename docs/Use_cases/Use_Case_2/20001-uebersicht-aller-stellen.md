@@ -1,6 +1,6 @@
 # US 20001 – Übersicht aller Stellen sehen
 
-Status: Geplant
+Status: Umgesetzt
 
 Datum: 2026-10-24
 
@@ -53,21 +53,21 @@ Gemeinsame Festlegungen für diesen Slice:
 
 ## Akzeptanzkriterien
 
-- [ ] Beim Öffnen der Anwendung erscheint die Übersicht.
-- [ ] `GET /api/stellenanzeigen` liefert alle Stellen des Demo-Benutzers als
+- [x] Beim Öffnen der Anwendung erscheint die Übersicht.
+- [x] `GET /api/stellenanzeigen` liefert alle Stellen des Demo-Benutzers als
       JSON-Liste, neueste zuerst.
-- [ ] Jede Zeile zeigt Titel, Firma, Arbeitsort, Status und Arbeitsweg.
-- [ ] Der Status erscheint mit dem Anzeigetext aus dem Datenmodell.
-- [ ] Der Arbeitsweg erscheint in Kilometern und Minuten; fehlen die Werte,
+- [x] Jede Zeile zeigt Titel, Firma, Arbeitsort, Status und Arbeitsweg.
+- [x] Der Status erscheint mit dem Anzeigetext aus dem Datenmodell.
+- [x] Der Arbeitsweg erscheint in Kilometern und Minuten; fehlen die Werte,
       bleibt die Zelle leer.
-- [ ] Ohne gespeicherte Stellen liefert das Backend eine leere Liste, und die
+- [x] Ohne gespeicherte Stellen liefert das Backend eine leere Liste, und die
       Übersicht zeigt keine Zeilen.
-- [ ] Eine neu gespeicherte Stelle erscheint nach «← Zurück zur Übersicht»
+- [x] Eine neu gespeicherte Stelle erscheint nach «← Zurück zur Übersicht»
       oben in der Übersicht.
-- [ ] «+ Neue Stelle» öffnet das Stellen-Formular.
-- [ ] Das Laden der Übersicht ändert keine Daten und löst keine
+- [x] «+ Neue Stelle» öffnet das Stellen-Formular.
+- [x] Das Laden der Übersicht ändert keine Daten und löst keine
       Arbeitswegberechnung aus.
-- [ ] Unittests prüfen die Route mit leerer und mit gefüllter Liste.
+- [x] Unittests prüfen die Route mit leerer und mit gefüllter Liste.
 
 ## Schrittweise Umsetzung
 

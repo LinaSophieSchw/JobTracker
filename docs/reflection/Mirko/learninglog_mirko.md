@@ -87,8 +87,10 @@ ausprobierbar, und das Backend wurde vor dem Frontend committet.
   US 30006 von Fabio, damit Arbeitsweg oder Hinweis sichtbar bleiben. US 20001
   und ADR 0010 wurden angepasst. Verworfen: direkt zur Übersicht wechseln, wie
   ursprünglich in ADR 0010 und der Story geplant.
-- Offen: Prüfung mit der echten Neon-Datenbank. Bisher nur mit Mock und
-  Beispieldaten geprüft, weil lokal die `.env` mit `DATABASE_URL` fehlt.
+- Prüfung mit der echten Neon-Datenbank zuerst offen, weil lokal die `.env`
+  mit `DATABASE_URL` fehlte. Nachgetragen am 24.10.2026: Mirko hat `.env`
+  angelegt und alle drei Prüfungen bestanden (Stellen erscheinen, neue Stelle
+  speichern, neue Stelle steht nach «← Zurück zur Übersicht» zuoberst).
 - Bemerkt, nicht geändert: ADR 0010 sagt «keine Erfolgsmeldungen», das
   Formular zeigt aber nach dem Speichern eine Bestätigung.
 
@@ -125,5 +127,5 @@ Offen: Was kann ich jetzt selbst erklären, und welcher Teil war am schwierigste
 zu verstehen?
 
 **Nächster Lernschritt**
-US 20001 mit der echten Datenbank prüfen und den Pull Request öffnen. Danach
-US 20002: Stelle aus der Übersicht öffnen.
+Review und Merge des Pull Requests. Danach US 20002: Stelle aus der Übersicht
+öffnen.
