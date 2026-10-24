@@ -8,9 +8,11 @@ Der Kartendienst rechnet aber nicht mit Adressen, sondern mit Punkten auf der
 Karte (Koordinaten). Deshalb arbeitet diese Datei in zwei Teilen:
 
     Wohnadresse     → koordinaten_suchen() → Punkt A ┐
-                                                      ├→ route_abfragen()
-    Arbeitsadresse  → koordinaten_suchen() → Punkt B ┘      → 95 Minuten
-                                                              138268 Meter
+                                                      ├→ Route abfragen
+    Arbeitsadresse  → koordinaten_suchen() → Punkt B ┘   → 95 Minuten
+                                                           138268 Meter
+
+Beides erledigt arbeitsweg_berechnen(); die Speicherroute ruft nur sie auf.
 
 Gehört zur Schicht «Backend». Der Browser spricht nie direkt mit
 OpenRouteService, damit der API-Schlüssel auf dem Server bleibt.
@@ -37,6 +39,10 @@ Version 06  24.10.2026:
 Vereinfacht: raise_for_status() entfernt. Fehlerantworten des Dienstes
 enthalten weder «features» noch «routes» und landen so ohnehin im except
 von arbeitsweg_berechnen(). (FH)
+
+Version 07  24.10.2026:
+Vereinfacht: route_abfragen() in arbeitsweg_berechnen() eingebaut, weil die
+Route nur an einer Stelle abgefragt wird. (FH)
 """
 
 # Werkzeug, mit dem Python Fragen ins Internet schicken kann.
@@ -113,38 +119,8 @@ def koordinaten_suchen(adresse, api_schluessel):
 
 
 # ==================================================
-# Teil 2: Route von Punkt A nach Punkt B abfragen
-# Beispiel: Bern → Zug = 5682 Sekunden und 138267.6 Meter
-# ==================================================
-def route_abfragen(start, ziel, api_schluessel):
-    """Fragt Fahrzeit und Strecke der Autoroute vom Start zum Ziel ab.
-
-    start und ziel sind Punkte auf der Karte [Längengrad, Breitengrad].
-    Gibt die Zusammenfassung der Route zurück, z. B.
-    {"duration": 5682.0, "distance": 138267.6}: Sekunden und Meter.
-    """
-    # 1. Die zwei Punkte an den Kartendienst schicken.
-    #    Nur zwei Punkte heisst: einfacher Hinweg, kein Rückweg.
-    #    post statt get, weil wir die Punkte im Inhalt der Anfrage
-    #    mitschicken müssen. So verlangt es der Dienst.
-    antwort = requests.post(
-        ROUTE_URL,
-        json={"coordinates": [start, ziel]},
-        headers={"Authorization": api_schluessel},
-        timeout=ZEITLIMIT_IN_SEKUNDEN,
-    )
-
-    # 2. Die Zusammenfassung der Route zurückgeben. Darin stehen beide Werte,
-    #    die wir brauchen: «duration» in Sekunden und «distance» in Metern.
-    #    Das hat die technische Prüfung bestätigt. Weil beide in derselben
-    #    Antwort stehen, braucht die Strecke keine zusätzliche Anfrage.
-    #    Findet der Dienst keine Route, z. B. weil ein Punkt mitten im See
-    #    liegt, fehlt «routes», und die Funktion bricht ab.
-    return antwort.json()["routes"][0]["summary"]
-
-
-# ==================================================
-# Hauptfunktion: setzt Teil 1 und Teil 2 zusammen
+# Teil 2 und Hauptfunktion: Route von Punkt A nach Punkt B abfragen
+# Beispiel: Bern → Zug = 95 Minuten und 138268 Meter
 # Die Speicherroute ruft nur diese eine Funktion auf.
 # ==================================================
 def arbeitsweg_berechnen(wohnadresse, arbeitsadresse, api_schluessel):
@@ -155,14 +131,31 @@ def arbeitsweg_berechnen(wohnadresse, arbeitsadresse, api_schluessel):
     {"fahrzeit_auto_in_minuten": 95, "strecke_auto_in_metern": 138268}.
     Scheitert die Berechnung, sind beide Werte None («leer»).
     """
-    # 1. try heisst: «Versuch Folgendes.» Darin die drei Arbeitsschritte:
+    # 1. try heisst: «Versuch Folgendes.» Darin die Arbeitsschritte:
     try:
         # Wohnadresse → Punkt A (Teil 1)
         start = koordinaten_suchen(wohnadresse, api_schluessel)
         # Arbeitsadresse → Punkt B (Teil 1)
         ziel = koordinaten_suchen(arbeitsadresse, api_schluessel)
-        # Fahrzeit und Strecke von A nach B (Teil 2)
-        route = route_abfragen(start, ziel, api_schluessel)
+
+        # Die zwei Punkte an den Kartendienst schicken.
+        # Nur zwei Punkte heisst: einfacher Hinweg, kein Rückweg.
+        # post statt get, weil wir die Punkte im Inhalt der Anfrage
+        # mitschicken müssen. So verlangt es der Dienst.
+        antwort = requests.post(
+            ROUTE_URL,
+            json={"coordinates": [start, ziel]},
+            headers={"Authorization": api_schluessel},
+            timeout=ZEITLIMIT_IN_SEKUNDEN,
+        )
+
+        # Die Zusammenfassung der Route holen, z. B.
+        # {"duration": 5682.0, "distance": 138267.6}: Sekunden und Meter.
+        # Fahrzeit und Strecke stehen in derselben Antwort, deshalb braucht
+        # die Strecke keine zusätzliche Anfrage. Findet der Dienst keine
+        # Route, z. B. weil ein Punkt mitten im See liegt, fehlt «routes»,
+        # und es geht direkt weiter zu except.
+        route = antwort.json()["routes"][0]["summary"]
 
     # 2. except fängt jeden Fehler auf, statt dass die App abstürzt: kein
     #    Internet, Zeitlimit, falscher oder fehlender Schlüssel, keine echte
