@@ -35,31 +35,31 @@ Bisher haben wir nur `duration` (Sekunden) gelesen. Jetzt lesen wir auch
 ```
 Browser   Klick «Speichern» → fetch POST /api/stellenanzeigen
    │
-Backend   stellenanzeige_anlegen()                         Abschnitt 4
+Backend   stellenanzeige_anlegen()                         Abschnitt 3
    │        ├─ stellenanzeige_speichern()  → id 42          (Linas Code)
-   │        └─ arbeitsweg_eintragen(42, daten)             Abschnitt 3
+   │        └─ arbeitsweg_eintragen(42, daten)             Abschnitt 2
    │             ├─ wohnadresse_lesen()                     (US 30004)
-   │             ├─ arbeitsweg_berechnen()                  Abschnitt 2
-   │             │    ├─ koordinaten_suchen() ×2            (US 30001)
-   │             │    └─ route_abfragen()                   Abschnitt 1  → OpenRouteService
-   │             └─ arbeitsweg_speichern(42, {...})         Abschnitt 5  → Datenbank
+   │             ├─ arbeitsweg_berechnen()                  Abschnitt 1
+   │             │    ├─ koordinaten_suchen() ×2            (US 30001)  → OpenRouteService
+   │             │    └─ requests.post(ROUTE_URL)                       → OpenRouteService
+   │             └─ arbeitsweg_speichern(42, {...})         Abschnitt 4  → Datenbank
    │
 Browser   {"id": 42, "fahrzeit_auto_in_minuten": 95,
-           "strecke_auto_in_metern": 138268} → Meldung      Abschnitt 6
+           "strecke_auto_in_metern": 138268} → Meldung      Abschnitt 5
 ```
 
 **Umbenennungen:** Weil die Funktionen jetzt mehr als die Fahrzeit liefern,
-haben sie neue Namen bekommen.
+haben sie neue Namen bekommen. Eine ist ganz weggefallen.
 
 | Vorher (US 30001) | Jetzt (US 30002) |
 |---|---|
-| `fahrzeit_in_sekunden_abfragen()` | `route_abfragen()` |
+| `fahrzeit_in_sekunden_abfragen()` | weggefallen, steht direkt in `arbeitsweg_berechnen()` |
 | `fahrzeit_berechnen()` | `arbeitsweg_berechnen()` |
 | `fahrzeit_speichern()` | `arbeitsweg_speichern()` |
 
 | Datei | Was sich geändert hat |
 |---|---|
-| `src/app/arbeitsweg.py` | `route_abfragen()` und `arbeitsweg_berechnen()` liefern beide Werte |
+| `src/app/arbeitsweg.py` | `arbeitsweg_berechnen()` fragt die Route selbst ab und liefert beide Werte |
 | `src/app/datenbank.py` | `arbeitsweg_speichern()` schreibt beide Spalten |
 | `src/app/stellenanzeigen_routes.py` | Imports, `arbeitsweg_eintragen()`, Antwort der Route |
 | `public/index.html` | Kilometer an die Meldung anhängen |
@@ -71,48 +71,12 @@ Die Datenbank musste **nicht** geändert werden: Die Spalte
 
 ---
 
-## 1. Route abfragen: die ganze Zusammenfassung zurückgeben
+## 1. Hauptfunktion: Route abfragen und beide Werte umrechnen
 
-[`src/app/arbeitsweg.py`, Zeilen 119–143](../../../src/app/arbeitsweg.py#L119-L143)
+[`src/app/arbeitsweg.py`, Zeilen 126–181](../../../src/app/arbeitsweg.py#L126-L181)
 
-**Wozu:** Fragt den Kartendienst nach der Autoroute von A nach B. Neu gibt sie
-nicht nur die Sekunden zurück, sondern die ganze Zusammenfassung mit Dauer
-**und** Strecke.
-
-```python
-def route_abfragen(start, ziel, api_schluessel):              # ← neu (Name)
-    antwort = requests.post(
-        ROUTE_URL,
-        json={"coordinates": [start, ziel]},
-        headers={"Authorization": api_schluessel},
-        timeout=ZEITLIMIT_IN_SEKUNDEN,
-    )
-
-    return antwort.json()["routes"][0]["summary"]              # ← neu
-```
-
-**Der Reihe nach:**
-1. `requests.post(...)` → schickt die zwei Punkte an den Kartendienst, wie
-   bisher.
-2. `return antwort.json()["routes"][0]["summary"]` → **neu:** Vorher stand am
-   Schluss noch `["duration"]`. Jetzt hören wir eine Stufe früher auf und
-   geben das ganze Dictionary zurück: `{"distance": 138267.6, "duration": 5682.0}`.
-
-*Warum:* So bekommen wir beide Werte aus **einer** Anfrage. Die Story schliesst
-eine zusätzliche Abfrage nur für die Strecke ausdrücklich aus.
-
-*Kein `raise_for_status()` mehr:* Früher stand vor dem `return` noch
-`antwort.raise_for_status()`, auch in `koordinaten_suchen()`. Es ist
-weggefallen, weil es nichts mehr beiträgt. Meldet der Dienst einen Fehler
-(falscher Schlüssel, keine Route), schickt er `{"error": ...}`. Dann fehlt
-`routes` bzw. `features`, die Funktion bricht ab, und das `except` in
-`arbeitsweg_berechnen()` fängt es auf. Das Ergebnis ist dasselbe.
-
-## 2. Hauptfunktion: beide Werte umrechnen
-
-[`src/app/arbeitsweg.py`, Zeilen 150–188](../../../src/app/arbeitsweg.py#L150-L188)
-
-**Wozu:** Setzt Adresssuche und Routenabfrage zusammen. Neu gibt sie ein
+**Wozu:** Übersetzt beide Adressen in Punkte, fragt den Kartendienst nach der
+Autoroute von A nach B und rechnet Dauer **und** Strecke um. Neu gibt sie ein
 Dictionary mit beiden Werten zurück statt nur der Minuten.
 
 ```python
@@ -120,7 +84,13 @@ def arbeitsweg_berechnen(wohnadresse, arbeitsadresse, api_schluessel):  # ← ne
     try:
         start = koordinaten_suchen(wohnadresse, api_schluessel)
         ziel = koordinaten_suchen(arbeitsadresse, api_schluessel)
-        route = route_abfragen(start, ziel, api_schluessel)             # ← neu
+        antwort = requests.post(                                        # ← neu hier
+            ROUTE_URL,
+            json={"coordinates": [start, ziel]},
+            headers={"Authorization": api_schluessel},
+            timeout=ZEITLIMIT_IN_SEKUNDEN,
+        )
+        route = antwort.json()["routes"][0]["summary"]                  # ← neu
     except Exception:
         return {"fahrzeit_auto_in_minuten": None, "strecke_auto_in_metern": None}  # ← neu
 
@@ -132,15 +102,32 @@ def arbeitsweg_berechnen(wohnadresse, arbeitsadresse, api_schluessel):  # ← ne
 
 **Der Reihe nach:**
 1. `start = ...`, `ziel = ...` → beide Adressen in Punkte übersetzen, wie
-   bisher.
-2. `route = route_abfragen(...)` → **neu:** holt die Zusammenfassung mit Dauer
-   und Strecke (Abschnitt 1).
-3. `except Exception: return {... None ...}` → **neu:** Scheitert irgendetwas,
+   bisher (`koordinaten_suchen()`, siehe Spickzettel US 30001).
+2. `antwort = requests.post(...)` → schickt die zwei Punkte an den
+   Kartendienst. **Neu hier:** Das stand früher in einer eigenen Funktion
+   (`fahrzeit_in_sekunden_abfragen()`). Weil die Route nur an dieser einen
+   Stelle abgefragt wird, steht es jetzt direkt in der Hauptfunktion.
+3. `route = antwort.json()["routes"][0]["summary"]` → **neu:** Früher stand am
+   Schluss noch `["duration"]`, wir haben also nur die Sekunden genommen. Jetzt
+   nehmen wir die ganze Zusammenfassung: `{"distance": 138267.6, "duration": 5682.0}`.
+   So kommen beide Werte aus **einer** Anfrage; die Story schliesst eine
+   zusätzliche Abfrage nur für die Strecke ausdrücklich aus.
+4. `except Exception: return {... None ...}` → **neu:** Scheitert irgendetwas,
    sind **beide** Werte `None`. Die Story verlangt, dass dann beide leer
    bleiben.
-4. `return {...}` → **neu:** rechnet beide Werte in ganze Zahlen um:
+5. `return {...}` → **neu:** rechnet beide Werte in ganze Zahlen um:
    - Fahrzeit: `5682 / 60 = 94.7` → `round()` → **95** Minuten (wie bisher).
    - Strecke: `138267.6` → `round()` → **138268** Meter. Sie bleibt in Metern.
+
+*Warum ist `koordinaten_suchen()` eine eigene Funktion, die Route aber nicht?*
+Die Adresssuche wird zweimal gebraucht (Wohn- und Arbeitsadresse), die Route
+nur einmal.
+
+*Kein `raise_for_status()` mehr:* Früher stand nach jeder Anfrage noch
+`antwort.raise_for_status()`. Es ist weggefallen, weil es nichts mehr
+beiträgt. Meldet der Dienst einen Fehler (falscher Schlüssel, keine Route),
+schickt er `{"error": ...}`. Dann fehlt `routes` bzw. `features`, die Zeile
+bricht ab, und das `except` fängt es auf. Das Ergebnis ist dasselbe.
 
 *Warum ganze Zahlen:* Die Datenbankspalten speichern nur ganze Zahlen
 (`INTEGER`).
@@ -154,7 +141,7 @@ Kilometer rechnet erst das Frontend um, nur für die Anzeige.
 zurückgeben. Die Schlüssel heissen gleich wie die Datenbankspalten, so sieht
 man sofort, welcher Wert wohin gehört.
 
-## 3. Arbeitsweg-Teil in der Route
+## 2. Arbeitsweg-Teil in der Route
 
 [`src/app/stellenanzeigen_routes.py`, Zeilen 68–100](../../../src/app/stellenanzeigen_routes.py#L68-L100)
 
@@ -191,7 +178,7 @@ def arbeitsweg_eintragen(stellen_id, daten):
 2. `arbeitsweg = arbeitsweg_berechnen(...)` → **neu:** Das Ergebnis ist jetzt
    das Dictionary mit beiden Werten.
 3. `arbeitsweg_speichern(...)` → **neu:** gibt das ganze Dictionary an die
-   Datenbank weiter (Abschnitt 5).
+   Datenbank weiter (Abschnitt 4).
 4. `return arbeitsweg` → gibt es an die Route zurück.
 
 Dazu die zwei geänderten Imports oben in der Datei
@@ -202,7 +189,7 @@ from .arbeitsweg import arbeitsweg_berechnen                                    
 from .datenbank import arbeitsweg_speichern, stellenanzeige_speichern, wohnadresse_lesen  # ← neu
 ```
 
-## 4. Antwort der Speicherroute
+## 3. Antwort der Speicherroute
 
 [`src/app/stellenanzeigen_routes.py`, Zeilen 135–151](../../../src/app/stellenanzeigen_routes.py#L135-L151)
 
@@ -226,13 +213,13 @@ Arbeitswegs.
 
 **Der Reihe nach:**
 1. `arbeitsweg = arbeitsweg_eintragen(...)` → berechnet und speichert den
-   Arbeitsweg (Abschnitt 3).
+   Arbeitsweg (Abschnitt 2).
 2. `jsonify({...})` → baut die Antwort mit drei Feldern: `id`, Fahrzeit und
    **neu** die Strecke in Metern. `None` wird in JSON zu `null`.
 3. `201` → «erstellt», auch wenn der Arbeitsweg fehlt. Die Stelle ist ja
    gespeichert.
 
-## 5. Beide Werte in der Datenbank eintragen
+## 4. Beide Werte in der Datenbank eintragen
 
 [`src/app/datenbank.py`, Zeilen 301–334](../../../src/app/datenbank.py#L301-L334)
 
@@ -269,7 +256,7 @@ def arbeitsweg_speichern(datenbank_url, stellen_id, arbeitsweg):  # ← neu (Nam
 *Warum beide in einem UPDATE:* So passen Fahrzeit und Strecke immer zusammen.
 Es kann nicht passieren, dass nur einer der beiden Werte gespeichert wird.
 
-## 6. Anzeige im Browser
+## 5. Anzeige im Browser
 
 [`public/index.html`, Zeilen 333–347](../../../public/index.html#L333-L347)
 
@@ -295,7 +282,7 @@ if (daten.fahrzeit_auto_in_minuten === null) {
 3. `.toFixed(1)` → **neu:** rundet auf eine Nachkommastelle: `"138.3"`.
 4. Die Meldung bekommt hinter den Minuten `, Strecke: 138.3 km`.
 
-## 7. Tests
+## 6. Tests
 
 [`tests/test_arbeitsweg.py`](../../../tests/test_arbeitsweg.py)
 

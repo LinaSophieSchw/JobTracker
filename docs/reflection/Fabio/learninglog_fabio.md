@@ -251,9 +251,9 @@ Speichern einer Stelle wird neben der Fahrzeit auch die Strecke aus derselben
 Routenantwort übernommen, in `strecke_auto_in_metern` gespeichert und im
 Browser angezeigt («Fahrzeit mit dem Auto: 95 Minuten, Strecke: 138.3 km»).
 
-- Geändert: `route_abfragen()` (vorher `fahrzeit_in_sekunden_abfragen()`) und
-  `arbeitsweg_berechnen()` (vorher `fahrzeit_berechnen()`) in
-  `src/app/arbeitsweg.py`, `arbeitsweg_speichern()` (vorher
+- Geändert: `arbeitsweg_berechnen()` (vorher `fahrzeit_berechnen()`) in
+  `src/app/arbeitsweg.py` fragt die Route jetzt selbst ab; die eigene
+  Funktion `fahrzeit_in_sekunden_abfragen()` ist weggefallen, `arbeitsweg_speichern()` (vorher
   `fahrzeit_speichern()`) in `src/app/datenbank.py`, `arbeitsweg_eintragen()`
   und die Antwort der Speicherroute in `src/app/stellenanzeigen_routes.py`,
   Anzeige in `public/index.html`.
@@ -298,8 +298,8 @@ Dictionary) frei und erlaubte die Anpassung an Linas Test. Danach wünschte er
 möglichst schlanken Code, weil er jede Codestelle erklären können muss, und
 wählte aus vier Vorschlägen zwei aus: `raise_for_status()` entfernen und den
 eigenen Umrechnungstest in den Test der Speicherroute einbauen. Das Einbauen
-von `route_abfragen()` in die Hauptfunktion wollte er zuerst im Vergleich
-sehen. Er verzichtete auf ein Review durch Lina. Der Agent schrieb
+der Routenabfrage in die Hauptfunktion liess er sich zuerst im Vergleich
+zeigen und gab es danach frei. Er verzichtete auf ein Review durch Lina. Der Agent schrieb
 Code, Tests und Doku, prüfte die Anzeige im Browser mit simulierten Antworten
 und machte eine echte Abfrage beim Kartendienst.
 
