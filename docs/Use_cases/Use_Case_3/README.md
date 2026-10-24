@@ -19,7 +19,7 @@ Umsetzung einer Vergleichsfunktion gehört nicht zu diesem Use Case.
 |---|---|---|
 | 1 | [US 30004 – Demo-Benutzer mit Wohnadresse fest im System hinterlegen](30004-demo-benutzer-fest-hinterlegen.md) | Umgesetzt (PR #17) |
 | 2 | [US 30001 – Fahrzeit beim erstmaligen Speichern sehen](30001-fahrzeit-beim-ersten-speichern.md) | Umgesetzt |
-| 3 | [US 30002 – Zusätzlich die Streckenlänge sehen](30002-streckenlaenge-ergaenzen.md) | Geplant |
+| 3 | [US 30002 – Zusätzlich die Streckenlänge sehen](30002-streckenlaenge-ergaenzen.md) | Umgesetzt |
 | 4 | [US 30003 – Arbeitsweg beim erneuten Speichern neu berechnen](30003-arbeitsweg-beim-erneuten-speichern.md) | Geplant |
 
 US 30004 kommt zuerst, weil die Berechnung eine Wohnadresse braucht.
