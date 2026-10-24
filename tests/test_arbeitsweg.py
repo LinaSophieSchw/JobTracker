@@ -20,6 +20,10 @@ Test für fehlenden Schlüssel entfernt; die Prüfung gibt es nicht mehr. (FH)
 Version 03  24.10.2026:
 Streckenlänge ergänzt: Test für die Umrechnung, bestehende Tests prüfen
 zusätzlich die Strecke (US 30002). (FH)
+
+Version 04  24.10.2026:
+Vereinfacht: eigener Umrechnungstest entfernt; der Test der Speicherroute
+prüft Umrechnung und einzige Routenabfrage mit. (FH)
 """
 
 from unittest.mock import Mock
@@ -37,8 +41,7 @@ WOHNADRESSE = {"strasse": "Bundesplatz 3", "postleitzahl": "3005", "ort": "Bern"
 # ==================================================
 def antwort_simulieren(json_daten):
     """Baut eine Attrappe einer erfolgreichen Antwort (Statuscode 200)."""
-    # Unser Code verwendet von der Antwort nur raise_for_status() und json().
-    # raise_for_status() macht hier nichts, weil alles in Ordnung ist.
+    # Unser Code verwendet von der Antwort nur json().
     antwort = Mock()
     antwort.json.return_value = json_daten
     return antwort
@@ -74,17 +77,6 @@ def routenantwort(dauer_in_sekunden, strecke_in_metern):
     )
 
 
-def adresssuche_bern_zug():
-    """Attrappe der Adresssuche: zuerst Bern (Wohnadresse), dann Zug."""
-    # side_effect gibt bei jedem Aufruf die nächste Antwort aus der Liste.
-    return Mock(
-        side_effect=[
-            adresstreffer("address", [7.444185, 46.946805]),
-            adresstreffer("address", [8.515899, 47.168894]),
-        ]
-    )
-
-
 # ==================================================
 # Requirement: Nur eine konkrete Adresse taugt für die Berechnung
 # ==================================================
@@ -112,30 +104,6 @@ def test_treffer_mit_nur_einem_ort_ergibt_keine_fahrzeit(monkeypatch):
     }
     # Ohne konkretes Ziel wird gar keine Route abgefragt.
     routenberechnung.assert_not_called()
-
-
-# ==================================================
-# Requirement: Fahrzeit und Strecke kommen aus derselben Routenantwort
-# ==================================================
-def test_fahrzeit_und_strecke_werden_aus_einer_antwort_umgerechnet(monkeypatch):
-    # Wofür: Der Kartendienst liefert Sekunden und Meter mit Kommastellen.
-    # Die Datenbank speichert ganze Minuten und ganze Meter. Geprüft wird
-    # die Umrechnung mit den echten Werten Bern–Zug aus der technischen
-    # Prüfung: 5682 s → 95 Minuten, 138267.6 m → 138268 Meter.
-    # Ausserdem darf es nur eine einzige Routenabfrage geben (US 30002:
-    # keine zusätzliche Anfrage nur für die Strecke).
-    routenberechnung = Mock(return_value=routenantwort(5682.0, 138267.6))
-    monkeypatch.setattr("app.arbeitsweg.requests.get", adresssuche_bern_zug())
-    monkeypatch.setattr("app.arbeitsweg.requests.post", routenberechnung)
-
-    zug = {"strasse": "Bahnhofstrasse 12", "postleitzahl": "6300", "ort": "Zug"}
-    arbeitsweg = arbeitsweg_berechnen(WOHNADRESSE, zug, "testschluessel")
-
-    assert arbeitsweg == {
-        "fahrzeit_auto_in_minuten": 95,
-        "strecke_auto_in_metern": 138268,
-    }
-    routenberechnung.assert_called_once()
 
 
 # ==================================================
@@ -181,12 +149,22 @@ def test_speicherroute_liefert_und_speichert_den_arbeitsweg(monkeypatch):
     # «Speichern» schickt die Formularangaben an die Route. Sie sucht beide
     # Adressen, fragt die Route ab, rechnet Fahrzeit und Strecke um, trägt
     # beide bei Stelle 42 ein und schickt sie dem Browser zurück.
+    # Die Werte sind die echten Bern–Zug aus der technischen Prüfung:
+    # 5682 s → 95 Minuten, 138267.6 m → 138268 Meter.
     arbeitsweg_speichern_mock = speicherroute_vorbereiten(monkeypatch)
-    monkeypatch.setattr("app.arbeitsweg.requests.get", adresssuche_bern_zug())
+    # side_effect gibt bei jedem Aufruf die nächste Antwort aus der Liste:
+    # zuerst Bern (Wohnadresse), dann Zug (Arbeitsadresse).
     monkeypatch.setattr(
-        "app.arbeitsweg.requests.post",
-        Mock(return_value=routenantwort(5682.0, 138267.6)),
+        "app.arbeitsweg.requests.get",
+        Mock(
+            side_effect=[
+                adresstreffer("address", [7.444185, 46.946805]),
+                adresstreffer("address", [8.515899, 47.168894]),
+            ]
+        ),
     )
+    routenberechnung = Mock(return_value=routenantwort(5682.0, 138267.6))
+    monkeypatch.setattr("app.arbeitsweg.requests.post", routenberechnung)
 
     antwort = app.test_client().post("/api/stellenanzeigen", json=FORMULAR_ZUG)
 
@@ -201,6 +179,9 @@ def test_speicherroute_liefert_und_speichert_den_arbeitsweg(monkeypatch):
         42,
         {"fahrzeit_auto_in_minuten": 95, "strecke_auto_in_metern": 138268},
     )
+    # Fahrzeit und Strecke kommen aus einer einzigen Routenabfrage (US 30002:
+    # keine zusätzliche Anfrage nur für die Strecke).
+    routenberechnung.assert_called_once()
 
 
 def test_gescheiterte_berechnung_verhindert_das_speichern_nicht(monkeypatch):

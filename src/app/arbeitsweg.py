@@ -32,6 +32,11 @@ Version 05  24.10.2026:
 Zusätzlich die Streckenlänge aus derselben Routenantwort übernehmen
 (US 30002). fahrzeit_in_sekunden_abfragen() heisst jetzt route_abfragen(),
 fahrzeit_berechnen() heisst jetzt arbeitsweg_berechnen(). (FH)
+
+Version 06  24.10.2026:
+Vereinfacht: raise_for_status() entfernt. Fehlerantworten des Dienstes
+enthalten weder «features» noch «routes» und landen so ohnehin im except
+von arbeitsweg_berechnen(). (FH)
 """
 
 # Werkzeug, mit dem Python Fragen ins Internet schicken kann.
@@ -86,16 +91,13 @@ def koordinaten_suchen(adresse, api_schluessel):
         timeout=ZEITLIMIT_IN_SEKUNDEN,
     )
 
-    # 2. Antwort prüfen: Hat der Dienst normal geantwortet?
-    #    Wenn nicht, z. B. weil der Schlüssel falsch ist (Statuscode 403),
-    #    bricht die Funktion hier ab.
-    antwort.raise_for_status()
-
-    # 3. Den besten Treffer nehmen: den ersten in der Liste «features».
-    #    Gibt es keinen, bricht [0] mit einem Fehler ab.
+    # 2. Den besten Treffer nehmen: den ersten in der Liste «features».
+    #    Gibt es keinen, bricht [0] mit einem Fehler ab. Meldet der Dienst
+    #    einen Fehler, z. B. bei falschem Schlüssel, fehlt «features» ganz,
+    #    und die Funktion bricht ebenfalls ab.
     treffer = antwort.json()["features"][0]
 
-    # 4. Prüfen, ob der Treffer eine echte Adresse ist.
+    # 3. Prüfen, ob der Treffer eine echte Adresse ist.
     #    Der Kartendienst findet fast immer irgendetwas und schreibt im Feld
     #    «layer» dazu, was es ist: «address» ist eine Adresse mit Hausnummer,
     #    «locality» z. B. nur ein Ort, «country» nur das Land.
@@ -104,7 +106,7 @@ def koordinaten_suchen(adresse, api_schluessel):
     if treffer["properties"]["layer"] != "address":
         raise ValueError("Keine konkrete Adresse gefunden.")
 
-    # 5. Den Punkt auf der Karte zurückgeben, also die zwei Zahlen.
+    # 4. Den Punkt auf der Karte zurückgeben, also die zwei Zahlen.
     #    Stolperfalle: zuerst der Längengrad (Ost-West), dann der Breitengrad
     #    (Nord-Süd). Bei Google Maps ist es umgekehrt.
     return treffer["geometry"]["coordinates"]
@@ -132,15 +134,12 @@ def route_abfragen(start, ziel, api_schluessel):
         timeout=ZEITLIMIT_IN_SEKUNDEN,
     )
 
-    # 2. Antwort prüfen, wie bei der Adresssuche.
-    #    Liegt ein Punkt z. B. mitten im See, findet der Dienst keine Strasse
-    #    (Statuscode 404), und die Funktion bricht ab.
-    antwort.raise_for_status()
-
-    # 3. Die Zusammenfassung der Route zurückgeben. Darin stehen beide Werte,
+    # 2. Die Zusammenfassung der Route zurückgeben. Darin stehen beide Werte,
     #    die wir brauchen: «duration» in Sekunden und «distance» in Metern.
     #    Das hat die technische Prüfung bestätigt. Weil beide in derselben
     #    Antwort stehen, braucht die Strecke keine zusätzliche Anfrage.
+    #    Findet der Dienst keine Route, z. B. weil ein Punkt mitten im See
+    #    liegt, fehlt «routes», und die Funktion bricht ab.
     return antwort.json()["routes"][0]["summary"]
 
 
