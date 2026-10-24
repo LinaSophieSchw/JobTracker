@@ -31,6 +31,11 @@ Version 07 – 24.10.2026 (FH):
 Strecke und Fahrzeit stehen in einem nur lesbaren Kasten «Arbeitsweg» unter
 der Stellenbeschreibung statt in der Bestätigung. Das Formular bleibt nach dem
 Speichern offen, damit die Werte sichtbar sind (US 30006, mit LS abgesprochen).
+
+Version 08 – 24.10.2026 (MG):
+Übersicht aller Stellen mit Titel, Firma, Arbeitsort, Status und Arbeitsweg
+ergänzt (US 20001). Die Übersicht ist die Startseite; «+ Neue Stelle» öffnet
+das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesprochen).
 -->
 <html lang="de">
 
@@ -52,6 +57,56 @@ Speichern offen, damit die Werte sichtbar sind (US 30006, mit LS abgesprochen).
         <!-- Backend-Status vorerst ausgeblendet:
         <p>Backend: {{ backend_status }}</p>
         -->
+
+        <!-- ========================================
+             Screen 1: Übersicht (MG)
+             ======================================== -->
+        <!-- v-if zeigt diesen Block nur, wenn «ansicht» den Wert
+             "uebersicht" hat. Sonst zeigt Vue den Block mit v-else weiter
+             unten. So gibt es zwei Screens in einer einzigen Datei (ADR 0010). -->
+        <div v-if="ansicht === 'uebersicht'">
+        <h2>Übersicht</h2>
+
+        <button type="button" @click="neue_stelle_oeffnen">+ Neue Stelle</button>
+
+        <p v-if="fehlermeldung">{{ fehlermeldung }}</p>
+
+        <!-- Eine Tabellenzeile pro gespeicherter Stelle.
+             v-for wiederholt die Zeile <tr> für jede Stelle in der Liste
+             «stellen». :key gibt Vue die id, damit es die Zeilen auseinanderhält. -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Titel</th>
+                    <th>Firma</th>
+                    <th>Arbeitsort</th>
+                    <th>Status</th>
+                    <th>Arbeitsweg</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="stelle in stellen" :key="stelle.id">
+                    <td>{{ stelle.titel }}</td>
+                    <td>{{ stelle.firma }}</td>
+                    <td>{{ stelle.arbeitsort }}</td>
+                    <td>{{ status_anzeigen(stelle.status) }}</td>
+                    <td>{{ arbeitsweg_anzeigen(stelle) }}</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+
+        <!-- ========================================
+             Screen 2: Stellen-Formular
+             ======================================== -->
+        <div v-else>
+        <!-- Führt zurück zur Übersicht und lädt sie neu (MG). Das Formular
+             bleibt nach dem Speichern offen (US 30006); mit diesem Button
+             kehrt man danach selbst zurück. -->
+        <button type="button" @click="zur_uebersicht" :disabled="laedt || speichert">
+            ← Zurück zur Übersicht
+        </button>
+
         <h2>Stellenanzeige erfassen</h2>
 
         <form @submit.prevent="stellenanzeige_laden">
@@ -194,6 +249,8 @@ Speichern offen, damit die Werte sichtbar sind (US 30006, mit LS abgesprochen).
                 Abbrechen
             </button>
         </div>
+        </div>
+        <!-- Ende Screen 2: Stellen-Formular -->
 
     </div>
 
@@ -208,6 +265,18 @@ Speichern offen, damit die Werte sichtbar sind (US 30006, mit LS abgesprochen).
         // Vue-Anwendung vorbereiten
         // ========================================
         const { createApp } = Vue;
+
+        // Anzeigetexte der Status (MG), wie in Abschnitt 5 im Datenmodell.
+        // Die Datenbank speichert «interview», angezeigt wird
+        // «Vorstellungsgespräch». Eine Konstante, weil sie sich nie ändert.
+        const STATUS_ANZEIGE = {
+            gespeichert: "Gespeichert",
+            beworben: "Beworben",
+            interview: "Vorstellungsgespräch",
+            zusage: "Zusage",
+            absage: "Absage",
+            zurueckgezogen: "Zurückgezogen",
+        };
 
         createApp({
             // Enthält die Werte für unsere Oberfläche.
@@ -245,6 +314,13 @@ Speichern offen, damit die Werte sichtbar sind (US 30006, mit LS abgesprochen).
                     erfolgsmeldung: "",                 // Zeigt die Bestätigung nach erfolgreicher Speicherung.
                     vorschau_vorhanden: false,        // Zeigt oder verbirgt das gesamte Formular.
                     manuelle_erfassung: false, // Unterscheidet manuelle Neuerfassung von einer importierten Vorschau.
+
+                    // Übersicht (MG): alle gespeicherten Stellen vom Backend.
+                    // Startet leer und wird beim Laden der Seite gefüllt.
+                    stellen: [],
+                    // Welcher Screen sichtbar ist: "uebersicht" oder "formular".
+                    // Die Übersicht ist die Startseite (ADR 0010).
+                    ansicht: "uebersicht",
                 };
             },
             // Enthält die Funktionen, die unsere Oberfläche auslösen kann.
@@ -253,6 +329,65 @@ Speichern offen, damit die Werte sichtbar sind (US 30006, mit LS abgesprochen).
             // Methoden: Stellenanzeige laden
             // --------------------------------------------------
             methods: {
+                // Holt alle Stellen für die Übersicht vom Backend (MG).
+                // GET ist bei fetch der Standard, darum braucht es hier
+                // keine method-Angabe und keinen body.
+                async stellen_laden() {
+                    try {
+                        const antwort = await fetch("/api/stellenanzeigen");
+                        const daten = await antwort.json();
+
+                        if (!antwort.ok) {
+                            throw new Error(daten.fehler || "Übersicht nicht verfügbar.");
+                        }
+
+                        // Sobald «stellen» einen neuen Wert hat, zeichnet Vue
+                        // die Tabelle neu. Wir müssen das HTML nicht selbst ändern.
+                        this.stellen = daten;
+                    } catch (fehler) {
+                        this.fehlermeldung = fehler.message;
+                    }
+                },
+
+                // Wechselt von der Übersicht zum leeren Stellen-Formular (MG).
+                neue_stelle_oeffnen() {
+                    // Reste einer früheren Erfassung entfernen, damit das
+                    // Formular wirklich leer beginnt.
+                    this.stellenlink = "";
+                    this.vorschau_vorhanden = false;
+                    this.fehlermeldung = "";
+                    this.erfolgsmeldung = "";
+                    this.ansicht = "formular";
+                },
+
+                // Wechselt zurück zur Übersicht und lädt die Liste neu (MG).
+                zur_uebersicht() {
+                    this.fehlermeldung = "";
+                    this.ansicht = "uebersicht";
+                    // Neu laden, damit eine eben gespeicherte Stelle oben erscheint.
+                    this.stellen_laden();
+                },
+
+                // Liefert zum gespeicherten Status den Anzeigetext (MG).
+                // Fehlt ein Wert in STATUS_ANZEIGE, zeigen wir den Status,
+                // wie er gespeichert ist, statt einer leeren Zelle.
+                status_anzeigen(status) {
+                    return STATUS_ANZEIGE[status] || status;
+                },
+
+                // Macht aus Strecke und Fahrzeit einen Text wie «125.4 km, 82 min» (MG).
+                // Gleiche Einheiten wie im Arbeitsweg-Kasten von Fabio.
+                arbeitsweg_anzeigen(stelle) {
+                    // null heisst: Berechnung gescheitert oder noch nie gerechnet.
+                    // Dann bleibt die Zelle leer (US 20001).
+                    if (stelle.fahrzeit_auto_in_minuten === null) {
+                        return "";
+                    }
+                    // Meter in Kilometer, auf eine Nachkommastelle gerundet.
+                    const strecke_in_km = (stelle.strecke_auto_in_metern / 1000).toFixed(1);
+                    return `${strecke_in_km} km, ${stelle.fahrzeit_auto_in_minuten} min`;
+                },
+
                 // Öffnet das vorhandene Formular ohne Abruf von jobs.ch.
                 stellenanzeige_manuell_erfassen() {
                     this.manuelle_erfassung = true;
@@ -407,6 +542,9 @@ Speichern offen, damit die Werte sichtbar sind (US 30006, mit LS abgesprochen).
             // ========================================
             // mounted() läuft einmal, sobald die Seite geladen ist.
             async mounted() {
+                // Übersicht beim Öffnen der Seite laden (MG).
+                this.stellen_laden();
+
                 try {
                     const antwort = await fetch("/api/status");
                     const daten = await antwort.json();

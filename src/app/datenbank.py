@@ -22,6 +22,9 @@ zusätzlich die Streckenlänge ein (US 30002). (FH)
 Version 07  24.10.2026:
 Meldung bei doppeltem Link um «kann hier nicht bearbeitet werden» ergänzt,
 weil das Formular nur neue Stellen speichert (US 30006, mit LS abgesprochen). (FH)
+
+Version 08  24.10.2026:
+stellenanzeigen_lesen() für die Übersicht ergänzt (US 20001). (MG)
 """
 
 import psycopg
@@ -297,6 +300,55 @@ def stellenanzeige_speichern(datenbank_url, daten):
             )
 
     return ergebnis[0]
+
+
+# ==================================================
+# Alle Stellen für die Übersicht lesen (MG)
+# ==================================================
+# Die Übersicht zeigt nur Titel, Firma, Arbeitsort, Status und Arbeitsweg.
+# Darum lesen wir nur diese Spalten und nicht die ganze Zeile, z. B. ohne die
+# lange Stellenbeschreibung. Die id braucht es, damit man später eine Zeile
+# anklicken und die Stelle öffnen kann (US 20002).
+def stellenanzeigen_lesen(datenbank_url):
+    """Liefert alle Stellen des aktuellen Benutzers, die neueste zuerst.
+
+    Gibt eine Liste von Dictionaries zurück, eine pro Stelle. Ist noch
+    keine Stelle gespeichert, ist die Liste leer.
+    """
+    with verbindung_oeffnen(datenbank_url) as verbindung:
+        # ORDER BY erstellt_am DESC: DESC heisst absteigend, also die zuletzt
+        # erfasste Stelle zuerst. WHERE benutzer_id: nur die eigenen Stellen
+        # (Regel B1).
+        zeilen = verbindung.execute(
+            """
+            SELECT id, titel, firma, arbeitsort, status,
+                   strecke_auto_in_metern, fahrzeit_auto_in_minuten
+            FROM stellenanzeigen
+            WHERE benutzer_id = %s
+            ORDER BY erstellt_am DESC
+            """,
+            (aktuelle_benutzer_id(),),
+        ).fetchall()
+
+    # fetchall() liefert jede Zeile als Tupel, z. B.
+    # (7, "Data Analyst", "Migros", "Zürich", "beworben", 12500, 18).
+    # Wie bei wohnadresse_lesen() machen wir daraus Dictionaries mit Namen,
+    # damit im Frontend stelle.titel steht statt stelle[1].
+    stellen = []
+    for zeile in zeilen:
+        stellen.append(
+            {
+                "id": zeile[0],
+                "titel": zeile[1],
+                "firma": zeile[2],
+                "arbeitsort": zeile[3],
+                "status": zeile[4],
+                "strecke_auto_in_metern": zeile[5],
+                "fahrzeit_auto_in_minuten": zeile[6],
+            }
+        )
+
+    return stellen
 
 
 # ==================================================

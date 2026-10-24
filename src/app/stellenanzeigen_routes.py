@@ -14,13 +14,21 @@ Beim Speichern wird die Fahrzeit berechnet und eingetragen (US 30001). (FH)
 
 Version 05 – 24.10.2026:
 Zusätzlich wird die Streckenlänge eingetragen und mitgeschickt (US 30002). (FH)
+
+Version 06 – 24.10.2026:
+Route für die Übersicht aller Stellen ergänzt (US 20001). (MG)
 """
 
 import psycopg
 from flask import Blueprint, current_app, jsonify, request
 
 from .arbeitsweg import arbeitsweg_berechnen
-from .datenbank import arbeitsweg_speichern, stellenanzeige_speichern, wohnadresse_lesen
+from .datenbank import (
+    arbeitsweg_speichern,
+    stellenanzeige_speichern,
+    stellenanzeigen_lesen,
+    wohnadresse_lesen,
+)
 from .stellenanzeige_erfassen import stellenanzeige_auslesen
 
 # Sammelt unsere Stellenanzeigen-Routen.
@@ -149,3 +157,27 @@ def stellenanzeige_anlegen():
         ),
         201,
     )
+
+
+# ==================================================
+# Alle Stellen für die Übersicht liefern (MG)
+# ==================================================
+# GET bedeutet: Der Browser will nur Daten abholen und schickt keine mit.
+# Es ist dieselbe Adresse wie beim Speichern oben; Flask unterscheidet die
+# beiden Routen an der Methode: GET liest, POST legt neu an.
+@stellenanzeigen.get("/api/stellenanzeigen")
+def stellenanzeigen_auflisten():
+    """Liefert alle Stellen des Demo-Benutzers als JSON-Liste."""
+    try:
+        stellen = stellenanzeigen_lesen(current_app.config["DATABASE"])
+    except psycopg.Error:
+        # Wie beim Speichern: keine technischen Details an den Browser.
+        # 503 heisst «Dienst gerade nicht verfügbar».
+        return (
+            jsonify({"fehler": "Übersicht derzeit nicht verfügbar."}),
+            503,
+        )
+
+    # jsonify macht aus der Python-Liste JSON. Ohne Angabe ist der
+    # Statuscode 200, also «OK».
+    return jsonify(stellen)
