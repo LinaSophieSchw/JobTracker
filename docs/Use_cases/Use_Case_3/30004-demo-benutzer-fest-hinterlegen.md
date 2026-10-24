@@ -1,8 +1,10 @@
 # US 30004 – Demo-Benutzer mit Wohnadresse fest im System hinterlegen
 
-Status: Geplant – Voraussetzung für die Stories 30001 bis 30003
+Status: Umgesetzt (PR #17) – Voraussetzung für die Stories 30001 bis 30003
 
-Datum: 2026-10-21
+Datum: 2026-10-21, umgesetzt 2026-10-21
+
+Spickzettel zur Umsetzung: [30004-spickzettel.md](30004-spickzettel.md)
 
 ## User Story
 
@@ -35,13 +37,13 @@ Gemeinsame Festlegungen für diesen Slice:
 
 ## Akzeptanzkriterien
 
-- [ ] Nach dem Anlegen der Tabellen existiert in `benutzer` genau ein Datensatz mit `id` 1.
-- [ ] Der Datensatz enthält einen Namen sowie die Wohnadresse in den Spalten `wohnadresse_strasse` (mit Hausnummer), `wohnadresse_postleitzahl` und `wohnadresse_ort`.
-- [ ] Wiederholtes Anlegen der Tabellen erzeugt keinen zweiten Benutzer und verändert den vorhandenen nicht.
-- [ ] Jede gespeicherte Stelle erhält `benutzer_id` 1. Die ID wird nicht aus Formulareingaben übernommen.
-- [ ] Stellen können sofort gespeichert werden; es muss vorher kein Profil erfasst werden.
-- [ ] Die Wohnadresse kann für die Arbeitswegberechnung aus der Datenbank gelesen werden.
-- [ ] Es gibt keine Maske und keinen Backend-Aufruf zum Erfassen oder Ändern des Benutzers oder seiner Wohnadresse.
+- [x] Nach dem Anlegen der Tabellen existiert in `benutzer` genau ein Datensatz mit `id` 1.
+- [x] Der Datensatz enthält einen Namen sowie die Wohnadresse in den Spalten `wohnadresse_strasse` (mit Hausnummer), `wohnadresse_postleitzahl` und `wohnadresse_ort`.
+- [x] Wiederholtes Anlegen der Tabellen erzeugt keinen zweiten Benutzer und verändert den vorhandenen nicht.
+- [x] Jede gespeicherte Stelle erhält `benutzer_id` 1. Die ID wird nicht aus Formulareingaben übernommen.
+- [x] Stellen können sofort gespeichert werden; es muss vorher kein Profil erfasst werden.
+- [x] Die Wohnadresse kann für die Arbeitswegberechnung aus der Datenbank gelesen werden.
+- [x] Es gibt keine Maske und keinen Backend-Aufruf zum Erfassen oder Ändern des Benutzers oder seiner Wohnadresse.
 
 ## Schrittweise Umsetzung
 
