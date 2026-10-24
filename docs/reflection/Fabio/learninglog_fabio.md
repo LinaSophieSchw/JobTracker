@@ -389,3 +389,81 @@ berechnet und was es dafür bräuchte?
 **Nächster Lernschritt**
 Im Team klären, wer Use Case 2 übernimmt. Danach US 30003 mit
 `PUT /api/stellenanzeigen/<id>` umsetzen.
+
+### 2026-10-24 – «Failed to fetch»: Absturz des lokalen Servers und Bereich Bugs
+
+**Was haben wir gemacht?**
+Beim Testen des aktuellen Stands (zuerst US 30001/30002, nach `git pull`
+US 30006) erschien im Browser mehrmals «Failed to fetch», beim Laden einer
+Anzeige und beim Speichern. Ablauf:
+
+- Im Browser endeten die Anfragen an `/api/stellenanzeigen/vorschau` und
+  `/api/stellenanzeigen` mit `net::ERR_EMPTY_RESPONSE`: Der Server hat gar
+  nicht geantwortet.
+- Ein Neustart des Servers half zuerst. Nach dem Holen der neuen Version kam
+  der Fehler wieder. Im Server-Log stand jetzt die Ursache:
+  `objc[…] … fork() was called … Crashing instead.`
+- Notlösung: Der Server läuft seither mit
+  `OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES` vor dem gunicorn-Befehl. Danach
+  wurde nachgestellt: Codeänderung mit Neuladen, dann vier Anfragen, alle
+  korrekt beantwortet.
+- Als dauerhafte Lösung wurde `uv run flask --app src/app run --debug --port 5001`
+  auf einem Testport geprüft (drei Neuladevorgänge, kein Absturz).
+- Neuer Bereich `docs/Use_cases/Bugs/` auf Höhe der Use Cases mit
+  [US 90001 – Lokalen Server auf allen Rechnern gleich und stabil starten](../../Use_cases/Bugs/90001-lokalen-server-stabil-starten.md).
+  Branch `docs/bugs-lokaler-server`, Pull Request #23, gemergt in `master`.
+
+**Warum haben wir das gemacht?**
+Ohne funktionierenden lokalen Server lässt sich keine Story testen. Die
+Ursache lag nicht im Code der App: gunicorn startet mit `--reload` nach jeder
+Codeänderung einen neuen Worker per `fork()`, und macOS beendet diesen
+Worker, sobald er über `requests` ins Internet geht. Zudem läuft gunicorn auf
+Windows gar nicht, und im README steht noch der Platzhalter der Vorlage. Das
+Team hat also keinen gemeinsamen Startbefehl.
+
+Betrachtete Lösungen: die macOS-Variable dauerhaft setzen (wirkt nur auf
+macOS und nur, wenn man daran denkt) oder lokal `flask run` verwenden (läuft
+auf allen Betriebssystemen, Online-Version und `Dockerfile` bleiben
+unverändert). Entscheid: zuerst eine Story schreiben, die Umstellung erst nach
+Absprache im Team umsetzen.
+
+**Welche Auswirkungen hat das?**
+Am Code der App hat sich nichts geändert. Bugs und Infrastrukturprobleme
+haben jetzt einen eigenen Ort; ihre Stories beginnen mit 9. Offen:
+
+- Absprache mit Lina und Mirko, ob lokal `flask run` verwendet wird.
+- Danach ADR 0012, Startbefehl im README und VS-Code-Aufgabe.
+- Test des Starts auf einem Windows-Rechner, falls im Team vorhanden.
+
+**Welche Konzepte wurden behandelt?**
+«Failed to fetch» bedeutet, dass der Browser keine Antwort bekommen hat; die
+Ursache steht meist im Server-Log, nicht im Code. gunicorn mit Master- und
+Worker-Prozessen, `fork()` und `--reload`; Umgebungsvariablen vor einem
+Befehl; Entwicklungsserver von Flask gegenüber einem Server für den
+Online-Betrieb; warum `--debug` nur mit `127.0.0.1` und nie mit
+`--host 0.0.0.0` verwendet werden darf. Bei Git: VS Code zeigt die Dateien
+des Branches, auf dem der Ordner gerade steht; ein in `master` gemergter PR
+erscheint erst nach `git switch master` und `git pull`; Git-Befehle
+funktionieren nur im Repository-Ordner (`JobTracker`), nicht im Ordner
+darüber («not a git repository»).
+
+**Eigenleistung und KI-Unterstützung**
+Fabio testete die App, meldete «Failed to fetch» und fragte, wie sich das in
+Zukunft verhindern lässt. Er fragte nach, ob die Umstellung auf Windows
+funktioniert und welche Nachteile sie hat. Er entschied, zuerst eine Story zu
+schreiben, und legte fest, dass sie in einem eigenen Bereich auf Höhe der Use
+Cases steht. Er benannte den Bereich in «Bugs» um und gab Umbenennen des
+Branches, Commit, Push, Pull Request und Merge in Auftrag. Er bemerkte, dass
+der neue Ordner in VS Code fehlte, und versuchte `git switch master` selbst.
+
+Der Agent untersuchte Browser-Anfragen und Server-Log, startete den Server
+neu, prüfte die Lösungen auf Testports, schrieb Bereich und Story, arbeitete
+dafür in einer eigenen Arbeitskopie (git worktree), committete, erstellte und
+mergte den Pull Request und wechselte den Ordner `JobTracker` auf `master`.
+
+**Persönliche Reflexion – von Fabio zu ergänzen**
+Kann ich erklären, warum «Failed to fetch» hier kein Fehler im Code war und
+wo ich bei diesem Fehler zuerst nachschaue?
+
+**Nächster Lernschritt**
+Mit Lina und Mirko über `flask run` entscheiden und danach US 90001 umsetzen.
