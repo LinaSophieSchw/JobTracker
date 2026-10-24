@@ -23,6 +23,9 @@ Während der Speicherung wird der Speicherbutton gesperrt.
 Version 05 – 24.10.2026 (FH):
 Nach dem Speichern erscheint die Fahrzeit mit dem Auto in Minuten oder der
 Hinweis «Arbeitsweg konnte nicht berechnet werden.» (US 30001).
+
+Version 06 – 24.10.2026 (FH):
+Hinter der Fahrzeit erscheint zusätzlich die Strecke in Kilometern (US 30002).
 -->
 <html lang="de">
 
@@ -327,14 +330,20 @@ Hinweis «Arbeitsweg konnte nicht berechnet werden.» (US 30001).
                         this.erfolgsmeldung =
                             `Stellenanzeige gespeichert (ID: ${daten.id}).`;
 
-                        // Fahrzeit oder Hinweis an die Bestätigung anhängen (FH).
-                        // Das Backend schickt null, wenn der Arbeitsweg nicht
-                        // berechnet werden konnte.
+                        // Fahrzeit und Strecke oder Hinweis an die Bestätigung
+                        // anhängen (FH). Das Backend schickt für beide Werte
+                        // null, wenn der Arbeitsweg nicht berechnet werden konnte.
                         if (daten.fahrzeit_auto_in_minuten === null) {
                             this.erfolgsmeldung += " Arbeitsweg konnte nicht berechnet werden.";
                         } else {
+                            // Die Strecke kommt in Metern, angezeigt wird sie in
+                            // Kilometern: 138268 / 1000 = 138.268 → «138.3».
+                            // toFixed(1) rundet auf eine Nachkommastelle.
+                            const strecke_in_km =
+                                (daten.strecke_auto_in_metern / 1000).toFixed(1);
                             this.erfolgsmeldung +=
-                                ` Fahrzeit mit dem Auto: ${daten.fahrzeit_auto_in_minuten} Minuten`;
+                                ` Fahrzeit mit dem Auto: ${daten.fahrzeit_auto_in_minuten} Minuten,` +
+                                ` Strecke: ${strecke_in_km} km`;
                         }
                         this.vorschau_vorhanden = false;
                     } catch (fehler) {
