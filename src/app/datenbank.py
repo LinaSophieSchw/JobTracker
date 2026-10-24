@@ -18,6 +18,10 @@ fahrzeit_speichern() für die Arbeitswegberechnung ergänzt (US 30001). (FH)
 Version 06  24.10.2026:
 fahrzeit_speichern() heisst jetzt arbeitsweg_speichern() und trägt
 zusätzlich die Streckenlänge ein (US 30002). (FH)
+
+Version 07  24.10.2026:
+Meldung bei doppeltem Link um «kann hier nicht bearbeitet werden» ergänzt,
+weil das Formular nur neue Stellen speichert (US 30006, mit LS abgesprochen). (FH)
 """
 
 import psycopg
@@ -284,8 +288,12 @@ def stellenanzeige_speichern(datenbank_url, daten):
                 (benutzer_id, geprueft["url"]),
             ).fetchone()
 
+            # Bearbeiten gespeicherter Stellen gehört zu Use Case 2 und ist
+            # hier nicht möglich. Die Meldung sagt das ausdrücklich, damit
+            # niemand glaubt, die Änderungen im Formular seien gespeichert. (FH)
             raise ValueError(
-                f"Diese Stelle ist bereits gespeichert (ID: {vorhanden[0]})."
+                f"Diese Stelle ist bereits gespeichert (ID: {vorhanden[0]}) "
+                "und kann hier nicht bearbeitet werden."
             )
 
     return ergebnis[0]
