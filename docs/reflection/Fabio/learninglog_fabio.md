@@ -310,3 +310,82 @@ Browser in Kilometer umgerechnet wird?
 **Nächster Lernschritt**
 Änderungen mit dem Skill `end-coding` committen und als Pull Request
 eröffnen; danach US 30003 (Neuberechnung beim erneuten Speichern).
+
+## 2026-10-24 – US 30006 umgesetzt: Arbeitsweg im Stellen-Formular anzeigen
+
+**Was haben wir gemacht?**
+Unter der Stellenbeschreibung gibt es einen nur lesbaren Kasten «Arbeitsweg
+mit dem Auto» mit Strecke und Fahrzeit. Er ist leer, bis die Stelle
+gespeichert ist. Das Formular bleibt nach dem Speichern offen. Ein zweiter
+Klick auf «Speichern» meldet «… bereits gespeichert (ID: …) und kann hier
+nicht bearbeitet werden.».
+
+- Geändert: `public/index.html` (Kasten, zwei Anzeigewerte, Leeren beim
+  Laden, Füllen beim Speichern) und die Meldung in
+  `stellenanzeige_speichern()` in `src/app/datenbank.py`.
+- Tests: ein angepasster Test von Lina in
+  `tests/test_stellenanzeige_speichern.py`. 39 Tests laufen durch.
+- Doku: [US 30006](../../Use_cases/Use_Case_3/30006-arbeitsweg-im-formular-anzeigen.md)
+  und [Spickzettel](../../Use_cases/Use_Case_3/30006-spickzettel.md).
+- Commits `f6cc126` (feat) und `c149ff2` (docs), PR #21 mit Merge-Commit in
+  `master`.
+
+**Warum haben wir das gemacht?**
+Fabio fiel auf, dass im Formular keine Arbeitsweg-Daten zu sehen sind. Die
+Abklärung ergab:
+
+- Die Werte hingen nur an der Bestätigungsmeldung, und das Formular wurde
+  nach dem Speichern ausgeblendet.
+- Stelle 11 hatte keine Werte, weil sie gespeichert wurde, bevor der Server
+  mit dem neuen Code lief.
+- Eine gespeicherte Stelle lässt sich heute gar nicht bearbeiten.
+  `POST /api/stellenanzeigen` legt nur neue Stellen an, und ein doppelter
+  Link bricht vor der Berechnung ab.
+- Das Bearbeiten ist für Use Case 2 vorgesehen (ADR 0005, Wireframe mit
+  `PUT /api/stellenanzeigen/<id>`). Dazu gibt es aber noch keine
+  ausgeschriebene Story.
+
+Betrachtete Alternativen: den Button nach dem Speichern sperren oder gleich
+eine `PUT`-Route bauen (Kern von US 30003). Entscheid: nur die Anzeige bauen,
+den Button aktiv lassen und stattdessen die Meldung klarer machen.
+
+**Welche Auswirkungen hat das?**
+Der Arbeitsweg steht an einem festen Ort im Formular, wie ADR 0005 es
+vorsieht. Backend, Berechnung und Datenbank blieben unverändert. Die Anzeige
+wurde im Browser geprüft: den doppelten Link mit dem echten Backend, Erfolg
+und gescheiterte Berechnung mit simulierten Antworten. Offen:
+
+- Bearbeiten gespeicherter Stellen und Anzeige beim Öffnen (Use Case 2),
+  dazu US 30003.
+- Stelle 11 hat weiterhin keinen Arbeitsweg.
+
+**Welche Konzepte wurden behandelt?**
+`:value` (eine Richtung) gegenüber `v-model` (zwei Richtungen) in Vue, dazu
+`readonly`; `fieldset`/`legend` für einen Kasten; Template-Strings in
+JavaScript; Unterschied zwischen `POST` (neu anlegen) und `PUT` (bestehenden
+Datensatz ersetzen); warum ein doppelter Link das Speichern abbricht, bevor
+die Berechnung erreicht wird; Zustand im Frontend zurücksetzen, damit keine
+alten Werte stehen bleiben.
+
+**Eigenleistung und KI-Unterstützung**
+Fabio bemerkte das Fehlen der Anzeige und fragte, warum ein erneutes
+Speichern mit Neuberechnung ein Problem wäre. Er fasste in eigenen Worten
+zusammen, dass das Bearbeiten heute nicht möglich ist, und fragte nach einer
+passenden geplanten Story. Er legte die Lösung fest (Kasten unter der
+Beschreibung, nur lesbar, Button aktiv, Meldung ergänzen) und sprach die
+Änderung an Linas Formular mit ihr ab. Er verlangte einen eigenen Branch,
+die User Story und den Spickzettel. Er verzichtete auf ein Review und liess
+direkt mergen.
+
+Der Agent untersuchte Code und Ursachen (Datenbankabfrage zu Stelle 11,
+echte Testberechnung: 44 min / 44.5 km), zeigte Alternativen auf, schrieb
+Code, Test, Story und Spickzettel, prüfte im Browser, committete, erstellte
+den Pull Request und mergte ihn.
+
+**Persönliche Reflexion – von Fabio zu ergänzen**
+Kann ich erklären, warum ein zweiter Klick auf «Speichern» heute nichts neu
+berechnet und was es dafür bräuchte?
+
+**Nächster Lernschritt**
+Im Team klären, wer Use Case 2 übernimmt. Danach US 30003 mit
+`PUT /api/stellenanzeigen/<id>` umsetzen.
