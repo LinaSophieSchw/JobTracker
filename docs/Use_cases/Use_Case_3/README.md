@@ -21,6 +21,7 @@ Umsetzung einer Vergleichsfunktion gehört nicht zu diesem Use Case.
 | 2 | [US 30001 – Fahrzeit beim erstmaligen Speichern sehen](30001-fahrzeit-beim-ersten-speichern.md) | Umgesetzt |
 | 3 | [US 30002 – Zusätzlich die Streckenlänge sehen](30002-streckenlaenge-ergaenzen.md) | Umgesetzt |
 | 4 | [US 30003 – Arbeitsweg beim erneuten Speichern neu berechnen](30003-arbeitsweg-beim-erneuten-speichern.md) | Geplant |
+| 5 | [US 30006 – Arbeitsweg im Stellen-Formular sehen](30006-arbeitsweg-im-formular-anzeigen.md) | Umgesetzt |
 
 US 30004 kommt zuerst, weil die Berechnung eine Wohnadresse braucht.
 
