@@ -18,6 +18,20 @@
                 "panel": "dedicated",
                 "close": true
             }
+        },
+        {
+            "label": "JobTracker starten",
+            "type": "shell",
+            "command": "uv run flask --app src/app run --debug --port 5001",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "isBackground": true,
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
         }
     ]
 }

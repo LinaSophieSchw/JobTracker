@@ -12,27 +12,45 @@ documentation when looking at your project online.
 
 ## Get started
 
-Explain what the user has to type to get started with your solution. Which one
-is the main Python file? In the simplest case, this could look something like
-this:
+Die folgenden Befehle laufen im Projektordner `JobTracker`, auf macOS im
+Terminal und auf Windows in der PowerShell gleich.
+
+1. Abhängigkeiten installieren bzw. aktualisieren:
+
+   ```bash
+   uv sync --all-groups
+   ```
+
+2. Die Datei `.env` im Projektordner braucht die Einträge `DATABASE_URL`
+   (Neon) und `OPENROUTESERVICE_API_KEY`. Sie ist nicht in Git.
+
+3. Server starten:
+
+   ```bash
+   uv run flask --app src/app run --debug --port 5001
+   ```
+
+   In VS Code geht das auch über *Terminal → Run Task… → JobTracker starten*.
+
+4. Im Browser http://localhost:5001 öffnen. Nach einer Codeänderung lädt der
+   Server von selbst neu. Mit `Ctrl+C` wird er beendet.
+
+Lokal verwenden wir den Entwicklungsserver von Flask statt gunicorn: gunicorn
+läuft auf Windows nicht und stürzte auf macOS nach dem Neuladen ab
+([ADR 0012](docs/decisions/0012-lokaler-server-mit-flask-run.md)).
+
+**Wichtig:** `--debug` nie zusammen mit `--host 0.0.0.0` verwenden. Die
+Fehlerseite im Debug-Modus erlaubt es, Python-Code auszuführen. Ohne
+`--host` ist der Server nur auf dem eigenen Rechner erreichbar.
+
+**«Failed to fetch» im Browser?** Dann hat der Server gar nicht geantwortet.
+Zuerst ins Terminal schauen, in dem der Server läuft: Dort steht die Ursache.
+
+Tests laufen mit:
 
 ```bash
-    uv run gunicorn app:app
+uv run pytest
 ```
-
-or on a Windows host
-
-```powershell
-    uv run waitress-serve app:app
-```
-
-In other cases the user might have to install some project dependencies first
-and has to run something like this (a pyproject.toml file is also included in
-the project template):
-
-``
-    uv sync
-``
 
 ## Local deployment
 

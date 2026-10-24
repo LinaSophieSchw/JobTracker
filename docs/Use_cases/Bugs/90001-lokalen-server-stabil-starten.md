@@ -1,8 +1,8 @@
 # US 90001 – Lokalen Server auf allen Rechnern gleich und stabil starten
 
-Status: Geplant (Absprache mit Lina und Mirko offen)
+Status: Umgesetzt (Branch `fix/90001-lokaler-server-starten`), Test auf Windows offen
 
-Datum: 2026-10-24
+Datum: 2026-10-24, umgesetzt 2026-10-24
 
 Art: Infrastruktur / Bug
 
@@ -19,6 +19,16 @@ Beim Testen von US 30006 erschien im Browser mehrmals **«Failed to fetch»**, b
 - macOS beendet diesen Worker sofort, sobald er über `requests` ins Internet geht (jobs.ch-Vorschau, OpenRouteService). Der Browser bekommt dann gar keine Antwort.
 - gunicorn läuft auf Windows grundsätzlich nicht. Im README steht dafür nur der Platzhalter der Projektvorlage (`uv run gunicorn app:app` bzw. `uv run waitress-serve app:app`), und dort fehlt `--pythonpath src`. Es gibt also keinen gemeinsamen Startbefehl im Team.
 
+### Beispiel: Stelle ID 16 ohne Arbeitsweg
+
+Der Fall ID 16 zeigt, dass der aktuelle Serverstart nicht funktioniert und dass der Bug mehr anrichtet als eine fehlende Antwort im Browser:
+
+- Am 24.10.2026 um 12:46:49 wurde die Stelle ID 16 (Moosweg 1, 2553 Safnern) gespeichert. Der gunicorn-Worker war um 12:46:10 nach einem Neuladen per `fork()` neu gestartet worden.
+- Die Stelle selbst wurde gespeichert. Danach ging der Worker für den Arbeitsweg zu OpenRouteService und wurde dabei von macOS beendet (Absturzbericht `Python-2026-10-24-124650.ips`, «crashed on child side of fork», Auslöser `_scproxy`).
+- Folge: Die Stelle steht in der Datenbank, aber Fahrzeit und Strecke sind leer. Der Browser bekommt keine Antwort.
+- **Warum das den Bug verschärft:** Der Arbeitsweg wird nur beim ersten Speichern berechnet. Ein zweites Speichern bricht mit «bereits gespeichert» ab. Die fehlenden Werte lassen sich in der App also nicht mehr nachholen. Aus einer fehlgeschlagenen Anfrage werden dauerhaft unvollständige Daten.
+- Gegenprobe: Mit denselben Adressen liefert `arbeitsweg_berechnen()` später 44 Minuten und 44 522 Meter. Der Code ist also nicht die Ursache.
+
 ## Umfang des ersten Vertical Slice
 
 Für die lokale Entwicklung wird der eingebaute Entwicklungsserver von Flask verwendet:
@@ -34,7 +44,7 @@ Gemeinsame Festlegungen für diesen Slice:
 - **Port 5001**, weil auf macOS Port 5000 durch die AirPlay-Funktion belegt ist.
 - **`--debug` nur lokal.** Der Server hört nur auf `127.0.0.1`. `--debug` darf nie zusammen mit `--host 0.0.0.0` verwendet werden, weil man über die Fehlerseite dann aus dem Netzwerk Python-Code ausführen könnte.
 - **Der Code in `src/` bleibt unverändert.**
-- Der Entscheid wird als ADR festgehalten, weil er die Werkzeuge des ganzen Teams betrifft.
+- Mit Lina und Mirko abgesprochen (24.10.2026). Der Entscheid steht in [ADR 0012](../../decisions/0012-lokaler-server-mit-flask-run.md).
 
 ## Ablauf
 
@@ -47,15 +57,15 @@ Gemeinsame Festlegungen für diesen Slice:
 
 ## Akzeptanzkriterien
 
-- [ ] Der Abschnitt «Get started» im README nennt den Befehl `uv sync --all-groups` und den Startbefehl. Der Platzhaltertext in diesem Abschnitt ist ersetzt.
-- [ ] Das README erklärt in einem Satz, warum lokal `flask run` statt gunicorn verwendet wird.
-- [ ] Das README warnt, `--debug` nicht mit `--host 0.0.0.0` zu verwenden.
-- [ ] Das README erklärt, dass man bei «Failed to fetch» zuerst ins Server-Terminal schaut.
-- [ ] In VS Code gibt es eine Aufgabe «JobTracker starten», die den Server mit demselben Befehl startet.
+- [x] Der Abschnitt «Get started» im README nennt den Befehl `uv sync --all-groups` und den Startbefehl. Der Platzhaltertext in diesem Abschnitt ist ersetzt.
+- [x] Das README erklärt in einem Satz, warum lokal `flask run` statt gunicorn verwendet wird.
+- [x] Das README warnt, `--debug` nicht mit `--host 0.0.0.0` zu verwenden.
+- [x] Das README erklärt, dass man bei «Failed to fetch» zuerst ins Server-Terminal schaut.
+- [x] In VS Code gibt es eine Aufgabe «JobTracker starten», die den Server mit demselben Befehl startet.
 - [ ] Nach einer Codeänderung lädt der Server neu, und eine Vorschau sowie das Speichern liefern weiterhin eine Antwort statt «Failed to fetch».
 - [ ] Der Start ist auf macOS geprüft und, falls im Team vorhanden, auf einem Windows-Rechner.
-- [ ] `src/`, `Dockerfile`, `pyproject.toml` und die Vercel-Konfiguration bleiben unverändert.
-- [ ] Ein ADR zum lokalen Entwicklungsserver liegt in `docs/decisions`.
+- [x] `src/`, `Dockerfile`, `pyproject.toml` und die Vercel-Konfiguration bleiben unverändert.
+- [x] Ein ADR zum lokalen Entwicklungsserver liegt in `docs/decisions`.
 
 ## Schrittweise Umsetzung
 
@@ -86,3 +96,14 @@ Gemeinsame Festlegungen für diesen Slice:
 | Notlösung auf macOS | `OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES` vor den gunicorn-Befehl setzen. Funktioniert, aber nur auf macOS und nur, wenn man daran denkt. |
 | Test mit `flask run` | Auf Testport 5098: drei Codeänderungen mit Neuladen ausgelöst, danach jede Vorschau-Anfrage korrekt beantwortet, kein Absturz. Flask startet beim Neuladen einen neuen Prozess statt `fork()`. |
 | Windows | gunicorn läuft auf Windows nicht. `flask run` läuft auf allen Betriebssystemen. Auf Windows noch nicht praktisch getestet. |
+
+### Prüfung der Umsetzung vom 24.10.2026
+
+| Was | Ergebnis |
+|---|---|
+| Start mit `uv run flask --app src/app run --debug --port 5001` auf macOS | Startseite, `/api/status` und `/api/datenbank/status` antworten. |
+| Vorschau nach drei Neuladevorgängen | Jede Anfrage beantwortet, kein Absturz. |
+| Speichern nach dem Neuladen | Noch nicht geprüft, damit keine Testdaten in Neon landen. Im Browser mit einer echten Stelle zu prüfen. |
+| Aufgabe «JobTracker starten» | `tasks.json` ist gültiges JSON, der Befehl ist derselbe wie im README. In VS Code selbst noch nicht gestartet. |
+| Unittests | `uv run pytest`: 39 bestanden. |
+| Windows | Noch nicht geprüft. |
