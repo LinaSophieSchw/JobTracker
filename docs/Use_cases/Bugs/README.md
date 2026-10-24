@@ -23,7 +23,7 @@ Hierher gehören zum Beispiel:
 
 | Reihenfolge | User Story | Art | Stand |
 |---|---|---|---|
-| 1 | [US 90001 – Lokalen Server auf allen Rechnern gleich und stabil starten](90001-lokalen-server-stabil-starten.md) | Infrastruktur / Bug | Geplant |
+| 1 | [US 90001 – Lokalen Server auf allen Rechnern gleich und stabil starten](90001-lokalen-server-stabil-starten.md) | Infrastruktur / Bug | Umgesetzt, Test auf Windows offen |
 
 ## Nummerierung
 
