@@ -52,11 +52,16 @@ Slice plant.
    ausprobieren kann, z. B. eine Route, ein Formular, eine Tabelle. Den Code
    schreibt der Agent im Stil von `references/code-stil.md`. Nach jedem
    Schritt:
-   - **Erklären:** Was macht dieser Code? Wie fliessen die Daten (z. B.
-     Formular → `fetch` → Flask-Route → Datenbank → zurück)? Warum ist er so
-     geschrieben und nicht anders? Neue Begriffe (Route, Request, JSON,
-     Statuscode, SQL-Abfrage, …) erklärt der Agent beim ersten Auftreten in
-     einem Satz, wenn möglich mit einem Alltagsvergleich.
+   - **Erklären:** Immer im festen Format aus
+     `references/erklaer-format.md`: Überschrift «Schritt N ist fertig: …»,
+     welche Datei ab welcher Zeile geändert wurde, «Wozu gibt es den neuen
+     Teil?» mit Beispiel und «Was der neue Teil macht, der Reihe nach» – pro
+     Funktion die Codestücke in Reihenfolge, je `codestück` → Erklärung, mit
+     dem Warum. Das gilt nach **jeder** Umsetzung im Code, auch bei
+     Vereinfachungen und Korrekturen; eine kurze Stichwortliste der
+     geänderten Dateien genügt nicht. Neue Begriffe (Route, Request, JSON,
+     SQL-Abfrage, …) erklärt der Agent beim ersten Auftreten in einem Satz,
+     wenn möglich mit einem Alltagsvergleich.
    - **Gesamtbild:** Das Schichtenbild mit dem neuen Stand.
    - **Ausprobieren:** Wie man das Ergebnis sieht – App starten, welche URL
      öffnen, was dort erscheinen sollte.
