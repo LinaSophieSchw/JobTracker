@@ -48,6 +48,12 @@ app.register_blueprint(stellenanzeigen)
 # Lokal kommt sie aus der .env, online aus den Vercel-Einstellungen.
 app.config["DATABASE"] = os.getenv("DATABASE_URL")
 
+# Liest den Schlüssel für OpenRouteService aus den Umgebungsvariablen. (FH)
+# Wie bei der Datenbank: lokal aus der .env, online aus den
+# Vercel-Einstellungen. So steht der Schlüssel nie im Code und nie in Git.
+# Die Speicherroute holt ihn hier ab und gibt ihn an fahrzeit_berechnen().
+app.config["OPENROUTESERVICE_API_KEY"] = os.getenv("OPENROUTESERVICE_API_KEY")
+
 # ALT Ersatzt durch die andere Datenbankverbindung zu PostgreSQL am 20.10 (LS)
 #  Die lokale Datenbank liegt im Hauptordner unter instance/. [LS]
 # datenbank_ordner = Path(__file__).resolve().parents[2] / "instance"
