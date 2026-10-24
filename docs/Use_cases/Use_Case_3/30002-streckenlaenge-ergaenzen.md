@@ -1,8 +1,10 @@
 # US 30002 – Zusätzlich die Streckenlänge sehen
 
-Status: Geplant
+Status: Umgesetzt (Branch `feature/30002-streckenlaenge`)
 
-Datum: 2026-10-20
+Datum: 2026-10-20, umgesetzt 2026-10-24
+
+Spickzettel zur Umsetzung: [30002-spickzettel.md](30002-spickzettel.md)
 
 ## User Story
 
@@ -36,12 +38,12 @@ Gemeinsame Festlegungen für diesen Slice:
 
 ## Akzeptanzkriterien
 
-- [ ] Beim erstmaligen Speichern einer Stelle wird zusätzlich zur Fahrzeit die Streckenlänge aus derselben Routenberechnung übernommen.
-- [ ] Die Streckenlänge wird dauerhaft bei der Stelle in der Datenbank gespeichert.
-- [ ] Bei der Stelle werden die Strecke in Kilometern und die Fahrzeit in Minuten angezeigt.
-- [ ] Nach erneutem Öffnen sind beide gespeicherten Werte sichtbar, ohne eine neue Berechnung auszulösen.
-- [ ] Scheitert die Berechnung, bleiben beide Ergebniswerte leer und der vereinbarte allgemeine Hinweis erscheint. Das Inserat bleibt speicherbar.
-- [ ] Es werden keine Eingabevalidierungen und keine Funktionen zur Bearbeitung gespeicherter Adressen ergänzt.
+- [x] Beim erstmaligen Speichern einer Stelle wird zusätzlich zur Fahrzeit die Streckenlänge aus derselben Routenberechnung übernommen.
+- [x] Die Streckenlänge wird dauerhaft bei der Stelle in der Datenbank gespeichert.
+- [x] Bei der Stelle werden die Strecke in Kilometern und die Fahrzeit in Minuten angezeigt.
+- [ ] Nach erneutem Öffnen sind beide gespeicherten Werte sichtbar, ohne eine neue Berechnung auszulösen. *Teilweise:* Beide Werte stehen dauerhaft in `fahrzeit_auto_in_minuten` und `strecke_auto_in_metern`. Eine Ansicht zum Öffnen einer Stelle gibt es noch nicht; sie gehört zur Detailansicht von Use Case 2, die diese Spalten nur mitlesen muss.
+- [x] Scheitert die Berechnung, bleiben beide Ergebniswerte leer und der vereinbarte allgemeine Hinweis erscheint. Das Inserat bleibt speicherbar.
+- [x] Es werden keine Eingabevalidierungen und keine Funktionen zur Bearbeitung gespeicherter Adressen ergänzt.
 
 ## Schrittweise Umsetzung
 
@@ -62,4 +64,14 @@ Gemeinsame Festlegungen für diesen Slice:
 
 ## Technische Prüfung vor der Umsetzung
 
-Vor der Umsetzung die verwendete Einheit der Streckenlänge in der konkreten API-Antwort prüfen und die Umrechnung für die Kilometeranzeige festlegen. Vorgesehen ist die Spalte `strecke_auto_in_metern` ([ADR 0008](../../decisions/0008-arbeitsweg-mit-openrouteservice.md)). Dazu sind noch keine API-Tests oder Schemaänderungen erfolgt.
+Vor der Umsetzung die verwendete Einheit der Streckenlänge in der konkreten API-Antwort prüfen und die Umrechnung für die Kilometeranzeige festlegen. Vorgesehen ist die Spalte `strecke_auto_in_metern` ([ADR 0008](../../decisions/0008-arbeitsweg-mit-openrouteservice.md)).
+
+### Befund vom 24.10.2026
+
+| Frage | Befund |
+|---|---|
+| Einheit | `distance` in `routes[0].summary` ist in Metern. Bestätigt schon in der Prüfung zu [US 30001](30001-fahrzeit-beim-ersten-speichern.md) am 22.10.2026 (Bern–Zug: 138267.6). |
+| Zusätzliche Abfrage | Nicht nötig. `distance` steht in derselben Antwort wie `duration`. |
+| Schema | Keine Änderung nötig. Die Spalte `strecke_auto_in_metern INTEGER` gibt es schon. |
+| Umrechnung | Gespeichert werden ganze Meter (`round()`, 138267.6 → 138268). Das Frontend zeigt Kilometer mit einer Nachkommastelle (138268 / 1000 → «138.3 km»). |
+| Echte Abfrage | Am 24.10.2026 mit `arbeitsweg_berechnen()` geprüft: Bern–Zug ergibt 95 Minuten und 138268 Meter, «Luzern» ohne Strasse ergibt beide Werte leer. |

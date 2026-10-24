@@ -91,15 +91,21 @@ def test_speicherroute_bestaetigt_neuen_eintrag(monkeypatch):
     monkeypatch.setitem(app.config, "DATABASE", "testdatenbank")
     # Seit US 30001 berechnet die Route danach den Arbeitsweg. Dieser Teil
     # wird hier ersetzt; er hat eigene Tests in test_arbeitsweg.py. (FH)
+    # Seit US 30002 gehört auch die Strecke in Metern dazu. (FH)
+    arbeitsweg = {"fahrzeit_auto_in_minuten": 95, "strecke_auto_in_metern": 138268}
     monkeypatch.setattr(
         "app.stellenanzeigen_routes.arbeitsweg_eintragen",
-        Mock(return_value=95),
+        Mock(return_value=arbeitsweg),
     )
 
     antwort = app.test_client().post("/api/stellenanzeigen", json=daten)
 
     assert antwort.status_code == 201
-    assert antwort.get_json() == {"id": 42, "fahrzeit_auto_in_minuten": 95}
+    assert antwort.get_json() == {
+        "id": 42,
+        "fahrzeit_auto_in_minuten": 95,
+        "strecke_auto_in_metern": 138268,
+    }
     speichern_mock.assert_called_once_with("testdatenbank", daten)
 
 

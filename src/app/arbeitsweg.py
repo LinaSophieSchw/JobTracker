@@ -1,14 +1,18 @@
 """Berechnet den Arbeitsweg mit OpenRouteService (Use Case 3).
 
 Wozu gibt es diese Datei?
-Wir wollen wissen, wie lange man mit dem Auto von der Wohnung zur Arbeit
-fährt. Das rechnet ein Kartendienst im Internet für uns aus: OpenRouteService.
+Wir wollen wissen, wie lange und wie weit man mit dem Auto von der Wohnung
+zur Arbeit fährt. Das rechnet ein Kartendienst im Internet für uns aus:
+OpenRouteService.
 Der Kartendienst rechnet aber nicht mit Adressen, sondern mit Punkten auf der
 Karte (Koordinaten). Deshalb arbeitet diese Datei in zwei Teilen:
 
     Wohnadresse     → koordinaten_suchen() → Punkt A ┐
-                                                      ├→ Fahrzeit → 95 Minuten
-    Arbeitsadresse  → koordinaten_suchen() → Punkt B ┘
+                                                      ├→ Route abfragen
+    Arbeitsadresse  → koordinaten_suchen() → Punkt B ┘   → 95 Minuten
+                                                           138268 Meter
+
+Beides erledigt arbeitsweg_berechnen(); die Speicherroute ruft nur sie auf.
 
 Gehört zur Schicht «Backend». Der Browser spricht nie direkt mit
 OpenRouteService, damit der API-Schlüssel auf dem Server bleibt.
@@ -25,6 +29,20 @@ Erklärende Kommentare ergänzt. (FH)
 Version 04  24.10.2026:
 Vereinfacht: kleine Hilfsfunktionen und Testteil entfernt, ein einziges
 Auffangen aller Fehler in fahrzeit_berechnen(). (FH)
+
+Version 05  24.10.2026:
+Zusätzlich die Streckenlänge aus derselben Routenantwort übernehmen
+(US 30002). fahrzeit_in_sekunden_abfragen() heisst jetzt route_abfragen(),
+fahrzeit_berechnen() heisst jetzt arbeitsweg_berechnen(). (FH)
+
+Version 06  24.10.2026:
+Vereinfacht: raise_for_status() entfernt. Fehlerantworten des Dienstes
+enthalten weder «features» noch «routes» und landen so ohnehin im except
+von arbeitsweg_berechnen(). (FH)
+
+Version 07  24.10.2026:
+Vereinfacht: route_abfragen() in arbeitsweg_berechnen() eingebaut, weil die
+Route nur an einer Stelle abgefragt wird. (FH)
 """
 
 # Werkzeug, mit dem Python Fragen ins Internet schicken kann.
@@ -79,16 +97,13 @@ def koordinaten_suchen(adresse, api_schluessel):
         timeout=ZEITLIMIT_IN_SEKUNDEN,
     )
 
-    # 2. Antwort prüfen: Hat der Dienst normal geantwortet?
-    #    Wenn nicht, z. B. weil der Schlüssel falsch ist (Statuscode 403),
-    #    bricht die Funktion hier ab.
-    antwort.raise_for_status()
-
-    # 3. Den besten Treffer nehmen: den ersten in der Liste «features».
-    #    Gibt es keinen, bricht [0] mit einem Fehler ab.
+    # 2. Den besten Treffer nehmen: den ersten in der Liste «features».
+    #    Gibt es keinen, bricht [0] mit einem Fehler ab. Meldet der Dienst
+    #    einen Fehler, z. B. bei falschem Schlüssel, fehlt «features» ganz,
+    #    und die Funktion bricht ebenfalls ab.
     treffer = antwort.json()["features"][0]
 
-    # 4. Prüfen, ob der Treffer eine echte Adresse ist.
+    # 3. Prüfen, ob der Treffer eine echte Adresse ist.
     #    Der Kartendienst findet fast immer irgendetwas und schreibt im Feld
     #    «layer» dazu, was es ist: «address» ist eine Adresse mit Hausnummer,
     #    «locality» z. B. nur ein Ort, «country» nur das Land.
@@ -97,73 +112,70 @@ def koordinaten_suchen(adresse, api_schluessel):
     if treffer["properties"]["layer"] != "address":
         raise ValueError("Keine konkrete Adresse gefunden.")
 
-    # 5. Den Punkt auf der Karte zurückgeben, also die zwei Zahlen.
+    # 4. Den Punkt auf der Karte zurückgeben, also die zwei Zahlen.
     #    Stolperfalle: zuerst der Längengrad (Ost-West), dann der Breitengrad
     #    (Nord-Süd). Bei Google Maps ist es umgekehrt.
     return treffer["geometry"]["coordinates"]
 
 
 # ==================================================
-# Teil 2: Fahrzeit von Punkt A nach Punkt B abfragen
-# Beispiel: Bern → Zug = 5682 Sekunden
-# ==================================================
-def fahrzeit_in_sekunden_abfragen(start, ziel, api_schluessel):
-    """Fragt die Autofahrzeit vom Start zum Ziel in Sekunden ab.
-
-    start und ziel sind Punkte auf der Karte [Längengrad, Breitengrad].
-    """
-    # 1. Die zwei Punkte an den Kartendienst schicken.
-    #    Nur zwei Punkte heisst: einfacher Hinweg, kein Rückweg.
-    #    post statt get, weil wir die Punkte im Inhalt der Anfrage
-    #    mitschicken müssen. So verlangt es der Dienst.
-    antwort = requests.post(
-        ROUTE_URL,
-        json={"coordinates": [start, ziel]},
-        headers={"Authorization": api_schluessel},
-        timeout=ZEITLIMIT_IN_SEKUNDEN,
-    )
-
-    # 2. Antwort prüfen, wie bei der Adresssuche.
-    #    Liegt ein Punkt z. B. mitten im See, findet der Dienst keine Strasse
-    #    (Statuscode 404), und die Funktion bricht ab.
-    antwort.raise_for_status()
-
-    # 3. Die Fahrzeit aus der Antwort holen, z. B. 5682.0.
-    #    Sie ist in Sekunden; das hat die technische Prüfung bestätigt.
-    return antwort.json()["routes"][0]["summary"]["duration"]
-
-
-# ==================================================
-# Hauptfunktion: setzt Teil 1 und Teil 2 zusammen
+# Teil 2 und Hauptfunktion: Route von Punkt A nach Punkt B abfragen
+# Beispiel: Bern → Zug = 95 Minuten und 138268 Meter
 # Die Speicherroute ruft nur diese eine Funktion auf.
 # ==================================================
-def fahrzeit_berechnen(wohnadresse, arbeitsadresse, api_schluessel):
-    """Berechnet die Autofahrzeit von der Wohn- zur Arbeitsadresse in Minuten.
+def arbeitsweg_berechnen(wohnadresse, arbeitsadresse, api_schluessel):
+    """Berechnet Fahrzeit und Strecke von der Wohn- zur Arbeitsadresse.
 
     Beide Adressen sind Dictionaries mit «strasse», «postleitzahl» und «ort».
-    Gibt None («keine Fahrzeit») zurück, wenn die Berechnung scheitert.
+    Gibt ein Dictionary zurück, z. B.
+    {"fahrzeit_auto_in_minuten": 95, "strecke_auto_in_metern": 138268}.
+    Scheitert die Berechnung, sind beide Werte None («leer»).
     """
-    # 1. try heisst: «Versuch Folgendes.» Darin die drei Arbeitsschritte:
+    # 1. try heisst: «Versuch Folgendes.» Darin die Arbeitsschritte:
     try:
         # Wohnadresse → Punkt A (Teil 1)
         start = koordinaten_suchen(wohnadresse, api_schluessel)
         # Arbeitsadresse → Punkt B (Teil 1)
         ziel = koordinaten_suchen(arbeitsadresse, api_schluessel)
-        # Fahrzeit von A nach B in Sekunden (Teil 2)
-        sekunden = fahrzeit_in_sekunden_abfragen(start, ziel, api_schluessel)
+
+        # Die zwei Punkte an den Kartendienst schicken.
+        # Nur zwei Punkte heisst: einfacher Hinweg, kein Rückweg.
+        # post statt get, weil wir die Punkte im Inhalt der Anfrage
+        # mitschicken müssen. So verlangt es der Dienst.
+        antwort = requests.post(
+            ROUTE_URL,
+            json={"coordinates": [start, ziel]},
+            headers={"Authorization": api_schluessel},
+            timeout=ZEITLIMIT_IN_SEKUNDEN,
+        )
+
+        # Die Zusammenfassung der Route holen, z. B.
+        # {"duration": 5682.0, "distance": 138267.6}: Sekunden und Meter.
+        # Fahrzeit und Strecke stehen in derselben Antwort, deshalb braucht
+        # die Strecke keine zusätzliche Anfrage. Findet der Dienst keine
+        # Route, z. B. weil ein Punkt mitten im See liegt, fehlt «routes»,
+        # und es geht direkt weiter zu except.
+        route = antwort.json()["routes"][0]["summary"]
 
     # 2. except fängt jeden Fehler auf, statt dass die App abstürzt: kein
     #    Internet, Zeitlimit, falscher oder fehlender Schlüssel, keine echte
     #    Adresse, keine Wohnadresse, unerwartete Antwort.
     #    Warum alle gleich: Die Story verlangt in jedem Fall dieselbe Meldung
-    #    ohne technische Details. Deshalb geben wir einfach None zurück.
+    #    ohne technische Details. Deshalb bleiben einfach beide Werte leer.
     #    None ist Pythons Wort für «nichts, leer». In der Datenbank wird daraus
     #    ein leeres Feld, und das Frontend zeigt «Arbeitsweg konnte nicht
     #    berechnet werden.».
     except Exception:
-        return None
+        return {"fahrzeit_auto_in_minuten": None, "strecke_auto_in_metern": None}
 
-    # 3. Hat alles geklappt: Sekunden in ganze Minuten umrechnen und
-    #    zurückgeben. 5682 Sekunden sind 94,7 Minuten → 95.
-    #    Ganze Minuten, weil die Datenbankspalte nur ganze Zahlen speichert.
-    return round(sekunden / 60)
+    # 3. Hat alles geklappt: beide Werte auf ganze Zahlen runden, weil die
+    #    Datenbankspalten nur ganze Zahlen speichern.
+    #    - Fahrzeit: Sekunden in Minuten. 5682 Sekunden sind 94,7 Minuten → 95.
+    #    - Strecke: bleibt in Metern. 138267.6 Meter → 138268.
+    #      In Kilometer rechnet erst das Frontend um, für die Anzeige.
+    #    Die Schlüssel heissen gleich wie die Datenbankspalten. So sieht man
+    #    sofort, welcher Wert wohin gehört.
+    return {
+        "fahrzeit_auto_in_minuten": round(route["duration"] / 60),
+        "strecke_auto_in_metern": round(route["distance"]),
+    }

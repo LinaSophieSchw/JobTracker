@@ -2,6 +2,13 @@
 
 Stand: 2026-10-24 · Umgesetzt von Fabio · Story: [US 30001](30001-fahrzeit-beim-ersten-speichern.md)
 
+> **Hinweis:** Seit [US 30002](30002-spickzettel.md) liefern die Funktionen
+> zusätzlich die Strecke und heissen anders: `arbeitsweg_berechnen()` und
+> `arbeitsweg_speichern()`. `fahrzeit_in_sekunden_abfragen()` ist weggefallen;
+> die Routenabfrage steht direkt in `arbeitsweg_berechnen()`, und
+> `raise_for_status()` wird nicht mehr verwendet. Dieser Spickzettel zeigt den
+> Stand nach US 30001; die Änderungen stehen im Spickzettel von US 30002.
+
 Vorbereitung für die Präsentation. Hier steht **der ganze Code dieser Story**
 mit Erklärung, in der Reihenfolge, in der er beim Klick auf «Speichern»
 abläuft. Man muss also nicht durch die Dateien klicken.

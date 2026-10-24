@@ -14,6 +14,10 @@ wohnadresse_lesen() für die Arbeitswegberechnung ergänzt (US 30004). (FH)
 
 Version 05  24.10.2026:
 fahrzeit_speichern() für die Arbeitswegberechnung ergänzt (US 30001). (FH)
+
+Version 06  24.10.2026:
+fahrzeit_speichern() heisst jetzt arbeitsweg_speichern() und trägt
+zusätzlich die Streckenlänge ein (US 30002). (FH)
 """
 
 import psycopg
@@ -288,24 +292,27 @@ def stellenanzeige_speichern(datenbank_url, daten):
 
 
 # ==================================================
-# Fahrzeit bei einer gespeicherten Stelle eintragen (FH)
+# Arbeitsweg bei einer gespeicherten Stelle eintragen (FH)
 # ==================================================
 # Wozu: Die Stelle ist zu diesem Zeitpunkt schon gespeichert
-# (stellenanzeige_speichern()). Erst danach wird die Fahrzeit berechnet.
-# Diese Funktion trägt das Ergebnis bei der Stelle nach, damit es beim
-# späteren Öffnen ohne neue Berechnung zur Verfügung steht.
-def fahrzeit_speichern(datenbank_url, stellen_id, fahrzeit_in_minuten):
-    """Trägt die Fahrzeit in Minuten bei einer gespeicherten Stelle ein.
+# (stellenanzeige_speichern()). Erst danach wird der Arbeitsweg berechnet.
+# Diese Funktion trägt Fahrzeit und Strecke bei der Stelle nach, damit sie
+# beim späteren Öffnen ohne neue Berechnung zur Verfügung stehen.
+def arbeitsweg_speichern(datenbank_url, stellen_id, arbeitsweg):
+    """Trägt Fahrzeit und Strecke bei einer gespeicherten Stelle ein.
 
-    fahrzeit_in_minuten darf None sein. Dann bleibt das Feld leer, weil die
+    arbeitsweg ist das Dictionary aus arbeitsweg_berechnen(), z. B.
+    {"fahrzeit_auto_in_minuten": 95, "strecke_auto_in_metern": 138268}.
+    Beide Werte dürfen None sein. Dann bleiben die Felder leer, weil die
     Berechnung gescheitert ist.
     """
     # 1. Verbindung zur Datenbank öffnen. Am Ende des with-Blocks werden
     #    die Änderungen bestätigt und die Verbindung geschlossen.
     with verbindung_oeffnen(datenbank_url) as verbindung:
         # 2. UPDATE ändert eine bestehende Zeile, statt eine neue anzulegen:
-        #    - SET: neue Fahrzeit eintragen und geaendert_am auf jetzt setzen
-        #      (Regel Z1 im Datenmodell: bei jeder Änderung).
+        #    - SET: Fahrzeit und Strecke eintragen und geaendert_am auf jetzt
+        #      setzen (Regel Z1 im Datenmodell: bei jeder Änderung).
+        #      Beide Werte in einem UPDATE, damit sie immer zusammenpassen.
         #    - WHERE: nur die Stelle mit dieser id, und nur, wenn sie dem
         #      aktuellen Benutzer gehört (Regel B1).
         #    Die %s sind Platzhalter; die Werte gehen getrennt mit. Das schützt
@@ -314,8 +321,14 @@ def fahrzeit_speichern(datenbank_url, stellen_id, fahrzeit_in_minuten):
             """
             UPDATE stellenanzeigen
             SET fahrzeit_auto_in_minuten = %s,
+                strecke_auto_in_metern = %s,
                 geaendert_am = CURRENT_TIMESTAMP
             WHERE id = %s AND benutzer_id = %s
             """,
-            (fahrzeit_in_minuten, stellen_id, aktuelle_benutzer_id()),
+            (
+                arbeitsweg["fahrzeit_auto_in_minuten"],
+                arbeitsweg["strecke_auto_in_metern"],
+                stellen_id,
+                aktuelle_benutzer_id(),
+            ),
         )

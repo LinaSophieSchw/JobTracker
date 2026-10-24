@@ -242,3 +242,71 @@ brauche ich ihn noch?
 Änderungen mit dem Skill `end-coding` committen und als Pull Request
 eröffnen; mit Lina klären, dass die Detailansicht von Use Case 2 die Spalte
 `fahrzeit_auto_in_minuten` anzeigt.
+
+## 2026-10-24 – US 30002 umgesetzt: Streckenlänge ergänzen
+
+**Was haben wir gemacht?**
+US 30002 wurde auf dem Branch `feature/30002-streckenlaenge` umgesetzt. Beim
+Speichern einer Stelle wird neben der Fahrzeit auch die Strecke aus derselben
+Routenantwort übernommen, in `strecke_auto_in_metern` gespeichert und im
+Browser angezeigt («Fahrzeit mit dem Auto: 95 Minuten, Strecke: 138.3 km»).
+
+- Geändert: `arbeitsweg_berechnen()` (vorher `fahrzeit_berechnen()`) in
+  `src/app/arbeitsweg.py` fragt die Route jetzt selbst ab; die eigene
+  Funktion `fahrzeit_in_sekunden_abfragen()` ist weggefallen, `arbeitsweg_speichern()` (vorher
+  `fahrzeit_speichern()`) in `src/app/datenbank.py`, `arbeitsweg_eintragen()`
+  und die Antwort der Speicherroute in `src/app/stellenanzeigen_routes.py`,
+  Anzeige in `public/index.html`.
+- Tests: drei angepasste Tests in `tests/test_arbeitsweg.py` (der Test der
+  Speicherroute prüft auch Umrechnung und einzige Routenabfrage), ein
+  angepasster Test von Lina in `tests/test_stellenanzeige_speichern.py`.
+- Doku: Befund in der Story,
+  [Spickzettel](../../Use_cases/Use_Case_3/30002-spickzettel.md), Hinweis im
+  Spickzettel von US 30001, Stand in der Übersicht von Use Case 3.
+
+**Warum haben wir das gemacht?**
+Die Story verlangt die Strecke zusätzlich zur Fahrzeit, ohne zusätzliche
+Abfrage. Die technische Prüfung von US 30001 hatte schon gezeigt, dass
+`distance` in Metern in derselben Antwort steht wie `duration`. Die Spalte
+`strecke_auto_in_metern` gab es bereits; eine Schemaänderung war nicht nötig.
+Entscheide: In der Datenbank ganze Meter, im Browser Kilometer mit einer
+Nachkommastelle. Beide Werte werden als Dictionary weitergegeben, dessen
+Schlüssel gleich heissen wie die Datenbankspalten. Die Funktionen wurden
+umbenannt, weil sie nicht mehr nur die Fahrzeit liefern.
+
+**Welche Auswirkungen hat das?**
+Strecke und Fahrzeit werden zusammen berechnet, in einem `UPDATE`
+gespeichert und angezeigt; scheitert die Berechnung, bleiben beide leer.
+39 Tests laufen durch. Eine echte Abfrage Bern–Zug ergab 95 Minuten und
+138268 Meter. Die Anzeige wurde im Browser mit simulierten Serverantworten
+(Erfolg und Fehler) geprüft; ein Durchlauf gegen Neon fand diesmal nicht
+statt. Offen:
+- Anzeige beim erneuten Öffnen gehört zur Detailansicht von Use Case 2.
+- Commit und Pull Request stehen noch aus.
+
+**Welche Konzepte wurden behandelt?**
+Mehrere Rückgabewerte als Dictionary; Einheiten im Namen
+(`strecke_auto_in_metern`); Runden mit `round()` in Python und `toFixed()` in
+JavaScript; Speichern in der Basiseinheit und Umrechnen erst für die Anzeige;
+mehrere Spalten in einem `UPDATE`; Umbenennen von Funktionen samt Aufrufen,
+Tests und Doku; mit einem Mock prüfen, wie oft eine Funktion aufgerufen wurde
+(`assert_called_once()`).
+
+**Eigenleistung und KI-Unterstützung**
+Fabio gab den Plan mit den Entscheiden (Meter speichern, Kilometer anzeigen,
+Dictionary) frei und erlaubte die Anpassung an Linas Test. Danach wünschte er
+möglichst schlanken Code, weil er jede Codestelle erklären können muss, und
+wählte aus vier Vorschlägen zwei aus: `raise_for_status()` entfernen und den
+eigenen Umrechnungstest in den Test der Speicherroute einbauen. Das Einbauen
+der Routenabfrage in die Hauptfunktion liess er sich zuerst im Vergleich
+zeigen und gab es danach frei. Er verzichtete auf ein Review durch Lina. Der Agent schrieb
+Code, Tests und Doku, prüfte die Anzeige im Browser mit simulierten Antworten
+und machte eine echte Abfrage beim Kartendienst.
+
+**Persönliche Reflexion – von Fabio zu ergänzen**
+Kann ich erklären, warum die Strecke in Metern gespeichert und erst im
+Browser in Kilometer umgerechnet wird?
+
+**Nächster Lernschritt**
+Änderungen mit dem Skill `end-coding` committen und als Pull Request
+eröffnen; danach US 30003 (Neuberechnung beim erneuten Speichern).
