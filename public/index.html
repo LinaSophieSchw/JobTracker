@@ -26,6 +26,11 @@ Hinweis «Arbeitsweg konnte nicht berechnet werden.» (US 30001).
 
 Version 06 – 24.10.2026 (FH):
 Hinter der Fahrzeit erscheint zusätzlich die Strecke in Kilometern (US 30002).
+
+Version 07 – 24.10.2026 (FH):
+Strecke und Fahrzeit stehen in einem nur lesbaren Kasten «Arbeitsweg» unter
+der Stellenbeschreibung statt in der Bestätigung. Das Formular bleibt nach dem
+Speichern offen, damit die Werte sichtbar sind (US 30006, mit LS abgesprochen).
 -->
 <html lang="de">
 
@@ -155,6 +160,30 @@ Hinter der Fahrzeit erscheint zusätzlich die Strecke in Kilometern (US 30002).
 
             </table>
 
+            <!-- Arbeitsweg (FH): nur lesbar. Die Werte berechnet das Backend
+                 beim ersten Klick auf «Speichern»; vorher bleiben die Felder leer.
+                 :value statt v-model: Vue schreibt den Wert nur ins Feld hinein,
+                 readonly verhindert, dass man selbst etwas eintippt. -->
+            <fieldset>
+                <legend>Arbeitsweg mit dem Auto (wird beim Speichern berechnet)</legend>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th scope="row"><label for="strecke_auto">Strecke</label></th>
+                            <td>
+                                <input id="strecke_auto" type="text" :value="strecke_auto_text" readonly>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="fahrzeit_auto">Fahrzeit</label></th>
+                            <td>
+                                <input id="fahrzeit_auto" type="text" :value="fahrzeit_auto_text" readonly>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </fieldset>
+
             <!-- Speichert die bearbeiteten Angaben. -->
             <button type="button" @click="stellenanzeige_speichern" :disabled="speichert || laedt">
                 {{ speichert ? "Wird gespeichert …" : "Speichern" }}
@@ -204,6 +233,11 @@ Hinter der Fahrzeit erscheint zusätzlich die Strecke in Kilometern (US 30002).
                     pensum: "",                      // Beschäftigungsumfang, z. B. „80–100 %“.
                     stellenbeschreibung: "",         // Beschreibung als reiner Text.
 
+                    // Arbeitsweg (FH): fertiger Anzeigetext, nur lesbar.
+                    // Leer, bis die Stelle gespeichert und berechnet ist.
+                    strecke_auto_text: "",           // z. B. „44.5 km“.
+                    fahrzeit_auto_text: "",          // z. B. „44 min“.
+
                     // Steuern Ladeanzeige, Fehlermeldung und Sichtbarkeit des Formulars.
                     laedt: false,                    // Während des Abrufs ist der Button gesperrt.
                     fehlermeldung: "",               // Meldung bei einem fehlgeschlagenen Abruf.
@@ -237,6 +271,10 @@ Hinter der Fahrzeit erscheint zusätzlich die Strecke in Kilometern (US 30002).
                     this.inseratadresse_ort = "";
                     this.pensum = "";
                     this.stellenbeschreibung = "";
+
+                    // Neue Stelle: noch kein Arbeitsweg berechnet. (FH)
+                    this.strecke_auto_text = "";
+                    this.fahrzeit_auto_text = "";
 
                     this.vorschau_vorhanden = true;
                 },
@@ -282,6 +320,10 @@ Hinter der Fahrzeit erscheint zusätzlich die Strecke in Kilometern (US 30002).
                         this.inseratadresse_ort = daten.inseratadresse_ort || "";
                         this.pensum = daten.pensum || "";
                         this.stellenbeschreibung = daten.stellenbeschreibung || "";
+
+                        // Neue Vorschau: noch kein Arbeitsweg berechnet. (FH)
+                        this.strecke_auto_text = "";
+                        this.fahrzeit_auto_text = "";
 
                         // Zeigt das Formular mit den übernommenen Werten an.
                         // Die Angaben sind bearbeitbar, aber noch nicht gespeichert.
@@ -330,22 +372,26 @@ Hinter der Fahrzeit erscheint zusätzlich die Strecke in Kilometern (US 30002).
                         this.erfolgsmeldung =
                             `Stellenanzeige gespeichert (ID: ${daten.id}).`;
 
-                        // Fahrzeit und Strecke oder Hinweis an die Bestätigung
-                        // anhängen (FH). Das Backend schickt für beide Werte
-                        // null, wenn der Arbeitsweg nicht berechnet werden konnte.
+                        // Fahrzeit und Strecke in den Arbeitsweg-Kasten schreiben
+                        // oder den Hinweis an die Bestätigung anhängen (FH).
+                        // Das Backend schickt für beide Werte null, wenn der
+                        // Arbeitsweg nicht berechnet werden konnte.
                         if (daten.fahrzeit_auto_in_minuten === null) {
+                            this.strecke_auto_text = "";
+                            this.fahrzeit_auto_text = "";
                             this.erfolgsmeldung += " Arbeitsweg konnte nicht berechnet werden.";
                         } else {
                             // Die Strecke kommt in Metern, angezeigt wird sie in
-                            // Kilometern: 138268 / 1000 = 138.268 → «138.3».
+                            // Kilometern: 44522 / 1000 = 44.522 → «44.5».
                             // toFixed(1) rundet auf eine Nachkommastelle.
                             const strecke_in_km =
                                 (daten.strecke_auto_in_metern / 1000).toFixed(1);
-                            this.erfolgsmeldung +=
-                                ` Fahrzeit mit dem Auto: ${daten.fahrzeit_auto_in_minuten} Minuten,` +
-                                ` Strecke: ${strecke_in_km} km`;
+                            this.strecke_auto_text = `${strecke_in_km} km`;
+                            this.fahrzeit_auto_text = `${daten.fahrzeit_auto_in_minuten} min`;
                         }
-                        this.vorschau_vorhanden = false;
+                        // Das Formular bleibt offen, damit man den Arbeitsweg im
+                        // Kasten sieht (FH). Ein zweiter Klick auf «Speichern»
+                        // meldet, dass die Stelle schon gespeichert ist.
                     } catch (fehler) {
                         // Bei Fehlern bleibt das Formular mit deinen Eingaben sichtbar.
                         this.fehlermeldung = fehler.message;

@@ -189,7 +189,10 @@ def test_speichern_meldet_bestehenden_eintrag(monkeypatch):
         Mock(return_value=verbindung),
     )
 
-    with pytest.raises(ValueError, match=r"bereits gespeichert \(ID: 7\)"):
+    with pytest.raises(
+        ValueError,
+        match=r"bereits gespeichert \(ID: 7\) und kann hier nicht bearbeitet werden",
+    ):
         stellenanzeige_speichern("testdatenbank", daten)
 
     # Auch die Suche nach dem Duplikat muss auf den Benutzer begrenzt sein.
