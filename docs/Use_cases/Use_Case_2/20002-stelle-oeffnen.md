@@ -1,6 +1,6 @@
 # US 20002 – Stelle aus der Übersicht öffnen
 
-Status: In Arbeit
+Status: Umgesetzt
 
 Datum: 2026-10-25
 
@@ -56,22 +56,24 @@ kann. Angezeigt wird er in dieser Story im Formular noch nicht.
 
 ## Akzeptanzkriterien
 
-- [ ] Ein Klick auf eine Zeile der Übersicht öffnet das Stellen-Formular mit
+- [x] Ein Klick auf eine Zeile der Übersicht öffnet das Stellen-Formular mit
       den gespeicherten Angaben dieser Stelle.
-- [ ] `GET /api/stellenanzeigen/<id>` liefert die Stelle des Demo-Benutzers
+- [x] `GET /api/stellenanzeigen/<id>` liefert die Stelle des Demo-Benutzers
       als JSON-Objekt mit den Feldern aus dem Ablauf.
-- [ ] Für eine unbekannte `id` oder eine Stelle eines anderen Benutzers
+- [x] Für eine unbekannte `id` oder eine Stelle eines anderen Benutzers
       antwortet das Backend mit 404 und einer Fehlermeldung.
-- [ ] Der Anzeigenlink erscheint nur lesbar als anklickbarer Link.
-- [ ] Der Bereich zum Laden eines Links ist im Zustand «Bestehend»
+- [x] Der Anzeigenlink erscheint nur lesbar als anklickbarer Link.
+- [x] Der Bereich zum Laden eines Links ist im Zustand «Bestehend»
       ausgeblendet.
-- [ ] Strecke und Fahrzeit erscheinen wie nach dem Speichern; fehlen die
-      Werte, erscheint derselbe Text wie in US 30006.
-- [ ] Im Zustand «Bestehend» gibt es weder «Speichern» noch «Löschen».
-- [ ] «← Zurück zur Übersicht» führt zurück zur Übersicht.
-- [ ] «+ Neue Stelle» öffnet danach wieder ein leeres Formular.
-- [ ] Das Öffnen ändert keine Daten und löst keine Arbeitswegberechnung aus.
-- [ ] Unittests prüfen die Route mit einer gefundenen und einer nicht
+- [x] Strecke und Fahrzeit erscheinen wie nach dem Speichern, z.B. «12.5 km»
+      und «18 min»; fehlen die Werte, bleiben die Felder leer. Angepasst am
+      25.10.2026: Der Hinweis «Arbeitsweg konnte nicht berechnet werden»
+      aus US 30006 gehört zum Speichern und erscheint beim Öffnen nicht.
+- [x] Im Zustand «Bestehend» gibt es weder «Speichern» noch «Löschen».
+- [x] «← Zurück zur Übersicht» führt zurück zur Übersicht.
+- [x] «+ Neue Stelle» öffnet danach wieder ein leeres Formular.
+- [x] Das Öffnen ändert keine Daten und löst keine Arbeitswegberechnung aus.
+- [x] Unittests prüfen die Route mit einer gefundenen und einer nicht
       gefundenen Stelle.
 
 ## Schrittweise Umsetzung

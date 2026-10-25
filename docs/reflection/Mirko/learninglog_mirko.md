@@ -129,3 +129,58 @@ zu verstehen?
 **Nächster Lernschritt**
 Review und Merge des Pull Requests. Danach US 20002: Stelle aus der Übersicht
 öffnen.
+
+### 2026-10-25 – US 20002: Stelle aus der Übersicht öffnen
+
+**Was haben wir gemacht?**
+US 20002 als eigene Story beschrieben
+(`docs/Use_cases/Use_Case_2/20002-stelle-oeffnen.md`) und als Vertical Slice
+umgesetzt:
+- Datenbank: `stellenanzeige_mit_id_lesen()` in `src/app/datenbank.py` liest
+  eine Stelle über ihre `id`, nur für den Demo-Benutzer.
+- Backend: Route `GET /api/stellenanzeigen/<id>` in
+  `src/app/stellenanzeigen_routes.py`; unbekannte Stelle → 404.
+- Tests: 8 Unittests in `tests/test_stellenanzeige_oeffnen.py`.
+- Frontend: Klick auf eine Zeile der Übersicht öffnet die Stelle im
+  Stellen-Formular im Zustand «Bestehend» (`public/index.html`).
+
+**Warum haben wir das gemacht?**
+Ohne Öffnen kann man eine Stelle später weder ändern noch löschen (US 20003
+bis US 20005). Das bestehende Formular wird wiederverwendet statt einer eigenen
+Detailansicht (ADR 0005). «Speichern» und «Löschen» sind im Zustand
+«Bestehend» vorerst ausgeblendet, weil die heutige Speicherroute immer eine
+neue Stelle anlegt und so Duplikate entstehen würden.
+
+**Welche Auswirkungen hat das?**
+Eine Stelle lässt sich per Klick öffnen und ansehen. Änderungen im Formular
+werden noch nicht gespeichert; das folgt mit US 20003. Die Antwort enthält
+schon den `status`, damit US 20003 ihn nutzen kann.
+
+**Welche Konzepte wurden behandelt?**
+- Platzhalter in der Route: `<int:stellen_id>` nimmt die Zahl aus der Adresse.
+- `fetchone()` statt `fetchall()`: eine Zeile oder `None`.
+- HTTP-Statuscodes: 200 OK, 404 nicht gefunden, 503 Dienst nicht verfügbar.
+- Warum 404 auch bei der Stelle eines fremden Benutzers: Die Antwort verrät
+  nicht, dass es die `id` gibt (Regel B1).
+- Unittests: prüfen einzelne Funktionen automatisch, bleiben im Repo und
+  schützen vor Rückschritten; Mock ersetzt die Datenbank.
+- Vue: `@click` auf einer Tabellenzeile, `v-if` mit einer Zustandsvariable
+  (`geoeffnete_stelle_id`), Template-Strings mit `${...}`.
+- Git-Worktree: zweiter Arbeitsordner mit eigenem Branch; VS Code muss diesen
+  Ordner öffnen, und die `.env` muss dort ebenfalls liegen.
+
+**Eigenleistung und KI-Unterstützung**
+- Mirko: Entscheide zu Klick auf die ganze Zeile, 404-Verhalten, nur «Zurück»
+  im Zustand «Bestehend» und PR-Prüfung durch Use Case 1; Freigabe der Story;
+  Tests im Browser (Route und Oberfläche); Freigabe der Commits.
+- KI (Claude): Story-Entwurf, Code, Unittests und Erklärungen zu jedem Schritt,
+  Commits nach Zustimmung.
+
+**Persönliche Reflexion – von Mirko zu ergänzen**
+Offen: Was kann ich jetzt selbst erklären, und welcher Teil war am schwierigsten
+zu verstehen?
+
+**Nächster Lernschritt**
+Pull Request für US 20002 öffnen und von Use Case 1 prüfen lassen. Vor US 20003
+mit Fabio den offenen Punkt O2 klären: Wer baut den `PUT`, und wie wird die
+Neuberechnung des Arbeitswegs (US 30003) eingebunden?
