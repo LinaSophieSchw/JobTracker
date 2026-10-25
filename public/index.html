@@ -73,7 +73,8 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
 
         <!-- Eine Tabellenzeile pro gespeicherter Stelle.
              v-for wiederholt die Zeile <tr> für jede Stelle in der Liste
-             «stellen». :key gibt Vue die id, damit es die Zeilen auseinanderhält. -->
+             «stellen». :key gibt Vue die id, damit es die Zeilen auseinanderhält.
+             @click öffnet die Stelle dieser Zeile im Formular (US 20002). -->
         <table>
             <thead>
                 <tr>
@@ -85,7 +86,7 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="stelle in stellen" :key="stelle.id">
+                <tr v-for="stelle in stellen" :key="stelle.id" @click="stelle_oeffnen(stelle.id)">
                     <td>{{ stelle.titel }}</td>
                     <td>{{ stelle.firma }}</td>
                     <td>{{ stelle.arbeitsort }}</td>
@@ -358,6 +359,36 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
                     this.fehlermeldung = "";
                     this.erfolgsmeldung = "";
                     this.ansicht = "formular";
+                },
+
+                // Holt eine Stelle vom Backend und zeigt sie im Formular (MG, US 20002).
+                // stellen_id kommt aus der angeklickten Zeile der Übersicht.
+                async stelle_oeffnen(stellen_id) {
+                    this.fehlermeldung = "";
+
+                    try {
+                        // Die id wird Teil der Adresse, z. B. /api/stellenanzeigen/7.
+                        const antwort = await fetch(`/api/stellenanzeigen/${stellen_id}`);
+                        const daten = await antwort.json();
+
+                        // Bei 404 oder 503 springt throw in den catch-Block.
+                        // Dann wechseln wir gar nicht erst zum Formular.
+                        if (!antwort.ok) {
+                            throw new Error(daten.fehler || "Stelle nicht verfügbar.");
+                        }
+
+                        // Vorerst nur Titel und Firma übernehmen.
+                        this.stellentitel = daten.titel || "";
+                        this.firma = daten.firma || "";
+
+                        // Formular mit den Feldern anzeigen.
+                        this.erfolgsmeldung = "";
+                        this.vorschau_vorhanden = true;
+                        this.ansicht = "formular";
+                    } catch (fehler) {
+                        // Die Meldung erscheint in der Übersicht, wir bleiben dort.
+                        this.fehlermeldung = fehler.message;
+                    }
                 },
 
                 // Wechselt zurück zur Übersicht und lädt die Liste neu (MG).
