@@ -25,6 +25,9 @@ weil das Formular nur neue Stellen speichert (US 30006, mit LS abgesprochen). (F
 
 Version 08  24.10.2026:
 stellenanzeigen_lesen() für die Übersicht ergänzt (US 20001). (MG)
+
+Version 09  25.10.2026:
+stellenanzeige_mit_id_lesen() zum Öffnen einer Stelle ergänzt (US 20002). (MG)
 """
 
 import psycopg
@@ -349,6 +352,57 @@ def stellenanzeigen_lesen(datenbank_url):
         )
 
     return stellen
+
+
+# ==================================================
+# Eine einzelne Stelle zum Öffnen lesen (MG)
+# ==================================================
+# Beim Öffnen braucht das Formular alle Felder, die es anzeigt, auch die
+# lange Stellenbeschreibung. Der status kommt schon mit, damit US 20003 ihn
+# verwenden kann. Lohn, Bewerbungsdatum und Notizen fehlen noch, weil das
+# Formular sie erst mit US 20004 bekommt.
+def stellenanzeige_mit_id_lesen(datenbank_url, stellen_id):
+    """Liefert die Stelle mit dieser id als Dictionary.
+
+    Gibt None zurück, wenn es keine Stelle mit dieser id gibt oder wenn sie
+    einem anderen Benutzer gehört.
+    """
+    with verbindung_oeffnen(datenbank_url) as verbindung:
+        # WHERE id und benutzer_id: Die Stelle muss diese id haben UND dem
+        # aktuellen Benutzer gehören (Regel B1). Sonst findet die Abfrage
+        # nichts, auch wenn es die id bei einem anderen Benutzer gibt.
+        zeile = verbindung.execute(
+            """
+            SELECT id, url, titel, firma, arbeitsort,
+                   inseratadresse_strasse, inseratadresse_postleitzahl,
+                   inseratadresse_ort, pensum, stellenbeschreibung, status,
+                   strecke_auto_in_metern, fahrzeit_auto_in_minuten
+            FROM stellenanzeigen
+            WHERE id = %s AND benutzer_id = %s
+            """,
+            (stellen_id, aktuelle_benutzer_id()),
+        ).fetchone()
+
+    # fetchone() liefert genau eine Zeile als Tupel oder None, wenn nichts
+    # gefunden wurde. Die id ist eindeutig, mehr als eine Zeile gibt es nie.
+    if zeile is None:
+        return None
+
+    return {
+        "id": zeile[0],
+        "url": zeile[1],
+        "titel": zeile[2],
+        "firma": zeile[3],
+        "arbeitsort": zeile[4],
+        "inseratadresse_strasse": zeile[5],
+        "inseratadresse_postleitzahl": zeile[6],
+        "inseratadresse_ort": zeile[7],
+        "pensum": zeile[8],
+        "stellenbeschreibung": zeile[9],
+        "status": zeile[10],
+        "strecke_auto_in_metern": zeile[11],
+        "fahrzeit_auto_in_minuten": zeile[12],
+    }
 
 
 # ==================================================
