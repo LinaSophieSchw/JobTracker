@@ -20,6 +20,9 @@ Route für die Übersicht aller Stellen ergänzt (US 20001). (MG)
 
 Version 07 – 25.10.2026:
 Route zum Öffnen einer einzelnen Stelle ergänzt (US 20002). (MG)
+
+Version 08 – 29.10.2026:
+Route zum Ändern des Status ergänzt; berechnet den Arbeitsweg neu (US 20003). (MG)
 """
 
 import psycopg
@@ -28,6 +31,7 @@ from flask import Blueprint, current_app, jsonify, request
 from .arbeitsweg import arbeitsweg_berechnen
 from .datenbank import (
     arbeitsweg_speichern,
+    status_speichern,
     stellenanzeige_mit_id_lesen,
     stellenanzeige_speichern,
     stellenanzeigen_lesen,
@@ -213,3 +217,63 @@ def stellenanzeige_oeffnen(stellen_id):
         return jsonify({"fehler": "Diese Stelle wurde nicht gefunden."}), 404
 
     return jsonify(stelle)
+
+
+# ==================================================
+# Status einer bestehenden Stelle speichern (MG)
+# ==================================================
+# PUT bedeutet: Der Browser ändert etwas, das es schon gibt. Dieselbe Adresse
+# wie beim Öffnen; Flask unterscheidet die beiden Routen an der Methode:
+# GET liest die Stelle, PUT ändert sie.
+#
+#   status_speichern() → stellenanzeige_mit_id_lesen() → arbeitsweg_eintragen()
+#
+@stellenanzeigen.put("/api/stellenanzeigen/<int:stellen_id>")
+def stellenanzeige_aendern(stellen_id):
+    """Speichert den neuen Status und berechnet den Arbeitsweg neu."""
+    daten = request.get_json(silent=True)
+
+    # Ohne JSON-Objekt gibt es keinen Status. None geht dann an
+    # status_speichern() und wird dort als ungültig abgelehnt.
+    status = daten.get("status") if isinstance(daten, dict) else None
+
+    datenbank_url = current_app.config["DATABASE"]
+
+    try:
+        # 1. Zuerst den Status speichern. Erst danach rechnen, damit die
+        #    Berechnung immer mit dem gespeicherten Stand arbeitet.
+        gefunden = status_speichern(datenbank_url, stellen_id, status)
+        if not gefunden:
+            return jsonify({"fehler": "Diese Stelle wurde nicht gefunden."}), 404
+
+        # 2. Die Stelle mit ihren gespeicherten Adressen lesen (US 20002).
+        stelle = stellenanzeige_mit_id_lesen(datenbank_url, stellen_id)
+    except ValueError as fehler:
+        # Unbekannter Status: verständliche Meldung, nichts gespeichert.
+        return jsonify({"fehler": str(fehler)}), 400
+    except psycopg.Error:
+        return (
+            jsonify(
+                {
+                    "fehler": "Speichern derzeit nicht möglich. "
+                    "Bitte später erneut versuchen."
+                }
+            ),
+            503,
+        )
+
+    # 3. Arbeitsweg neu berechnen mit Fabios Funktion, unverändert (US 30003).
+    #    Sie braucht aus «daten» nur die drei inseratadresse_*-Felder, und
+    #    die liefert stellenanzeige_mit_id_lesen() mit genau diesen Namen.
+    arbeitsweg = arbeitsweg_eintragen(stellen_id, stelle)
+
+    # 200 statt 201 wie beim POST: Es ist nichts Neues entstanden, die
+    # bestehende Stelle wurde geändert.
+    return jsonify(
+        {
+            "id": stellen_id,
+            "status": status,
+            "fahrzeit_auto_in_minuten": arbeitsweg["fahrzeit_auto_in_minuten"],
+            "strecke_auto_in_metern": arbeitsweg["strecke_auto_in_metern"],
+        }
+    )
