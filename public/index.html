@@ -153,6 +153,22 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
             <!-- Eine Zeile pro Feld: links Beschriftung, rechts Eingabe. -->
             <table>
                 <tbody>
+                    <!-- Status nur bei einer geöffneten Stelle (MG, US 20003).
+                         Eine neue Stelle startet immer mit «gespeichert».
+                         v-for geht durch status_auswahl: «wert» wird gespeichert,
+                         «anzeigetext» sieht der Benutzer. v-model hält die Wahl
+                         in «status» fest. -->
+                    <tr v-if="geoeffnete_stelle_id !== null">
+                        <th scope="row"><label for="status">Status</label></th>
+                        <td>
+                            <select id="status" v-model="status">
+                                <option v-for="(anzeigetext, wert) in status_auswahl"
+                                        :key="wert" :value="wert">
+                                    {{ anzeigetext }}
+                                </option>
+                            </select>
+                        </td>
+                    </tr>
                     <tr>
                         <th scope="row"><label for="stellentitel">Titel</label></th>
                         <td>
@@ -335,6 +351,11 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
                     // id der Stelle, die aus der Übersicht geöffnet wurde (MG).
                     // null heisst: Das Formular erfasst eine neue Stelle.
                     geoeffnete_stelle_id: null,
+                    // Status der geöffneten Stelle, z. B. "beworben" (MG, US 20003).
+                    status: "",
+                    // Auswahl für das Dropdown. Das HTML sieht nur Werte aus
+                    // data(), darum reichen wir die Konstante hier durch.
+                    status_auswahl: STATUS_ANZEIGE,
                 };
             },
             // Enthält die Funktionen, die unsere Oberfläche auslösen kann.
@@ -421,6 +442,8 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
                         // kein Linkbereich, kein Speichern und kein Abbrechen.
                         this.manuelle_erfassung = false;
                         this.geoeffnete_stelle_id = daten.id;
+                        // Dropdown auf den gespeicherten Status stellen (US 20003).
+                        this.status = daten.status;
 
                         // Formular mit den Feldern anzeigen.
                         this.erfolgsmeldung = "";
