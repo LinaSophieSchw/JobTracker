@@ -1,6 +1,6 @@
 # Use Case 2 – Stellenanzeigen verwalten
 
-Stand: 2026-10-25
+Stand: 2026-10-29
 
 **Status:** Entwurf
 
@@ -17,7 +17,7 @@ interessieren.
 |---|---|---|---|
 | 1 | [US 20001 – Übersicht aller Stellen sehen](20001-uebersicht-aller-stellen.md) | `GET /api/stellenanzeigen` | Umgesetzt |
 | 2 | [US 20002 – Stelle aus der Übersicht öffnen](20002-stelle-oeffnen.md) | `GET /api/stellenanzeigen/<id>` | Umgesetzt |
-| 3 | US 20003 – Status einer Stelle ändern | `PUT /api/stellenanzeigen/<id>` (nur `status`) | Geplant |
+| 3 | [US 20003 – Status einer Stelle ändern](20003-status-aendern.md) | `PUT /api/stellenanzeigen/<id>` (nur `status`) | In Arbeit |
 | 4 | US 20004 – Weitere Angaben einer Stelle bearbeiten | derselbe `PUT`, erweitert | Geplant |
 | 5 | US 20005 – Stelle löschen | `DELETE /api/stellenanzeigen/<id>` | Geplant |
 
@@ -46,8 +46,10 @@ Use Case 2 verwendet die zwei Screens aus
   «Löschen» und «Zurück». Der Status wird im Formular über ein Dropdown
   gewählt, nicht direkt in der Übersicht.
 
-Nach dem Speichern erscheint die Übersicht, ohne Erfolgsmeldung. Vor dem
-Löschen fragt die Oberfläche nach.
+Nach dem Speichern bleibt das Formular offen, damit Arbeitsweg oder Hinweis
+sichtbar sind; mit «← Zurück zur Übersicht» kehrt man zurück. Entschieden am
+29.10.2026 (Mirko), wie bei neuen Stellen (US 20001). Vor dem Löschen fragt
+die Oberfläche nach.
 
 ## Voraussetzungen
 
@@ -96,13 +98,12 @@ wechseln. `geaendert_am` wird auch bei einer reinen Statusänderung neu gesetzt
 
 ## Offene Punkte
 
-| Nr. | Thema | Wer | Auswirkung |
-|---|---|---|---|
-| O2 | **Speichervorgang mit Use Case 3.** Wer baut den `PUT`, und wie wird die Neuberechnung aus US 30003 eingebunden? | Mirko und Fabio | Muss vor US 20003 geklärt sein. |
+Keine.
 
 ## Entschiedene Punkte
 
 | Nr. | Thema | Entscheid |
 |---|---|---|
 | O1 | Profil ändern | Entschieden am 24.10.2026 (Mirko): Vorerst gibt es keine Maske zum Ändern von Name und Wohnadresse. Die Daten des Demo-Benutzers bleiben fest hinterlegt ([US 30004](../Use_Case_3/30004-demo-benutzer-fest-hinterlegen.md)). |
+| O2 | Speichervorgang mit Use Case 3 | Entschieden am 29.10.2026 (Mirko): Mirko baut `PUT /api/stellenanzeigen/<id>`. Die Route ruft bei jedem Speichern die bestehende Funktion `arbeitsweg_eintragen()` aus Use Case 3 unverändert auf, mit den gespeicherten Adressen der Stelle ([US 20003](20003-status-aendern.md)). Fabio wird informiert; den Stand von US 30003 führt er selbst nach. |
 | O3 | Suche und Filter | Entschieden am 24.10.2026 (Mirko): Use Case 2 baut vorerst keine Suche und keinen Filter, wie in [ADR 0010](../../decisions/0010-minimale-oberflaeche.md) vorgeschlagen. |
