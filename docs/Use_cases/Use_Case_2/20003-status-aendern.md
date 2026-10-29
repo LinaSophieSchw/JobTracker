@@ -1,6 +1,6 @@
 # US 20003 – Status einer Stelle ändern
 
-Status: In Arbeit
+Status: Umgesetzt
 
 Datum: 2026-10-29
 
@@ -44,6 +44,9 @@ Gemeinsame Festlegungen für diesen Slice:
   nicht berechnet werden.». Wie bei neuen Stellen (US 20001, US 30006);
   ersetzt für bestehende Stellen den Plan «nach dem Speichern zur Übersicht».
   Entschieden am 29.10.2026 (Mirko).
+- Nach erfolgreichem Speichern erscheint die kurze Meldung **«Gespeichert.»**,
+  weil das Formular offen bleibt und man sonst nicht sieht, ob es geklappt
+  hat. Wie beim Speichern neuer Stellen. Entschieden am 29.10.2026 (Mirko).
 
 ## Ablauf
 
@@ -61,19 +64,19 @@ Gemeinsame Festlegungen für diesen Slice:
 
 ## Akzeptanzkriterien
 
-- [ ] Im Zustand «Bestehend» zeigt das Dropdown den gespeicherten Status der
+- [x] Im Zustand «Bestehend» zeigt das Dropdown den gespeicherten Status der
       Stelle.
-- [ ] Nach «Speichern» ist der neue Status in der Datenbank gespeichert und
+- [x] Nach «Speichern» ist der neue Status in der Datenbank gespeichert und
       erscheint in der Übersicht.
-- [ ] `geaendert_am` ist nach dem Speichern neu gesetzt.
-- [ ] Ein unbekannter Status gibt 400 mit Meldung; nichts wird gespeichert.
-- [ ] Eine unbekannte `id` oder eine Stelle eines anderen Benutzers gibt 404.
-- [ ] Jedes Speichern berechnet den Arbeitsweg neu; das Ergebnis oder der
+- [x] `geaendert_am` ist nach dem Speichern neu gesetzt.
+- [x] Ein unbekannter Status gibt 400 mit Meldung; nichts wird gespeichert.
+- [x] Eine unbekannte `id` oder eine Stelle eines anderen Benutzers gibt 404.
+- [x] Jedes Speichern berechnet den Arbeitsweg neu; das Ergebnis oder der
       Hinweis erscheint im Formular.
-- [ ] Scheitert die Berechnung, ist der Status trotzdem gespeichert.
-- [ ] Eine neue Stelle zeigt kein Dropdown und wird wie bisher mit `POST`
+- [x] Scheitert die Berechnung, ist der Status trotzdem gespeichert.
+- [x] Eine neue Stelle zeigt kein Dropdown und wird wie bisher mit `POST`
       gespeichert.
-- [ ] Unittests prüfen die Datenbankfunktion und die Route: Erfolg,
+- [x] Unittests prüfen die Datenbankfunktion und die Route: Erfolg,
       ungültiger Status, unbekannte Stelle.
 
 ## Schrittweise Umsetzung

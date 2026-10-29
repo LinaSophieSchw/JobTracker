@@ -17,7 +17,7 @@ interessieren.
 |---|---|---|---|
 | 1 | [US 20001 – Übersicht aller Stellen sehen](20001-uebersicht-aller-stellen.md) | `GET /api/stellenanzeigen` | Umgesetzt |
 | 2 | [US 20002 – Stelle aus der Übersicht öffnen](20002-stelle-oeffnen.md) | `GET /api/stellenanzeigen/<id>` | Umgesetzt |
-| 3 | [US 20003 – Status einer Stelle ändern](20003-status-aendern.md) | `PUT /api/stellenanzeigen/<id>` (nur `status`) | In Arbeit |
+| 3 | [US 20003 – Status einer Stelle ändern](20003-status-aendern.md) | `PUT /api/stellenanzeigen/<id>` (nur `status`) | Umgesetzt |
 | 4 | US 20004 – Weitere Angaben einer Stelle bearbeiten | derselbe `PUT`, erweitert | Geplant |
 | 5 | US 20005 – Stelle löschen | `DELETE /api/stellenanzeigen/<id>` | Geplant |
 
@@ -90,7 +90,9 @@ wechseln. `geaendert_am` wird auch bei einer reinen Statusänderung neu gesetzt
   ([ADR 0010](../../decisions/0010-minimale-oberflaeche.md)).
 - Status direkt in der Übersicht ändern.
 - Sortieren der Übersicht nach Spalten.
-- Erfolgs- und Hinweismeldungen nach dem Speichern.
+- Ausführliche Erfolgsmeldungen nach dem Speichern. Bei einer geöffneten
+  Stelle erscheint nur «Gespeichert.» und gegebenenfalls der Hinweis zum
+  Arbeitsweg ([US 20003](20003-status-aendern.md)).
 - Ändern des Anzeigenlinks (`url`); er ist nach dem Anlegen fest.
 - Verlauf der Statusänderungen.
 - Maske zum Ändern des Profils (Name und Wohnadresse des Demo-Benutzers).
