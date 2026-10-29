@@ -28,11 +28,26 @@ stellenanzeigen_lesen() für die Übersicht ergänzt (US 20001). (MG)
 
 Version 09  25.10.2026:
 stellenanzeige_mit_id_lesen() zum Öffnen einer Stelle ergänzt (US 20002). (MG)
+
+Version 10  29.10.2026:
+status_speichern() zum Ändern des Status ergänzt (US 20003). (MG)
 """
 
 import psycopg
 
 from .stellenanzeige_erfassen import anzeigenlink_bestimmen
+
+# Die sechs erlaubten Werte für status, wie in Abschnitt 5 im Datenmodell
+# und im CHECK der Tabelle. Eine Konstante, weil sich die Liste zur Laufzeit
+# nie ändert. (MG, US 20003)
+ERLAUBTE_STATUS = (
+    "gespeichert",
+    "beworben",
+    "interview",
+    "zusage",
+    "absage",
+    "zurueckgezogen",
+)
 
 
 # ==================================================
@@ -403,6 +418,44 @@ def stellenanzeige_mit_id_lesen(datenbank_url, stellen_id):
         "strecke_auto_in_metern": zeile[11],
         "fahrzeit_auto_in_minuten": zeile[12],
     }
+
+
+# ==================================================
+# Status einer bestehenden Stelle ändern (MG)
+# ==================================================
+# US 20003 ändert nur den status. Alle anderen Felder bleiben, wie sie sind.
+# Den Arbeitsweg berechnet danach die Route neu, nicht diese Funktion.
+def status_speichern(datenbank_url, stellen_id, status):
+    """Speichert einen neuen Status bei der Stelle mit dieser id.
+
+    Gibt True zurück, wenn die Stelle gefunden und geändert wurde, und False,
+    wenn es keine Stelle mit dieser id beim aktuellen Benutzer gibt.
+    Bei einem unbekannten Status entsteht ein ValueError.
+    """
+    # 1. Status prüfen, bevor wir die Datenbank fragen. Der CHECK in der
+    #    Tabelle würde einen falschen Wert auch ablehnen, aber nur mit einem
+    #    technischen Fehler. So bekommt der Browser eine verständliche Meldung.
+    if status not in ERLAUBTE_STATUS:
+        raise ValueError("Bitte einen gültigen Status wählen.")
+
+    with verbindung_oeffnen(datenbank_url) as verbindung:
+        # 2. UPDATE ändert die bestehende Zeile, wie in arbeitsweg_speichern():
+        #    - SET: neuer Status und geaendert_am auf jetzt (Regel Z1, auch bei
+        #      einer reinen Statusänderung).
+        #    - WHERE: nur diese id und nur beim aktuellen Benutzer (Regel B1).
+        ergebnis = verbindung.execute(
+            """
+            UPDATE stellenanzeigen
+            SET status = %s,
+                geaendert_am = CURRENT_TIMESTAMP
+            WHERE id = %s AND benutzer_id = %s
+            """,
+            (status, stellen_id, aktuelle_benutzer_id()),
+        )
+
+    # 3. rowcount sagt, wie viele Zeilen das UPDATE geändert hat. Die id ist
+    #    eindeutig, also ist es 1 (gefunden) oder 0 (nicht gefunden).
+    return ergebnis.rowcount == 1
 
 
 # ==================================================

@@ -184,3 +184,79 @@ zu verstehen?
 Pull Request für US 20002 öffnen und von Use Case 1 prüfen lassen. Vor US 20003
 mit Fabio den offenen Punkt O2 klären: Wer baut den `PUT`, und wie wird die
 Neuberechnung des Arbeitswegs (US 30003) eingebunden?
+
+### 2026-10-29 – US 20003: Status einer Stelle ändern
+
+**Was haben wir gemacht?**
+US 20003 beschrieben (`docs/Use_cases/Use_Case_2/20003-status-aendern.md`),
+den offenen Punkt O2 entschieden und die Story als Vertical Slice umgesetzt:
+- Datenbank: `status_speichern()` und die Konstante `ERLAUBTE_STATUS` in
+  `src/app/datenbank.py`; `UPDATE` mit `geaendert_am`, Rückmeldung über
+  `rowcount`.
+- Backend: Route `PUT /api/stellenanzeigen/<id>` in
+  `src/app/stellenanzeigen_routes.py`: Status speichern, Stelle lesen,
+  Arbeitsweg mit Fabios `arbeitsweg_eintragen()` unverändert neu berechnen.
+- Tests: 9 Unittests in `tests/test_status_aendern.py`.
+- Frontend (`public/index.html`): Status-Dropdown und «Speichern» im Zustand
+  «Bestehend», Hilfsfunktion `arbeitsweg_texte_setzen()`.
+
+**Warum haben wir das gemacht?**
+Der Status zeigt den Stand der Bewerbung. Die Neuberechnung bei jedem
+Speichern erfüllt US 30003, ohne Fabios Code zu ändern: Die gelesene Stelle
+enthält genau die Adressfelder, die seine Funktion braucht. Reihenfolge
+speichern → lesen → rechnen, damit ab US 20004 auch eine geänderte Adresse
+verwendet wird. Betrachtete Alternativen: keine Neuberechnung bei reiner
+Statusänderung; nach dem ersten Speichern direkt in den Zustand «Bestehend»
+wechseln (zurückgestellt, berührt Use Case 1 und US 30006).
+
+**Welche Auswirkungen hat das?**
+Der Status einer geöffneten Stelle lässt sich speichern und erscheint in der
+Übersicht. Jeder Klick auf «Speichern» fragt OpenRouteService an. Fabio muss
+informiert werden; den Stand von US 30003 führt er selbst nach.
+
+**Welche Konzepte wurden behandelt?**
+- HTTP-Methoden: `GET` lesen, `POST` neu anlegen, `PUT` Bestehendes ändern;
+  `fetch` ohne `method` schickt `GET`. 200 statt 201 bei einer Änderung.
+- 405 «Method Not Allowed»: Server lief mit altem Code; `flask run --debug`
+  lädt Änderungen automatisch neu. HTML-Fehlerseite statt JSON führt zu
+  «Unexpected token '<'».
+- `rowcount`, `ValueError` → 400, `pytest.raises`, Mock-Aufrufe prüfen mit
+  `call_args` und `assert_not_called()`.
+- Vue: `<select>` mit `v-model` (zwei Richtungen) gegenüber `:value` (eine
+  Richtung); `v-for` über ein Objekt; `v-if`/`v-else` für zwei Knöpfe;
+  `try`/`catch`/`finally`.
+- Die Übersicht lädt nur beim Öffnen der Seite oder bei «Zurück» neu.
+
+**Eigenleistung und KI-Unterstützung**
+- Mirko: Entscheide zu Neuberechnung bei jedem Speichern, Formular bleibt
+  offen, Variante A (kein direkter Wechsel nach dem ersten Speichern); Test
+  des `PUT` in der Browser-Konsole inkl. Fehlersuche (405); Tests im Browser;
+  Freigabe der Commits.
+- KI (Claude): Story-Entwurf, Code, Unittests und Erklärungen mit Alternativen
+  und Kontrollfragen, Commits nach Zustimmung.
+
+**Persönliche Reflexion – von Mirko zu ergänzen**
+Antworten auf Kontrollfragen in dieser Sitzung, wie gegeben:
+- Wo finde ich `POST`? Antwort zu `fetch` ohne `method`: «fetchall dann wird
+  das auf alles angewandt» (Ergänzung: ohne `method` schickt `fetch` ein
+  `GET`; `fetchall` gehört zur Datenbank).
+- Zweites «Speichern» nach dem Anlegen: «Nein es sollte stehen, dass sie
+  bereits existiert.»
+- `status_speichern()` bei fremder Stelle: «404 weil die stelle in der DB zwar
+  gefunden wird jedoch nicht für den richtigen nutzer» (Ergänzung: die
+  Funktion liefert `False`, erst die Route macht 404; die Datenbank findet
+  wegen `AND benutzer_id` gar keine Zeile).
+- 405 beim `PUT`: «weil der server gestartet wurde und erst dann die PUT
+  funktion erstellt wurde.»
+- `assert_not_called()` bei unbekannter Stelle: «sonst würde immer etwas
+  erwartet werden vom kartendienst und es würde immer versucht gerechnet zu
+  werden.»
+- `v-model` statt `:value` und `finally`: offen, im Chat erklärt.
+
+Offen: Was kann ich jetzt selbst erklären, und welcher Teil war am schwierigsten
+zu verstehen?
+
+**Nächster Lernschritt**
+Fabio über den `PUT` informieren, Pull Request für US 20003 öffnen und von
+Use Case 1 prüfen lassen. Danach US 20004: weitere Angaben und die
+Arbeitsadresse über denselben `PUT` speichern.
