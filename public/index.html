@@ -261,11 +261,15 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
             </fieldset>
 
             <!-- Speichert die bearbeiteten Angaben.
-                 Bei einer geöffneten Stelle ausgeblendet (MG, US 20002): Die
-                 Speicherroute legt immer eine neue Stelle an. Speichern einer
-                 bestehenden Stelle kommt mit US 20003. -->
+                 Zwei Knöpfe mit derselben Beschriftung (MG, US 20003): Eine neue
+                 Stelle wird mit POST angelegt, eine geöffnete mit PUT geändert.
+                 v-if / v-else zeigt immer genau einen davon. -->
             <button v-if="geoeffnete_stelle_id === null" type="button"
                     @click="stellenanzeige_speichern" :disabled="speichert || laedt">
+                {{ speichert ? "Wird gespeichert …" : "Speichern" }}
+            </button>
+            <button v-else type="button"
+                    @click="stelle_aktualisieren" :disabled="speichert">
                 {{ speichert ? "Wird gespeichert …" : "Speichern" }}
             </button>
 
@@ -425,18 +429,8 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
                         this.pensum = daten.pensum || "";
                         this.stellenbeschreibung = daten.stellenbeschreibung || "";
 
-                        // Gespeicherten Arbeitsweg anzeigen, im gleichen Format wie
-                        // nach dem Speichern: Meter in Kilometer. Fehlt er, bleiben
-                        // die Felder leer.
-                        if (daten.fahrzeit_auto_in_minuten === null) {
-                            this.strecke_auto_text = "";
-                            this.fahrzeit_auto_text = "";
-                        } else {
-                            const strecke_in_km =
-                                (daten.strecke_auto_in_metern / 1000).toFixed(1);
-                            this.strecke_auto_text = `${strecke_in_km} km`;
-                            this.fahrzeit_auto_text = `${daten.fahrzeit_auto_in_minuten} min`;
-                        }
+                        // Gespeicherten Arbeitsweg anzeigen.
+                        this.arbeitsweg_texte_setzen(daten);
 
                         // Zustand «Bestehend»: Link nur lesbar statt als Eingabefeld,
                         // kein Linkbereich, kein Speichern und kein Abbrechen.
@@ -452,6 +446,61 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
                     } catch (fehler) {
                         // Die Meldung erscheint in der Übersicht, wir bleiben dort.
                         this.fehlermeldung = fehler.message;
+                    }
+                },
+
+                // Schreibt Strecke und Fahrzeit in den Arbeitsweg-Kasten (MG).
+                // Gebraucht beim Öffnen (US 20002) und nach dem Ändern (US 20003),
+                // darum eine eigene Funktion statt zweimal derselbe Code.
+                // Gleiches Format wie nach dem ersten Speichern: Meter in Kilometer.
+                // Gibt true zurück, wenn ein Arbeitsweg vorhanden ist.
+                arbeitsweg_texte_setzen(daten) {
+                    if (daten.fahrzeit_auto_in_minuten === null) {
+                        this.strecke_auto_text = "";
+                        this.fahrzeit_auto_text = "";
+                        return false;
+                    }
+                    const strecke_in_km = (daten.strecke_auto_in_metern / 1000).toFixed(1);
+                    this.strecke_auto_text = `${strecke_in_km} km`;
+                    this.fahrzeit_auto_text = `${daten.fahrzeit_auto_in_minuten} min`;
+                    return true;
+                },
+
+                // Speichert den gewählten Status der geöffneten Stelle (MG, US 20003).
+                // Das Backend berechnet dabei den Arbeitsweg neu.
+                async stelle_aktualisieren() {
+                    this.speichert = true;
+                    this.fehlermeldung = "";
+                    this.erfolgsmeldung = "";
+
+                    try {
+                        // PUT statt POST: Die Stelle gibt es schon, wir ändern sie.
+                        // Mitgeschickt wird nur der Status (US 20003).
+                        const antwort = await fetch(
+                            `/api/stellenanzeigen/${this.geoeffnete_stelle_id}`,
+                            {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ status: this.status }),
+                            }
+                        );
+                        const daten = await antwort.json();
+
+                        if (!antwort.ok) {
+                            throw new Error(daten.fehler || "Speichern fehlgeschlagen.");
+                        }
+
+                        // Wie beim ersten Speichern: kurze Bestätigung und neuer
+                        // Arbeitsweg, oder der Hinweis, wenn er fehlt (US 30003).
+                        this.erfolgsmeldung = "Gespeichert.";
+                        if (!this.arbeitsweg_texte_setzen(daten)) {
+                            this.erfolgsmeldung += " Arbeitsweg konnte nicht berechnet werden.";
+                        }
+                    } catch (fehler) {
+                        this.fehlermeldung = fehler.message;
+                    } finally {
+                        // Knopf auch nach einem Fehler wieder freigeben.
+                        this.speichert = false;
                     }
                 },
 
