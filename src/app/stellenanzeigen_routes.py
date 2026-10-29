@@ -17,6 +17,9 @@ Zusätzlich wird die Streckenlänge eingetragen und mitgeschickt (US 30002). (FH
 
 Version 06 – 24.10.2026:
 Route für die Übersicht aller Stellen ergänzt (US 20001). (MG)
+
+Version 07 – 25.10.2026:
+Route zum Öffnen einer einzelnen Stelle ergänzt (US 20002). (MG)
 """
 
 import psycopg
@@ -25,6 +28,7 @@ from flask import Blueprint, current_app, jsonify, request
 from .arbeitsweg import arbeitsweg_berechnen
 from .datenbank import (
     arbeitsweg_speichern,
+    stellenanzeige_mit_id_lesen,
     stellenanzeige_speichern,
     stellenanzeigen_lesen,
     wohnadresse_lesen,
@@ -181,3 +185,31 @@ def stellenanzeigen_auflisten():
     # jsonify macht aus der Python-Liste JSON. Ohne Angabe ist der
     # Statuscode 200, also «OK».
     return jsonify(stellen)
+
+
+# ==================================================
+# Eine einzelne Stelle zum Öffnen liefern (MG)
+# ==================================================
+# <int:stellen_id> ist ein Platzhalter in der Adresse. Bei
+# /api/stellenanzeigen/7 übergibt Flask die 7 als Zahl an stellen_id.
+# int: sorgt dafür, dass nur Zahlen passen; /api/stellenanzeigen/abc
+# beantwortet Flask selbst mit 404.
+@stellenanzeigen.get("/api/stellenanzeigen/<int:stellen_id>")
+def stellenanzeige_oeffnen(stellen_id):
+    """Liefert eine Stelle des Demo-Benutzers als JSON-Objekt."""
+    try:
+        stelle = stellenanzeige_mit_id_lesen(
+            current_app.config["DATABASE"],
+            stellen_id,
+        )
+    except psycopg.Error:
+        # Wie bei der Übersicht: keine technischen Details an den Browser.
+        return jsonify({"fehler": "Stelle derzeit nicht verfügbar."}), 503
+
+    # None heisst: keine Stelle mit dieser id, oder sie gehört einem anderen
+    # Benutzer. Für den Browser ist beides gleich: 404, «nicht gefunden».
+    # So verrät die Antwort nicht, ob es die id bei jemand anderem gibt.
+    if stelle is None:
+        return jsonify({"fehler": "Diese Stelle wurde nicht gefunden."}), 404
+
+    return jsonify(stelle)

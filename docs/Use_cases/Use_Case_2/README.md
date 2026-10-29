@@ -1,6 +1,6 @@
 # Use Case 2 – Stellenanzeigen verwalten
 
-Stand: 2026-10-24
+Stand: 2026-10-25
 
 **Status:** Entwurf
 
@@ -15,8 +15,8 @@ interessieren.
 
 | Reihenfolge | User Story | Endpunkt | Stand |
 |---|---|---|---|
-| 1 | [US 20001 – Übersicht aller Stellen sehen](20001-uebersicht-aller-stellen.md) | `GET /api/stellenanzeigen` | Umgesetzt, PR offen |
-| 2 | US 20002 – Stelle aus der Übersicht öffnen | `GET /api/stellenanzeigen/<id>` | Geplant |
+| 1 | [US 20001 – Übersicht aller Stellen sehen](20001-uebersicht-aller-stellen.md) | `GET /api/stellenanzeigen` | Umgesetzt |
+| 2 | [US 20002 – Stelle aus der Übersicht öffnen](20002-stelle-oeffnen.md) | `GET /api/stellenanzeigen/<id>` | Umgesetzt |
 | 3 | US 20003 – Status einer Stelle ändern | `PUT /api/stellenanzeigen/<id>` (nur `status`) | Geplant |
 | 4 | US 20004 – Weitere Angaben einer Stelle bearbeiten | derselbe `PUT`, erweitert | Geplant |
 | 5 | US 20005 – Stelle löschen | `DELETE /api/stellenanzeigen/<id>` | Geplant |

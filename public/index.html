@@ -73,7 +73,8 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
 
         <!-- Eine Tabellenzeile pro gespeicherter Stelle.
              v-for wiederholt die Zeile <tr> für jede Stelle in der Liste
-             «stellen». :key gibt Vue die id, damit es die Zeilen auseinanderhält. -->
+             «stellen». :key gibt Vue die id, damit es die Zeilen auseinanderhält.
+             @click öffnet die Stelle dieser Zeile im Formular (US 20002). -->
         <table>
             <thead>
                 <tr>
@@ -85,7 +86,7 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="stelle in stellen" :key="stelle.id">
+                <tr v-for="stelle in stellen" :key="stelle.id" @click="stelle_oeffnen(stelle.id)">
                     <td>{{ stelle.titel }}</td>
                     <td>{{ stelle.firma }}</td>
                     <td>{{ stelle.arbeitsort }}</td>
@@ -107,9 +108,13 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
             ← Zurück zur Übersicht
         </button>
 
-        <h2>Stellenanzeige erfassen</h2>
+        <!-- Zustand «Bestehend» (MG, US 20002): geoeffnete_stelle_id ist gesetzt,
+             wenn die Stelle aus der Übersicht geöffnet wurde. Dann gibt es
+             nichts mehr zu laden, darum fehlt der Bereich mit dem Link. -->
+        <h2 v-if="geoeffnete_stelle_id === null">Stellenanzeige erfassen</h2>
+        <h2 v-else>Gespeicherte Stellenanzeige</h2>
 
-        <form @submit.prevent="stellenanzeige_laden">
+        <form v-if="geoeffnete_stelle_id === null" @submit.prevent="stellenanzeige_laden">
             <label for="stellenlink">Link zur jobs.ch-Stellenanzeige</label>
             <input id="stellenlink" type="url" v-model="stellenlink" required>
             <button type="submit" :disabled="laedt">
@@ -239,13 +244,19 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
                 </table>
             </fieldset>
 
-            <!-- Speichert die bearbeiteten Angaben. -->
-            <button type="button" @click="stellenanzeige_speichern" :disabled="speichert || laedt">
+            <!-- Speichert die bearbeiteten Angaben.
+                 Bei einer geöffneten Stelle ausgeblendet (MG, US 20002): Die
+                 Speicherroute legt immer eine neue Stelle an. Speichern einer
+                 bestehenden Stelle kommt mit US 20003. -->
+            <button v-if="geoeffnete_stelle_id === null" type="button"
+                    @click="stellenanzeige_speichern" :disabled="speichert || laedt">
                 {{ speichert ? "Wird gespeichert …" : "Speichern" }}
             </button>
 
-            <!-- Blendet die ungespeicherte Vorschau aus. -->
-            <button type="button" @click="vorschau_vorhanden = false" :disabled="speichert">
+            <!-- Blendet die ungespeicherte Vorschau aus. Bei einer geöffneten
+                 Stelle führt «← Zurück zur Übersicht» zurück (MG). -->
+            <button v-if="geoeffnete_stelle_id === null" type="button"
+                    @click="vorschau_vorhanden = false" :disabled="speichert">
                 Abbrechen
             </button>
         </div>
@@ -321,6 +332,9 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
                     // Welcher Screen sichtbar ist: "uebersicht" oder "formular".
                     // Die Übersicht ist die Startseite (ADR 0010).
                     ansicht: "uebersicht",
+                    // id der Stelle, die aus der Übersicht geöffnet wurde (MG).
+                    // null heisst: Das Formular erfasst eine neue Stelle.
+                    geoeffnete_stelle_id: null,
                 };
             },
             // Enthält die Funktionen, die unsere Oberfläche auslösen kann.
@@ -354,10 +368,68 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
                     // Reste einer früheren Erfassung entfernen, damit das
                     // Formular wirklich leer beginnt.
                     this.stellenlink = "";
+                    // Keine Stelle mehr geöffnet: Formular wieder im Zustand «Neu» (US 20002).
+                    this.geoeffnete_stelle_id = null;
                     this.vorschau_vorhanden = false;
                     this.fehlermeldung = "";
                     this.erfolgsmeldung = "";
                     this.ansicht = "formular";
+                },
+
+                // Holt eine Stelle vom Backend und zeigt sie im Formular (MG, US 20002).
+                // stellen_id kommt aus der angeklickten Zeile der Übersicht.
+                async stelle_oeffnen(stellen_id) {
+                    this.fehlermeldung = "";
+
+                    try {
+                        // Die id wird Teil der Adresse, z. B. /api/stellenanzeigen/7.
+                        const antwort = await fetch(`/api/stellenanzeigen/${stellen_id}`);
+                        const daten = await antwort.json();
+
+                        // Bei 404 oder 503 springt throw in den catch-Block.
+                        // Dann wechseln wir gar nicht erst zum Formular.
+                        if (!antwort.ok) {
+                            throw new Error(daten.fehler || "Stelle nicht verfügbar.");
+                        }
+
+                        // Alle Felder übernehmen, wie in stellenanzeige_laden().
+                        // || "" verwendet einen leeren Text, falls eine Angabe fehlt.
+                        this.anzeigenlink = daten.url || "";
+                        this.stellentitel = daten.titel || "";
+                        this.firma = daten.firma || "";
+                        this.arbeitsort = daten.arbeitsort || "";
+                        this.inseratadresse_strasse = daten.inseratadresse_strasse || "";
+                        this.inseratadresse_postleitzahl = daten.inseratadresse_postleitzahl || "";
+                        this.inseratadresse_ort = daten.inseratadresse_ort || "";
+                        this.pensum = daten.pensum || "";
+                        this.stellenbeschreibung = daten.stellenbeschreibung || "";
+
+                        // Gespeicherten Arbeitsweg anzeigen, im gleichen Format wie
+                        // nach dem Speichern: Meter in Kilometer. Fehlt er, bleiben
+                        // die Felder leer.
+                        if (daten.fahrzeit_auto_in_minuten === null) {
+                            this.strecke_auto_text = "";
+                            this.fahrzeit_auto_text = "";
+                        } else {
+                            const strecke_in_km =
+                                (daten.strecke_auto_in_metern / 1000).toFixed(1);
+                            this.strecke_auto_text = `${strecke_in_km} km`;
+                            this.fahrzeit_auto_text = `${daten.fahrzeit_auto_in_minuten} min`;
+                        }
+
+                        // Zustand «Bestehend»: Link nur lesbar statt als Eingabefeld,
+                        // kein Linkbereich, kein Speichern und kein Abbrechen.
+                        this.manuelle_erfassung = false;
+                        this.geoeffnete_stelle_id = daten.id;
+
+                        // Formular mit den Feldern anzeigen.
+                        this.erfolgsmeldung = "";
+                        this.vorschau_vorhanden = true;
+                        this.ansicht = "formular";
+                    } catch (fehler) {
+                        // Die Meldung erscheint in der Übersicht, wir bleiben dort.
+                        this.fehlermeldung = fehler.message;
+                    }
                 },
 
                 // Wechselt zurück zur Übersicht und lädt die Liste neu (MG).
