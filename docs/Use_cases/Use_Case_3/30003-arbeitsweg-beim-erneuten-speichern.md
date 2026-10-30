@@ -1,8 +1,8 @@
 # US 30003 – Arbeitsweg beim erneuten Speichern neu berechnen
 
-Status: Geplant
+Status: Umgesetzt über US 20003 (PR #28, Mirko)
 
-Datum: 2026-10-20
+Datum: 2026-10-20, nachgeführt 2026-10-30
 
 ## User Story
 
@@ -37,14 +37,14 @@ Gemeinsame Festlegungen für diesen Slice:
 
 ## Akzeptanzkriterien
 
-- [ ] Jeder Klick auf «Speichern» bei einem bestehenden Inserat löst die Berechnung erneut aus.
-- [ ] Verwendet werden die beim Speichern aktuellen Adressen. Das gilt auch, wenn eine Adresse über eine in einem anderen Use-Case umgesetzte Funktion geändert wurde. Die Bearbeitungsfunktion selbst gehört nicht zu dieser Story.
-- [ ] Bei erfolgreicher Berechnung ersetzen die neu ermittelten Werte die bisherigen Werte in der Datenbank und in der Anzeige. Sie können zahlenmässig unverändert bleiben.
-- [ ] Scheitert die Berechnung, verhindert dies nicht das Speichern des Inserats.
-- [ ] Bei einem Berechnungsfehler werden beide bisherigen Ergebniswerte geleert. Stattdessen erscheint der vereinbarte allgemeine Hinweis.
-- [ ] Beim nächsten Klick auf «Speichern» wird die Berechnung erneut versucht.
-- [ ] Das spätere Öffnen des Inserats zeigt den gespeicherten Zustand und löst keine Berechnung aus.
-- [ ] Es werden keine Eingabevalidierungen und keine Funktionen zur Bearbeitung gespeicherter Adressen ergänzt.
+- [x] Jeder Klick auf «Speichern» bei einem bestehenden Inserat löst die Berechnung erneut aus.
+- [x] Verwendet werden die beim Speichern aktuellen Adressen. Das gilt auch, wenn eine Adresse über eine in einem anderen Use-Case umgesetzte Funktion geändert wurde. Die Bearbeitungsfunktion selbst gehört nicht zu dieser Story.
+- [x] Bei erfolgreicher Berechnung ersetzen die neu ermittelten Werte die bisherigen Werte in der Datenbank und in der Anzeige. Sie können zahlenmässig unverändert bleiben.
+- [x] Scheitert die Berechnung, verhindert dies nicht das Speichern des Inserats.
+- [x] Bei einem Berechnungsfehler werden beide bisherigen Ergebniswerte geleert. Stattdessen erscheint der vereinbarte allgemeine Hinweis.
+- [x] Beim nächsten Klick auf «Speichern» wird die Berechnung erneut versucht.
+- [x] Das spätere Öffnen des Inserats zeigt den gespeicherten Zustand und löst keine Berechnung aus.
+- [x] Es werden keine Eingabevalidierungen und keine Funktionen zur Bearbeitung gespeicherter Adressen ergänzt.
 
 ## Schrittweise Umsetzung
 
@@ -67,4 +67,4 @@ Gemeinsame Festlegungen für diesen Slice:
 
 ## Technische Prüfung vor der Umsetzung
 
-Vor der Umsetzung prüfen, ob der Ablauf zum erneuten Speichern bereits vorhanden ist und wie die Ergebnisse bei derselben Stelle aktualisiert werden. Mit simulierten Antworten prüfen, dass nach einem Berechnungsfehler keine alten Ergebniswerte weiter angezeigt werden und dass die Berechnung die beim Speichern aktuellen Adressen verwendet. Die Schnittstelle zur anderweitig umgesetzten Adressbearbeitung abstimmen. Diese Prüfung und Implementierung stehen noch aus.
+Vor der Umsetzung prüfen, ob der Ablauf zum erneuten Speichern bereits vorhanden ist und wie die Ergebnisse bei derselben Stelle aktualisiert werden. Mit simulierten Antworten prüfen, dass nach einem Berechnungsfehler keine alten Ergebniswerte weiter angezeigt werden und dass die Berechnung die beim Speichern aktuellen Adressen verwendet. Die Schnittstelle zur anderweitig umgesetzten Adressbearbeitung abstimmen. Diese Story braucht keinen eigenen Code: `PUT /api/stellenanzeigen/<id>` aus [US 20003](../Use_Case_2/20003-status-aendern.md) ruft bei jedem Speichern `arbeitsweg_eintragen()` mit den gespeicherten Adressen der Stelle auf (Entscheid O2 in Use Case 2). Bei einem Fehler ersetzt `arbeitsweg_speichern()` beide Werte durch leere Werte, und die Oberfläche zeigt den Hinweis «Arbeitsweg konnte nicht berechnet werden.» Geprüft am 2026-10-30 gegen `master` (52a608c).
