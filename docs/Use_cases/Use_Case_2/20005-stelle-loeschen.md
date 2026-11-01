@@ -1,6 +1,6 @@
 # US 20005 – Stelle löschen
 
-Status: Entwurf
+Status: Umgesetzt
 
 Datum: 2026-11-01
 
@@ -57,17 +57,17 @@ Gemeinsame Festlegungen für diesen Slice:
 
 ## Akzeptanzkriterien
 
-- [ ] Im Zustand «Bestehend» erscheint «Löschen»; bei einer neuen Stelle
+- [x] Im Zustand «Bestehend» erscheint «Löschen»; bei einer neuen Stelle
       nicht.
-- [ ] Vor dem Löschen erscheint die Rückfrage; «Abbrechen» löscht nichts.
-- [ ] Nach «OK» ist die Stelle aus der Datenbank entfernt, und die Übersicht
+- [x] Vor dem Löschen erscheint die Rückfrage; «Abbrechen» löscht nichts.
+- [x] Nach «OK» ist die Stelle aus der Datenbank entfernt, und die Übersicht
       erscheint ohne sie.
-- [ ] Ein erfolgreiches `DELETE` gibt 204 ohne Inhalt.
-- [ ] Eine unbekannte `id` oder eine Stelle eines anderen Benutzers gibt 404;
+- [x] Ein erfolgreiches `DELETE` gibt 204 ohne Inhalt.
+- [x] Eine unbekannte `id` oder eine Stelle eines anderen Benutzers gibt 404;
       nichts wird gelöscht.
-- [ ] Ist die Datenbank nicht erreichbar, erscheint eine kurze Meldung ohne
+- [x] Ist die Datenbank nicht erreichbar, erscheint eine kurze Meldung ohne
       technische Details (503).
-- [ ] Unittests prüfen die Datenbankfunktion und die Route: Erfolg, unbekannte
+- [x] Unittests prüfen die Datenbankfunktion und die Route: Erfolg, unbekannte
       Stelle, Datenbankfehler.
 
 ## Schrittweise Umsetzung

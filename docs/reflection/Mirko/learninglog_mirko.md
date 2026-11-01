@@ -324,3 +324,69 @@ Offen: Was war an US 20004 im Vergleich zu US 20003 schwieriger?
 **Nächster Lernschritt**
 Pull Request für US 20004 öffnen und von Use Case 1 (Lina) prüfen lassen, weil
 ihre Prüffunktion umgebaut wurde. Danach US 20005: Stelle löschen.
+
+### 2026-11-01 – US 20005: Stelle löschen
+
+**Was haben wir gemacht?**
+- User Story [US 20005](../../Use_cases/Use_Case_2/20005-stelle-loeschen.md)
+  geschrieben und umgesetzt. Damit sind alle fünf Stories von Use Case 2
+  umgesetzt.
+- `datenbank.py`: `stellenanzeige_loeschen()` mit SQL `DELETE … WHERE id = %s
+  AND benutzer_id = %s`, meldet über `rowcount`, ob eine Stelle gefunden wurde.
+- `stellenanzeigen_routes.py`: Route `DELETE /api/stellenanzeigen/<id>`
+  (`stellenanzeige_entfernen()`): 204 ohne Inhalt, 404, 503.
+- `public/index.html`: Knopf «Löschen» nur im Zustand «Bestehend», Rückfrage
+  mit `confirm()`, danach zurück zur Übersicht.
+- `tests/test_stelle_loeschen.py`: 6 Tests; insgesamt 74 grün. Im Browser mit
+  einer eigens angelegten Teststelle geprüft: «Abbrechen» löscht nichts, «OK»
+  löscht (204) und zeigt die Übersicht ohne die Stelle.
+
+**Warum haben wir das gemacht?**
+Damit Stellen, die nicht mehr interessieren, aus der Übersicht verschwinden.
+Entscheide und verworfene Alternativen:
+- Endgültig löschen statt nur ausblenden (bräuchte neue Spalte und Änderungen
+  an Übersicht und Öffnen).
+- `confirm()` statt eigenem Dialog (eine Zeile, passt zu ADR 0010).
+- 204 ohne Inhalt statt 200 mit JSON (nach dem Löschen gibt es nichts
+  zurückzugeben).
+- Danach zur Übersicht statt Formular mit Meldung (die Stelle existiert nicht
+  mehr).
+
+**Welche Auswirkungen hat das?**
+Gelöschte Stellen sind endgültig weg, inklusive Arbeitsweg. Zum Abschliessen
+einer Stelle ohne Löschen gibt es die Status «Zurückgezogen» und «Absage».
+
+**Welche Konzepte wurden behandelt?**
+- `%s` als Platzhalter im SQL: Werte gehen getrennt an die Datenbank und
+  schützen vor SQL-Injection.
+- Bei `DELETE` ist das `WHERE` mit id und Benutzer besonders wichtig, weil
+  Löschen nicht rückgängig zu machen ist.
+- 204 «No Content»: Das Frontend darf dann kein `antwort.json()` lesen.
+- `fetch` und `body`: Anfrage aus dem Browser und mitgeschickte Daten; ein
+  `DELETE` braucht keinen `body`.
+- Mocks in Tests verhindern, dass ein Test die echte Datenbank verändert.
+
+**Eigenleistung und KI-Unterstützung**
+- Mirko: Entscheide (endgültig löschen, `confirm()`, 204, danach Übersicht),
+  Freigabe der Story und der Commits.
+- KI (Claude): Story-Entwurf, Code, Unittests, Browser-Test, Erklärungen mit
+  Alternativen und Kontrollfragen, Commits nach Zustimmung.
+
+**Persönliche Reflexion – von Mirko zu ergänzen**
+Antworten auf Kontrollfragen in dieser Sitzung, wie gegeben:
+- Warum `WHERE id … AND benutzer_id` beim Löschen? «damit doppelt geprüft
+  wird, dass es sich um die korrekte stelle des korrekten nutzers handelt.
+  wenn später mehrere benutzer existieren muss das klargestellt sein.»
+- Was ohne Mock im Routentest? «dann würde im test etwas aus der richtigen
+  datenbank gelöscht werden.» (Ergänzung: Im Test zeigt `DATABASE` auf
+  `"testadresse"`, darum käme 503; ohne diese Einstellung träfe es die echte
+  Datenbank.)
+- Warum kein `body` beim `DELETE`? «weil er nur die id der zeile braucht. es
+  spielt also keine rolle welche inhalte drin sind, wenns gelöscht wird.»
+
+Offen: Welche Story aus Use Case 2 würde ich in der Präsentation zeigen, und
+warum?
+
+**Nächster Lernschritt**
+Pull Request für US 20005 öffnen und von Use Case 1 (Lina) prüfen lassen.
+Testeinträge «s» über «Löschen» aufräumen.
