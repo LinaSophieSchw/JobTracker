@@ -40,6 +40,10 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
 Version 09 – 01.11.2026 (MG):
 «Speichern» einer geöffneten Stelle schickt alle Felder ausser der url, nicht
 nur den Status (US 20004).
+
+Version 10 – 01.11.2026 (MG):
+«Löschen» im Zustand «Bestehend» mit Rückfrage; danach zur Übersicht
+(US 20005).
 -->
 <html lang="de">
 
@@ -275,6 +279,14 @@ nur den Status (US 20004).
             <button v-else type="button"
                     @click="stelle_aktualisieren" :disabled="speichert">
                 {{ speichert ? "Wird gespeichert …" : "Speichern" }}
+            </button>
+
+            <!-- Löscht die geöffnete Stelle (MG, US 20005). Nur im Zustand
+                 «Bestehend»: Eine neue Stelle ist noch nicht gespeichert, es gibt
+                 also nichts zu löschen. -->
+            <button v-if="geoeffnete_stelle_id !== null" type="button"
+                    @click="stelle_loeschen" :disabled="speichert">
+                Löschen
             </button>
 
             <!-- Blendet die ungespeicherte Vorschau aus. Bei einer geöffneten
@@ -516,6 +528,47 @@ nur den Status (US 20004).
                         this.fehlermeldung = fehler.message;
                     } finally {
                         // Knopf auch nach einem Fehler wieder freigeben.
+                        this.speichert = false;
+                    }
+                },
+
+                // Löscht die geöffnete Stelle nach einer Rückfrage (MG, US 20005).
+                async stelle_loeschen() {
+                    // confirm() zeigt einen Dialog des Browsers mit «OK» und
+                    // «Abbrechen» und liefert true oder false. Bei «Abbrechen»
+                    // hören wir hier auf; es wird nichts gelöscht.
+                    if (!confirm("Stelle wirklich löschen?")) {
+                        return;
+                    }
+
+                    // speichert sperrt «Speichern» und «Löschen», solange die
+                    // Anfrage läuft. So kann man nicht zweimal klicken.
+                    this.speichert = true;
+                    this.fehlermeldung = "";
+                    this.erfolgsmeldung = "";
+
+                    try {
+                        const antwort = await fetch(
+                            `/api/stellenanzeigen/${this.geoeffnete_stelle_id}`,
+                            { method: "DELETE" }
+                        );
+
+                        // Achtung: Bei Erfolg antwortet das Backend mit 204 ohne
+                        // Inhalt. antwort.json() würde dann einen Fehler werfen.
+                        // Darum lesen wir JSON nur im Fehlerfall, wo das Backend
+                        // eine Meldung mitschickt.
+                        if (!antwort.ok) {
+                            const daten = await antwort.json();
+                            throw new Error(daten.fehler || "Löschen fehlgeschlagen.");
+                        }
+
+                        // Die Stelle gibt es nicht mehr: zurück zur Übersicht,
+                        // die neu geladen wird und die Stelle nicht mehr zeigt.
+                        this.zur_uebersicht();
+                    } catch (fehler) {
+                        // Das Formular bleibt offen und zeigt die Meldung.
+                        this.fehlermeldung = fehler.message;
+                    } finally {
                         this.speichert = false;
                     }
                 },

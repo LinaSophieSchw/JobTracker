@@ -26,6 +26,9 @@ Route zum Ändern des Status ergänzt; berechnet den Arbeitsweg neu (US 20003). 
 
 Version 09 – 01.11.2026:
 PUT speichert alle Felder ausser der url, nicht nur den Status (US 20004). (MG)
+
+Version 10 – 01.11.2026:
+Route zum Löschen einer Stelle ergänzt (US 20005). (MG)
 """
 
 import psycopg
@@ -35,6 +38,7 @@ from .arbeitsweg import arbeitsweg_berechnen
 from .datenbank import (
     arbeitsweg_speichern,
     stellenanzeige_aktualisieren,
+    stellenanzeige_loeschen,
     stellenanzeige_mit_id_lesen,
     stellenanzeige_speichern,
     stellenanzeigen_lesen,
@@ -282,3 +286,37 @@ def stellenanzeige_aendern(stellen_id):
             "strecke_auto_in_metern": arbeitsweg["strecke_auto_in_metern"],
         }
     )
+
+
+# ==================================================
+# Bestehende Stelle löschen (MG)
+# ==================================================
+# DELETE bedeutet: Der Browser will etwas entfernen. Wieder dieselbe Adresse
+# wie beim Öffnen und Speichern; Flask unterscheidet an der Methode:
+# GET liest, PUT ändert, DELETE löscht.
+@stellenanzeigen.delete("/api/stellenanzeigen/<int:stellen_id>")
+def stellenanzeige_entfernen(stellen_id):
+    """Löscht eine Stelle des Demo-Benutzers endgültig."""
+    try:
+        geloescht = stellenanzeige_loeschen(
+            current_app.config["DATABASE"],
+            stellen_id,
+        )
+    except psycopg.Error:
+        # Wie bei den anderen Routen: keine technischen Details an den Browser.
+        return (
+            jsonify(
+                {
+                    "fehler": "Löschen derzeit nicht möglich. "
+                    "Bitte später erneut versuchen."
+                }
+            ),
+            503,
+        )
+
+    if not geloescht:
+        return jsonify({"fehler": "Diese Stelle wurde nicht gefunden."}), 404
+
+    # 204 heisst «No Content»: erledigt, aber es gibt nichts zurückzuschicken,
+    # denn die Stelle existiert nicht mehr. Darum ein leerer Text statt JSON.
+    return "", 204
