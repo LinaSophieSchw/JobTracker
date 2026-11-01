@@ -36,6 +36,9 @@ Version 11  01.11.2026:
 status_speichern() heisst jetzt stellenanzeige_aktualisieren() und speichert
 alle Felder ausser der url; Prüfung dafür in stellenfelder_pruefen()
 herausgelöst (US 20004). (MG)
+
+Version 12  01.11.2026:
+stellenanzeige_loeschen() zum Löschen einer Stelle ergänzt (US 20005). (MG)
 """
 
 import psycopg
@@ -504,6 +507,36 @@ def stellenanzeige_aktualisieren(datenbank_url, stellen_id, daten):
 
     # 4. rowcount sagt, wie viele Zeilen das UPDATE geändert hat. Die id ist
     #    eindeutig, also ist es 1 (gefunden) oder 0 (nicht gefunden).
+    return ergebnis.rowcount == 1
+
+
+# ==================================================
+# Bestehende Stelle löschen (MG)
+# ==================================================
+# US 20005 löscht endgültig: Die Zeile verschwindet aus der Tabelle, mit ihr
+# auch der gespeicherte Arbeitsweg. Es gibt keinen Papierkorb.
+def stellenanzeige_loeschen(datenbank_url, stellen_id):
+    """Löscht die Stelle mit dieser id beim aktuellen Benutzer.
+
+    Gibt True zurück, wenn die Stelle gefunden und gelöscht wurde, und False,
+    wenn es keine Stelle mit dieser id beim aktuellen Benutzer gibt.
+    """
+    with verbindung_oeffnen(datenbank_url) as verbindung:
+        # DELETE entfernt die Zeilen, auf die das WHERE passt.
+        # Ohne WHERE wären alle Stellen weg. Darum prüfen wir hier wie bei
+        # UPDATE beides: diese id und den aktuellen Benutzer (Regel B1).
+        # So kann niemand über eine fremde id die Stelle eines anderen
+        # Benutzers löschen.
+        ergebnis = verbindung.execute(
+            """
+            DELETE FROM stellenanzeigen
+            WHERE id = %s AND benutzer_id = %s
+            """,
+            (stellen_id, aktuelle_benutzer_id()),
+        )
+
+    # rowcount sagt, wie viele Zeilen gelöscht wurden: 1 oder 0,
+    # wie bei stellenanzeige_aktualisieren().
     return ergebnis.rowcount == 1
 
 
