@@ -1,6 +1,6 @@
 # US 20004 – Weitere Angaben einer Stelle bearbeiten
 
-Status: Entwurf
+Status: Umgesetzt
 
 Datum: 2026-11-01
 
@@ -64,22 +64,24 @@ Gemeinsame Festlegungen für diesen Slice:
 
 ## Akzeptanzkriterien
 
-- [ ] Im Zustand «Bestehend» lassen sich alle Felder ausser dem Anzeigenlink
+- [x] Im Zustand «Bestehend» lassen sich alle Felder ausser dem Anzeigenlink
       ändern.
-- [ ] Nach «Speichern» sind alle geänderten Felder in der Datenbank
+- [x] Nach «Speichern» sind alle geänderten Felder in der Datenbank
       gespeichert; Titel, Firma, Arbeitsort und Status erscheinen geändert in
       der Übersicht.
-- [ ] Der Anzeigenlink bleibt unverändert.
-- [ ] `geaendert_am` ist nach dem Speichern neu gesetzt.
-- [ ] Ein leerer Titel oder eine leere Firma gibt 400 mit Meldung; nichts wird
+- [x] Der Anzeigenlink bleibt unverändert.
+- [x] `geaendert_am` ist nach dem Speichern neu gesetzt.
+- [x] Ein leerer Titel oder eine leere Firma gibt 400 mit Meldung; nichts wird
       gespeichert.
-- [ ] Ein unbekannter Status gibt weiterhin 400 mit Meldung.
-- [ ] Eine unbekannte `id` oder eine Stelle eines anderen Benutzers gibt 404.
-- [ ] Nach einer Änderung der Arbeitsadresse wird der Arbeitsweg mit der neuen
+- [x] Ein unbekannter Status gibt weiterhin 400 mit Meldung.
+- [x] Eine unbekannte `id` oder eine Stelle eines anderen Benutzers gibt 404.
+- [x] Nach einer Änderung der Arbeitsadresse wird der Arbeitsweg mit der neuen
       Adresse berechnet; das Ergebnis oder der Hinweis erscheint im Formular.
-- [ ] Scheitert die Berechnung, sind die Angaben trotzdem gespeichert.
-- [ ] Eine neue Stelle wird wie bisher mit `POST` gespeichert.
-- [ ] Unittests prüfen die Datenbankfunktion und die Route: Erfolg,
+      Geprüft mit Unittest; im Browser noch offen, weil die Berechnung am
+      01.11.2026 bei allen Stellen scheiterte (Fabio korrigiert, Use Case 3).
+- [x] Scheitert die Berechnung, sind die Angaben trotzdem gespeichert.
+- [x] Eine neue Stelle wird wie bisher mit `POST` gespeichert.
+- [x] Unittests prüfen die Datenbankfunktion und die Route: Erfolg,
       fehlende Pflichtfelder, ungültiger Status, unbekannte Stelle.
 
 ## Schrittweise Umsetzung

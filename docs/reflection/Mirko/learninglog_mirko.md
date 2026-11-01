@@ -260,3 +260,67 @@ zu verstehen?
 Fabio über den `PUT` informieren, Pull Request für US 20003 öffnen und von
 Use Case 1 prüfen lassen. Danach US 20004: weitere Angaben und die
 Arbeitsadresse über denselben `PUT` speichern.
+
+### 2026-11-01 – US 20004: Weitere Angaben einer Stelle bearbeiten
+
+**Was haben wir gemacht?**
+- User Story [US 20004](../../Use_cases/Use_Case_2/20004-angaben-bearbeiten.md)
+  geschrieben und umgesetzt: Der `PUT /api/stellenanzeigen/<id>` speichert
+  jetzt alle Felder einer geöffneten Stelle ausser der `url`, nicht nur den
+  Status.
+- `datenbank.py`: Prüfung der Felder ohne `url` als `stellenfelder_pruefen()`
+  aus `stellenanzeige_eingaben_pruefen()` (Use Case 1) herausgelöst;
+  `status_speichern()` heisst neu `stellenanzeige_aktualisieren()` und
+  überschreibt alle Felder mit einem `UPDATE`.
+- `stellenanzeigen_routes.py`: Route gibt alle Formularwerte weiter.
+- `public/index.html`: «Speichern» schickt alle Felder mit.
+- `tests/test_status_aendern.py` auf den vollständigen `PUT` umgestellt und
+  ergänzt; 68 Tests grün. Im Browser geprüft: Änderung gespeichert (200),
+  leerer Titel gibt «Bitte Titel eingeben.» (400).
+
+**Warum haben wir das gemacht?**
+Damit sich Fehler aus dem Import korrigieren und Stellen aktuell halten lassen.
+Betrachtete Alternative: nur geänderte Felder schicken. Verworfen, weil das
+Backend sonst pro Feld entscheiden müsste, was es überschreibt; ein
+vollständiger `PUT` ist einfacher zu prüfen und zu testen.
+
+**Welche Auswirkungen hat das?**
+- Erfassen und Ändern verwenden dieselben Prüfregeln (Titel und Firma
+  Pflicht). Use Case 1 verhält sich unverändert.
+- Ein `PUT` mit nur `{"status": ...}` wie in US 20003 wird jetzt abgelehnt.
+- Der Arbeitsweg wird nach dem Speichern mit der neuen Adresse berechnet.
+  Offen: Die Berechnung scheiterte am 01.11.2026 bei allen Stellen; Fabio
+  korrigiert das in Use Case 3.
+
+**Welche Konzepte wurden behandelt?**
+- HTTP-Methoden (`GET`, `POST`, `PUT`, `DELETE`) gegenüber SQL-Befehlen
+  (`SELECT`, `INSERT`, `UPDATE`, `DELETE`): zwei Sprachen auf zwei Ebenen.
+- PostgreSQL ist die Datenbank-Software, SQL die Sprache, Neon der
+  Cloud-Anbieter, psycopg die Python-Bibliothek dazwischen.
+- Platzhalter in der Adresse: Bei `/api/stellenanzeigen/7` ist 7 die `id`
+  der Stelle, die Flask an die Routenfunktion übergibt.
+- Prüfung wiederverwenden statt kopieren; `**` zum Zusammenführen von
+  Dictionaries; Hilfsfunktion `formularwerte()` in Tests.
+
+**Eigenleistung und KI-Unterstützung**
+- Mirko: Entscheide (alle Felder schicken, Arbeitsweg immer neu berechnen,
+  Wechsel nach dem ersten Speichern weiterhin zurückgestellt), Freigabe der
+  Story und der Commits.
+- KI (Claude): Story-Entwurf, Code, Unittests, Browser-Test, Erklärungen mit
+  Alternativen und Kontrollfragen, Commits nach Zustimmung.
+
+**Persönliche Reflexion – von Mirko zu ergänzen**
+Antworten auf Kontrollfragen in dieser Sitzung, wie gegeben:
+- Warum PUT 200 und POST 201? «weil PUT etwas erstetzt und POST etwas neues
+  erstellt.»
+- Wo stehen `UPDATE` und PUT-Route? «Update in datenbank.py, PUT in
+  stellenanzeigen_routes.py»
+- Muss sich am SQL etwas ändern, wenn statt Neon ein lokales PostgreSQL
+  verwendet wird? «Nein die sprache ist ja gleich» (Ergänzung: Es ändert sich
+  nur die `DATABASE_URL` in der `.env`.)
+
+Offen: Was war an US 20004 im Vergleich zu US 20003 schwieriger?
+
+**Nächster Lernschritt**
+Pull Request für US 20004 öffnen und von Use Case 1 (Lina) prüfen lassen, weil
+ihre Prüffunktion umgebaut wurde. Danach US 20005: Stelle löschen.
