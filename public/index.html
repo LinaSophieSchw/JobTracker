@@ -36,6 +36,10 @@ Version 08 – 24.10.2026 (MG):
 Übersicht aller Stellen mit Titel, Firma, Arbeitsort, Status und Arbeitsweg
 ergänzt (US 20001). Die Übersicht ist die Startseite; «+ Neue Stelle» öffnet
 das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesprochen).
+
+Version 09 – 01.11.2026 (MG):
+«Speichern» einer geöffneten Stelle schickt alle Felder ausser der url, nicht
+nur den Status (US 20004).
 -->
 <html lang="de">
 
@@ -466,7 +470,7 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
                     return true;
                 },
 
-                // Speichert den gewählten Status der geöffneten Stelle (MG, US 20003).
+                // Speichert die Angaben der geöffneten Stelle (MG, US 20003/20004).
                 // Das Backend berechnet dabei den Arbeitsweg neu.
                 async stelle_aktualisieren() {
                     this.speichert = true;
@@ -475,13 +479,25 @@ das Formular, «← Zurück zur Übersicht» führt zurück (mit UC1 abgesproche
 
                     try {
                         // PUT statt POST: Die Stelle gibt es schon, wir ändern sie.
-                        // Mitgeschickt wird nur der Status (US 20003).
+                        // Mitgeschickt werden immer alle Felder, auch unveränderte;
+                        // das Backend überschreibt die ganze Stelle (US 20004).
+                        // Die url fehlt bewusst: Der Anzeigenlink bleibt fest.
                         const antwort = await fetch(
                             `/api/stellenanzeigen/${this.geoeffnete_stelle_id}`,
                             {
                                 method: "PUT",
                                 headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ status: this.status }),
+                                body: JSON.stringify({
+                                    titel: this.stellentitel,
+                                    firma: this.firma,
+                                    arbeitsort: this.arbeitsort,
+                                    inseratadresse_strasse: this.inseratadresse_strasse,
+                                    inseratadresse_postleitzahl: this.inseratadresse_postleitzahl,
+                                    inseratadresse_ort: this.inseratadresse_ort,
+                                    pensum: this.pensum,
+                                    stellenbeschreibung: this.stellenbeschreibung,
+                                    status: this.status,
+                                }),
                             }
                         );
                         const daten = await antwort.json();
