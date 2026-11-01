@@ -17,9 +17,12 @@ interessieren.
 |---|---|---|---|
 | 1 | [US 20001 – Übersicht aller Stellen sehen](20001-uebersicht-aller-stellen.md) | `GET /api/stellenanzeigen` | Umgesetzt |
 | 2 | [US 20002 – Stelle aus der Übersicht öffnen](20002-stelle-oeffnen.md) | `GET /api/stellenanzeigen/<id>` | Umgesetzt |
-| 3 | [US 20003 – Status einer Stelle ändern](20003-status-aendern.md) | `PUT /api/stellenanzeigen/<id>` (nur `status`) | Umgesetzt |
+| 3 | [US 20003 – Status einer Stelle ändern](20003-status-aendern.md) | `PUT /api/stellenanzeigen/<id>` (anfangs nur `status`) | Umgesetzt |
 | 4 | [US 20004 – Weitere Angaben einer Stelle bearbeiten](20004-angaben-bearbeiten.md) | derselbe `PUT`, erweitert | Umgesetzt |
 | 5 | [US 20005 – Stelle löschen](20005-stelle-loeschen.md) | `DELETE /api/stellenanzeigen/<id>` | Umgesetzt |
+
+Zur Vorbereitung der Präsentation fasst der [Spickzettel](spickzettel.md)
+alle fünf Stories mit Code, Entscheiden und möglichen Fragen zusammen.
 
 Die Stories werden einzeln ausgearbeitet: erst eine Story schreiben und
 umsetzen, dann die nächste. So fliessen Erkenntnisse aus der Umsetzung in die
