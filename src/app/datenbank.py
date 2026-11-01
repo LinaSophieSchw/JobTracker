@@ -31,6 +31,11 @@ stellenanzeige_mit_id_lesen() zum Öffnen einer Stelle ergänzt (US 20002). (MG)
 
 Version 10  29.10.2026:
 status_speichern() zum Ändern des Status ergänzt (US 20003). (MG)
+
+Version 11  01.11.2026:
+status_speichern() heisst jetzt stellenanzeige_aktualisieren() und speichert
+alle Felder ausser der url; Prüfung dafür in stellenfelder_pruefen()
+herausgelöst (US 20004). (MG)
 """
 
 import psycopg
@@ -227,8 +232,24 @@ def stellenanzeige_eingaben_pruefen(daten):
 
     url = textfeld_pruefen(daten.get("url"), "Link", pflicht=True)
 
+    # Die übrigen Felder prüft stellenfelder_pruefen(). Dieselbe Prüfung
+    # braucht auch das Ändern einer Stelle, dort aber ohne url. (MG, US 20004)
     return {
         "url": anzeigenlink_bestimmen(url),
+        **stellenfelder_pruefen(daten),
+    }
+
+
+def stellenfelder_pruefen(daten):
+    """Prüft alle Formularfelder ausser der url und liefert bereinigte Werte.
+
+    Aus stellenanzeige_eingaben_pruefen() herausgelöst (MG, US 20004), damit
+    Erfassen und Ändern einer Stelle dieselben Regeln verwenden.
+    """
+    if not isinstance(daten, dict):
+        raise ValueError("Bitte Anzeigenangaben übermitteln.")
+
+    return {
         "titel": textfeld_pruefen(
             daten.get("titel"), "Titel", pflicht=True, maximale_laenge=200
         ),
@@ -421,39 +442,67 @@ def stellenanzeige_mit_id_lesen(datenbank_url, stellen_id):
 
 
 # ==================================================
-# Status einer bestehenden Stelle ändern (MG)
+# Bestehende Stelle ändern (MG)
 # ==================================================
-# US 20003 ändert nur den status. Alle anderen Felder bleiben, wie sie sind.
-# Den Arbeitsweg berechnet danach die Route neu, nicht diese Funktion.
-def status_speichern(datenbank_url, stellen_id, status):
-    """Speichert einen neuen Status bei der Stelle mit dieser id.
+# US 20003 hat hier nur den status gespeichert (status_speichern()).
+# Seit US 20004 speichert die Funktion alle Felder des Formulars und heisst
+# darum stellenanzeige_aktualisieren(). Die url bleibt fest und wird nicht
+# geändert. Den Arbeitsweg berechnet danach die Route neu, nicht diese Funktion.
+def stellenanzeige_aktualisieren(datenbank_url, stellen_id, daten):
+    """Überschreibt die Angaben der Stelle mit dieser id mit den Formularwerten.
 
+    daten enthält alle Formularfelder und den status, aber keine url.
     Gibt True zurück, wenn die Stelle gefunden und geändert wurde, und False,
     wenn es keine Stelle mit dieser id beim aktuellen Benutzer gibt.
-    Bei einem unbekannten Status entsteht ein ValueError.
+    Bei ungültigen Angaben entsteht ein ValueError.
     """
-    # 1. Status prüfen, bevor wir die Datenbank fragen. Der CHECK in der
-    #    Tabelle würde einen falschen Wert auch ablehnen, aber nur mit einem
-    #    technischen Fehler. So bekommt der Browser eine verständliche Meldung.
+    # 1. Alle Felder prüfen, bevor wir die Datenbank fragen, mit denselben
+    #    Regeln wie beim Erfassen: Titel und Firma sind Pflicht.
+    geprueft = stellenfelder_pruefen(daten)
+
+    # 2. Status prüfen wie in US 20003. Der CHECK in der Tabelle würde einen
+    #    falschen Wert auch ablehnen, aber nur mit einem technischen Fehler.
+    #    So bekommt der Browser eine verständliche Meldung.
+    status = daten.get("status")
     if status not in ERLAUBTE_STATUS:
         raise ValueError("Bitte einen gültigen Status wählen.")
 
     with verbindung_oeffnen(datenbank_url) as verbindung:
-        # 2. UPDATE ändert die bestehende Zeile, wie in arbeitsweg_speichern():
-        #    - SET: neuer Status und geaendert_am auf jetzt (Regel Z1, auch bei
-        #      einer reinen Statusänderung).
+        # 3. UPDATE ändert die bestehende Zeile, wie in arbeitsweg_speichern():
+        #    - SET: alle Felder ausser url, dazu geaendert_am auf jetzt
+        #      (Regel Z1).
         #    - WHERE: nur diese id und nur beim aktuellen Benutzer (Regel B1).
         ergebnis = verbindung.execute(
             """
             UPDATE stellenanzeigen
-            SET status = %s,
+            SET titel = %s,
+                firma = %s,
+                arbeitsort = %s,
+                inseratadresse_strasse = %s,
+                inseratadresse_postleitzahl = %s,
+                inseratadresse_ort = %s,
+                pensum = %s,
+                stellenbeschreibung = %s,
+                status = %s,
                 geaendert_am = CURRENT_TIMESTAMP
             WHERE id = %s AND benutzer_id = %s
             """,
-            (status, stellen_id, aktuelle_benutzer_id()),
+            (
+                geprueft["titel"],
+                geprueft["firma"],
+                geprueft["arbeitsort"],
+                geprueft["inseratadresse_strasse"],
+                geprueft["inseratadresse_postleitzahl"],
+                geprueft["inseratadresse_ort"],
+                geprueft["pensum"],
+                geprueft["stellenbeschreibung"],
+                status,
+                stellen_id,
+                aktuelle_benutzer_id(),
+            ),
         )
 
-    # 3. rowcount sagt, wie viele Zeilen das UPDATE geändert hat. Die id ist
+    # 4. rowcount sagt, wie viele Zeilen das UPDATE geändert hat. Die id ist
     #    eindeutig, also ist es 1 (gefunden) oder 0 (nicht gefunden).
     return ergebnis.rowcount == 1
 
