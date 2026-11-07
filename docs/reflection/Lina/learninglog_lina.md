@@ -1355,3 +1355,97 @@ obwohl beide dieselbe Bilddatei verwenden?
 
 Bilddatei, HTML und Lernlog gemeinsam sichern, die Änderung nach Review
 veröffentlichen und das Symbol anschliessend auch online prüfen.
+
+## 2026-11-07 – Favicon auf Vercel mit kleiner Bilddatei anzeigen
+
+**Was haben wir gemacht?**
+
+Das grosse Seitenlogo war online sichtbar, das Favicon im Browser-Tab dagegen
+nicht. Die PNG-Datei war direkt erreichbar; im Netzwerkfenster wurde eine
+Antwort mit Status 200 und eine Bildgrösse von 1254 × 1254 Pixeln angezeigt.
+Lina erstellte mit Paint eine separate Datei public/favicon_32.png mit
+32 × 32 Pixeln und passte den Favicon-Verweis im HTML an. Ein Unterschied
+zwischen Bindestrich und Unterstrich im Dateinamen wurde korrigiert.
+Nach lokalem Test, Commit und Merge bestätigte Lina die Anzeige auf Vercel.
+
+**Warum haben wir das gemacht?**
+
+Das Browser-Symbol sollte auch online funktionieren. Eine eigene kleine
+Datei trennt das Favicon vom grösseren Logo neben der Überschrift.
+
+**Welche Auswirkungen hat das?**
+
+Das HTML verweist für das Tab-Symbol auf favicon_32.png. Das Seitenlogo
+verwendet weiterhin favicon.png. Die kleine Datei löste das beobachtete
+Problem; die genaue Ursache beim ursprünglichen Bild wurde nicht eindeutig
+nachgewiesen. Im gezeigten Terminal liefen 74 Tests erfolgreich; Ruff und
+Black bestanden ebenfalls, Black wurde wegen der Windows-Sperre als
+Python-Modul gestartet. Diese Prüfungen ersetzen den visuellen Browsertest nicht.
+
+**Welche Konzepte wurden behandelt?**
+
+Bildabmessungen, getrennte Bilddateien für unterschiedliche Anzeigezwecke,
+Dateipfade, Browser-Netzwerkprüfung sowie lokaler Test gegenüber Deployment.
+
+**Eigenleistung und KI-Unterstützung**
+
+Lina bearbeitete die Bilder und HTML-Verweise manuell, prüfte die Darstellung
+lokal und online und führte Commit und Merge aus. Der Agent unterstützte die
+Fehlersuche und erklärte die einzelnen Schritte.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+
+Welche Hinweise haben gezeigt, dass die Bilddatei online erreichbar war,
+obwohl das Symbol im Tab fehlte?
+
+**Nächster Lernschritt**
+
+Bei künftigen Änderungen Dateiname, Abmessungen und beide Anzeigeorte prüfen.
+
+## 2026-11-07 – Architekturdiagramm mit Mermaid im README einbinden
+
+**Was haben wir gemacht?**
+
+Die Architekturübersicht wurde um Bootstrap im Frontend ergänzt. Besprochen
+wurden die Aufgaben von Vue und Bootstrap, die Bereitstellung über CDN und
+psycopg als Verbindung zwischen Python und PostgreSQL. Für die Überschriften
+wurde nach einem nicht erfolgreichen Versuch mit HTML-Tags die Markdown-
+Schreibweise in Mermaid verwendet. Der Datenbankkasten nennt nur die Tabellen
+benutzer und stellenanzeigen. Lina erstellte einen neuen Dokumentationsbranch
+und fügte das Diagramm unter Systemarchitektur als mermaid-Codeblock im README
+ein. Die Werkzeugwahl ist in Entscheid 0015 festgehalten.
+
+**Warum haben wir das gemacht?**
+
+Die aktuelle Architektur soll direkt im Repository sichtbar und als Text
+änderbar sein. Eine separate Grafik müsste bei jeder Änderung neu exportiert
+werden. Lina bevorzugte die kompakte Übersicht gegenüber einer C4-Darstellung.
+
+**Welche Auswirkungen hat das?**
+
+Die Dokumentation zeigt Frontend, Hosting, Backend, Datenbank und externe
+Dienste mit ihren Verbindungen. Es wurde keine Anwendungsfunktion geändert.
+Die Prüfung der Darstellung auf GitHub und das Review durch Fabio sind noch
+offen; ein Merge dieser Dokumentationsänderung ist noch nicht bestätigt.
+
+**Welche Konzepte wurden behandelt?**
+
+Mermaid-Codeblöcke in Markdown, beschriftete Verbindungen, Hosting-Grenzen,
+CDN für Frontend-Dateien und SQL-Zugriff über psycopg. Das Diagramm beschreibt
+die Systemarchitektur und ersetzt kein detailliertes Datenmodell.
+
+**Eigenleistung und KI-Unterstützung**
+
+Lina entschied über Inhalt und Darstellung, erstellte den Branch und band den
+Code manuell ein. Der Agent formulierte den Mermaid-Code, erklärte Begriffe
+und Einbindung und ergänzte Entscheid und Lernlog auf Linas Wunsch.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+
+Kann ich anhand des Diagramms erklären, welche Aufgaben im Browser liegen
+und welche das Backend übernimmt?
+
+**Nächster Lernschritt**
+
+README und Entscheid als Pull Request hochladen, die GitHub-Darstellung prüfen
+und Fabio um fachliches Review bitten.

@@ -80,3 +80,57 @@ your ideas for creating the whole software? What might not be apparent from the
 sources alone? You can also add diagrams, photos of whiteboards or flipcharts
 or even crudly drawing napkin sketches of the core concepts of your software
 when they are readable and helpful for understanding.
+
+
+## Systemarchitektur
+
+```mermaid
+flowchart TB
+    Browser["`**Frontend im Browser**
+Vue 3: Bedienlogik
+Bootstrap: Darstellung
+Beide über CDN eingebunden
+Stellenübersicht und Formular`"]
+
+    subgraph Vercel["Hosting: Vercel"]
+        direction LR
+        Backend["`**Python-Backend mit Flask**
+JSON-API und Validierung
+Import und Speicherung
+Arbeitswegberechnung`"]
+
+        Dateien["`**Statische Dateien**
+public/index.html und Bilder
+HTML und JavaScript`"]
+    end
+
+    DB[("`**PostgreSQL bei Neon**
+benutzer
+stellenanzeigen`")]
+
+    Jobs["`**jobs.ch**
+Stellenanzeigen als Webseite
+HTML und JSON-LD`"]
+
+    ORS["`**OpenRouteService**
+Adresssuche und Koordinaten
+Autoroute mit Strecke und Fahrzeit`"]
+
+    Browser <-->|"HTTPS: Anfragen und Antworten als JSON"| Backend
+    Dateien -->|"HTTPS: Dateien ausliefern"| Browser
+    Backend <-->|"SQL über psycopg"| DB
+    Backend <-->|"HTTPS: Webseite laden und auslesen<br/>requests und BeautifulSoup"| Jobs
+    Backend <-->|"HTTPS: REST-API mit JSON<br/>requests"| ORS
+
+    classDef frontend fill:#D6E896,stroke:#738A35,color:#111111;
+    classDef server fill:#BDE2EB,stroke:#568B98,color:#111111;
+    classDef database fill:#DBEAFE,stroke:#527AA3,color:#111111;
+    classDef external fill:#F0F5F7,stroke:#78909C,color:#111111;
+
+    class Browser frontend;
+    class Backend,Dateien server;
+    class DB database;
+    class Jobs,ORS external;
+
+    style Vercel fill:#F6F8FA,stroke:#D50006,stroke-width:2px,color:#111111
+```
