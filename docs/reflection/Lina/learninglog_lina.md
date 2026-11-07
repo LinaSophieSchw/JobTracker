@@ -1449,3 +1449,64 @@ und welche das Backend übernimmt?
 
 README und Entscheid als Pull Request hochladen, die GitHub-Darstellung prüfen
 und Fabio um fachliches Review bitten.
+
+## 2026-11-07 – Aufgaben mit einem Kanban-Board in GitHub Projects organisieren
+
+**Was haben wir gemacht?**
+
+Lina legte in GitHub Projects das Board «JobTracker – Aufgabenübersicht» mit
+ der Kanban-Vorlage an und wählte das Repository JobTracker für den Import aus.
+Dabei wurden keine offenen Issues gefunden. Das Board zeigte zunächst die
+Spalten Backlog, Ready, In progress, In review und Done. Besprochen wurde,
+Pull Requests als verknüpfte Karten aufzunehmen und User Stories aus den
+Markdown-Dateien nachträglich als Issues zu erfassen. Für bewusst entfallene
+Stories wurde die Bezeichnung «Cancelled» vorgeschlagen; «Deferred» bedeutet
+hingegen aufgeschoben. Die Aufgaben README (#36) und Präsentation (#37) waren
+im gezeigten Board vorhanden. Ihre Beschreibungen wurden ausgearbeitet und
+die fachlichen Nummern 90009 und 90010 vorgeschlagen.
+
+**Warum haben wir das gemacht?**
+
+Das Team soll offene, laufende, zu prüfende und abgeschlossene Arbeit an einem
+Ort sehen können. GitHub Projects bietet dafür ein Kanban-Board direkt auf
+der Plattform, auf der auch Repository, Issues und Pull Requests liegen.
+Die Markdown-Dateien bleiben die ausführliche Dokumentation der User Stories.
+
+**Welche Auswirkungen hat das?**
+
+Ein Issue kann als Karte mit Verantwortlichkeit und Status im Board erscheinen.
+Ein verknüpfter Pull Request wird dadurch weder freigegeben noch gemergt.
+Die nachträgliche Erfassung bildet den aktuellen Stand ab, ersetzt aber keine
+historische Aufzeichnung der damaligen Bearbeitung. Für die Zuordnung der
+Grundlagenarbeiten wurden lokale Git-Commits, Branches und Merge-Nachrichten
+geprüft. Einige Story-Dokumente enthalten noch veraltete Statusangaben; diese
+müssen vor einer Einstufung mit dem tatsächlichen Stand abgeglichen werden.
+Das Board war laut Schloss-Symbol privat. Die Vergabe von Schreibzugriff an
+Fabio und Mirko wurde erklärt; ihr Abschluss wurde nicht separat nachgewiesen.
+
+**Welche Konzepte wurden behandelt?**
+
+Git verwaltet die Versionshistorie. GitHub stellt zusätzlich Projects mit
+Kanban-Ansichten bereit. Issues beschreiben Aufgaben, Pull Requests bündeln
+Änderungen zur Prüfung, und das Board ordnet diese nach Bearbeitungsstand.
+Die eigene Nummerierung wie US 10001 oder Aufgabe 90009 ist unabhängig von
+GitHubs automatisch vergebenen Issue-Nummern wie #36. Technische Aufgaben
+sind nicht automatisch fachliche User Stories.
+
+**Eigenleistung und KI-Unterstützung**
+
+Lina richtete das Board über die Oberfläche ein, zeigte Zwischenstände und
+bestimmte die gewünschte Aufgabenorganisation. Der Agent erklärte die
+Bedienung, prüfte Story-Dateien und Git-Historie und schlug Titel,
+Beschreibungen, Nummern und Zuordnungen vor. Ein vollständiger Import aller
+Stories wurde nicht unabhängig geprüft.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+
+Wie unterscheiden sich für mich Issue, Pull Request und Kanban-Karte, und
+welche Information möchte ich künftig direkt im Board pflegen?
+
+**Nächster Lernschritt**
+
+Mit Fabio und Mirko Zugriff und Status der Karten abgleichen und vereinbaren,
+wann Aufgaben nach In review, Done oder Cancelled verschoben werden.
