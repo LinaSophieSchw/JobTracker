@@ -52,6 +52,11 @@ Die Stellenübersicht erhält eine gestreifte Tabelle mit Hervorhebung der Zeile
 Der Arbeitsweg wird in der Übersicht ohne Zeilenumbruch angezeigt.
 Statuswerte werden als farbige Bootstrap-Badges dargestellt; die Funktion
 status_farbe() ordnet jedem Status die passende Farbe zu.
+
+Version 12 – 07.11.2026 (LS):
+JobTracker-Logo als favicon.png im Ordner public ergänzt.
+Das Symbol wird als Favicon im Browser-Tab und neben dem Seitentitel angezeigt.
+Logo und Titel mit Bootstrap-Klassen nebeneinander ausgerichtet.
 -->
 <html lang="de">
 
@@ -59,6 +64,7 @@ status_farbe() ordnet jedem Status die passende Farbe zu.
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>JobTracker</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
 
     <!-- Bootstrap gestaltet die Oberfläche ohne zusätzliche Build-Tools. -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -74,7 +80,10 @@ status_farbe() ordnet jedem Status die passende Farbe zu.
 
 <body class="bg-light">
     <div id="app" class="container py-4">
-        <h1 class="mb-4">JobTracker</h1>
+        <h1 class="d-flex align-items-center gap-3 mb-4">
+            <img src="/favicon.png" alt="" width="40" height="40">
+            JobTracker
+        </h1>
         <!-- Backend-Status vorerst ausgeblendet:
         <p>Backend: {{ backend_status }}</p>
         -->

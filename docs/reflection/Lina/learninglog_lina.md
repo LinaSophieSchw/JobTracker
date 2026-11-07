@@ -1245,3 +1245,113 @@ an unserem Status-Badge? Welche Änderungen kann ich selbst nachvollziehen?
 Die Darstellung auch bei schmalem Fenster prüfen, Abschlussprüfungen ausführen
 und die Änderungen samt Lernlog auf dem Gestaltungsbranch sichern. Danach
 Preview und Review vor der Übernahme auf Master.
+
+## 2026-11-07 – Öffentliche Domain auf Vercel ändern
+
+**Was haben wir gemacht?**
+
+Nach der Bootstrap-Gestaltung bestätigte der Vercel-Screenshot das erfolgreiche
+Production-Deployment von Master: Commit `0c4acdb`, Merge von PR #32,
+Status Ready. Die öffentliche Webseite zeigte die neue Gestaltung und
+farbigen Status-Badges.
+
+Lina änderte anschliessend die öffentliche Domain über den Bereich Domains
+im Vercel-Projekt. Ausgangsadresse war
+`job-tracker-omega-virid.vercel.app`. Als kürzerer Name wurde
+`jobtracker-swen.vercel.app` im Bestätigungsdialog angezeigt. Die Variante
+`jobtracker-swen26.vercel.app` wurde ebenfalls besprochen; ob Lina nach dem
+Screenshot noch auf diese Variante wechselte, ist nicht bestätigt.
+Lina bestätigte mit ihrem Auftrag zum Lernlog, die Domain geändert zu haben.
+Im gezeigten Dialog war «Redirect old domain to new» ausgewählt, damit
+Besucher der bisherigen Adresse zur neuen gelangen. Ein separater Aufruf
+der endgültigen neuen Adresse und ein Test der Weiterleitung wurden in
+diesem Gespräch noch nicht gezeigt.
+
+**Warum haben wir das gemacht?**
+
+Die automatisch erzeugte Adresse war schwer zu merken. Ein kürzerer Name
+mit Projekt- und Kursbezug lässt sich einfacher teilen und präsentieren.
+
+**Welche Auswirkungen hat das?**
+
+Die Änderung betrifft die öffentliche Erreichbarkeit, nicht den HTML-Code,
+die fachliche Logik oder die Datenbank. Die ausgewählte Weiterleitung soll
+bereits geteilte Links erhalten. Die endgültige neue Adresse ist nach der
+Bestätigung im Vercel-Dashboard zu prüfen und in Projektunterlagen und
+Präsentation nachzuführen.
+
+**Welche Konzepte wurden behandelt?**
+
+Unterschied zwischen Projektname, Deployment-Adresse und öffentlicher
+Domain; Zuordnung zur Production-Umgebung; Weiterleitung gegenüber Entfernen
+der alten Domain. «Preview Deployment Suffix» ist eine andere Einstellung
+und wurde für diese Umbenennung nicht verwendet.
+
+**Eigenleistung und KI-Unterstützung**
+
+Lina bediente Vercel selbst und zeigte die Dialoge. Der Agent erklärte den
+Menüpfad, schlug einen verständlichen Namen vor und erläuterte die Option
+zur Weiterleitung. Der Agent wies darauf hin, dass der im Screenshot
+stehende Name noch keine Jahreszahl enthielt.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+
+Warum ist eine Weiterleitung bei einer Domainänderung hilfreich, und welche
+Links im Projekt müssen wir trotzdem aktualisieren?
+
+**Nächster Lernschritt**
+
+Die endgültige Domain sowie die Weiterleitung der alten Adresse im Browser
+prüfen und den bestätigten Link in Dokumentation und Präsentation übernehmen.
+
+## 2026-11-07 – JobTracker-Logo als Favicon und im Seitentitel ergänzen
+
+**Was haben wir gemacht?**
+
+Ein schlichtes blaues Aktenkoffer-Symbol mit weissem Häkchen wurde mit
+KI-Bildgenerierung erstellt und als `public/favicon.png` gespeichert.
+Lina ergänzte im HTML-Kopf den Verweis auf das PNG als Favicon. Danach
+wurde dasselbe Bild neben der Überschrift «JobTracker» eingebunden, mit
+40 × 40 Pixeln und den Bootstrap-Klassen `d-flex`, `align-items-center`
+und `gap-3`. Das Bild erhält einen leeren Alternativtext, weil der Name
+unmittelbar daneben steht und das Symbol dort dekorativ ist.
+Linas Screenshot bestätigte die Darstellung neben dem Titel. Für die
+Versionshistorie wurde ein Eintrag als Version 12 formuliert.
+
+**Warum haben wir das gemacht?**
+
+Ein einheitliches Symbol soll die Webapp im Browser-Tab und auf der Seite
+wiedererkennbar machen. Die blaue Farbe passt zur Bootstrap-Hauptfarbe.
+Dasselbe Bild wird an beiden Stellen wiederverwendet.
+
+**Welche Auswirkungen hat das?**
+
+Nur ein Bild und seine Einbindung im Frontend kommen hinzu. Die fachlichen
+Abläufe bleiben unverändert. Zunächst war unklar, wo das Favicon erscheint:
+Es gehört zum Browser-Tab, nicht zum Symbol neben der Adresse und nicht
+zur sichtbaren Überschrift. Die Anzeige neben dem Titel wurde deshalb
+zusätzlich über ein img-Element ergänzt. Die neue Darstellung wurde lokal
+geprüft; ein Online-Deployment dieser Logoänderung ist noch nicht bestätigt.
+
+**Welche Konzepte wurden behandelt?**
+
+Favicon gegenüber sichtbarem Seitenlogo, statische Dateien im Ordner public,
+link- und img-Elemente, Alternativtext für dekorative Bilder, feste Bildmasse,
+Flexbox-Ausrichtung über Bootstrap und Browser-Zwischenspeicherung.
+
+**Eigenleistung und KI-Unterstützung**
+
+Lina wünschte ein schlichtes Logo, ergänzte die HTML-Verweise manuell und
+prüfte die Anzeige im Browser. Der Agent generierte das Bild, speicherte
+es im Projekt und erklärte die Einbindung und die unterschiedlichen
+Anzeigeorte. Persönliche Reflexionen werden nicht stellvertretend formuliert.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+
+Wie unterscheiden sich die Einbindungen als Favicon und als Seitenlogo,
+obwohl beide dieselbe Bilddatei verwenden?
+
+**Nächster Lernschritt**
+
+Bilddatei, HTML und Lernlog gemeinsam sichern, die Änderung nach Review
+veröffentlichen und das Symbol anschliessend auch online prüfen.
