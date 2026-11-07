@@ -1158,3 +1158,90 @@ nehmen wir dafür in Kauf?
 
 Den offenen Dokumentationsstand sichern und die Gestaltung auf einem eigenen
 Branch schrittweise umsetzen; Browserabläufe und Bildschirmgrössen prüfen.
+
+## 2026-11-07 – Bootstrap-Gestaltung und farbige Statusanzeigen umsetzen
+
+**Was haben wir gemacht?**
+
+Nach dem Dokumentationscommit legte Lina manuell den Branch
+`feature/bootstrap-oberflaeche` an. Aufbauend auf ADR 0013 wurde
+`public/index.html` gemeinsam Schritt für Schritt gestaltet:
+
+- Bootstrap 5.3.8 als CSS-Datei über CDN eingebunden, inklusive
+  Integritätswert und `crossorigin`. Vue bleibt separat über CDN geladen;
+  Bootstrap-JavaScript und eigenes CSS wurden nicht ergänzt.
+- Viewport-Metadaten ergänzt. Sie ermöglichen die Verwendung der tatsächlichen
+  Gerätebreite, beweisen allein aber noch keine mobile Bedienbarkeit.
+- `bg-light`, `container`, `py-4` und `mb-4` für Hintergrund, Inhaltsbreite
+  und Abstände verwendet.
+- Den Button für neue Stellen und die Übersichtstabelle mit Bootstrap-Klassen
+  gestaltet: gestreifte Zeilen, Hervorhebung beim Darüberfahren und
+  vertikale Ausrichtung der Inhalte.
+- Eingabefelder und Stellenbeschreibung einzeln mit `form-control`, die
+  Statusauswahl mit `form-select` gestaltet. Vue-Bindungen und vorhandene
+  Attribute blieben erhalten.
+- Buttons für Laden, manuelle Erfassung, Zurück, Speichern, Löschen und
+  Abbrechen mit passenden Varianten von `btn` gestaltet. Die beiden
+  Speichern-Buttons für neue und bestehende Stellen bleiben getrennt;
+  Mirkos Kommentare und Bedingungen wurden beibehalten.
+- Der Arbeitsweg brach in der Übersicht teilweise vor «min» um. Mit
+  `text-nowrap` bleibt die Angabe in einer Zeile. Die Werte waren zuvor
+  nicht abgeschnitten, sondern auf zwei Zeilen verteilt.
+- `status_farbe()` ordnet den sechs Statuswerten Bootstrap-Farbklassen zu.
+  Ein `span` mit `badge` und dynamischer Klassenbindung zeigt die Farbe;
+  `status_anzeigen()` liefert unverändert den Anzeigetext. Unbekannte
+  Werte erhalten eine graue Darstellung. Die Schrift bleibt als zusätzliche
+  Information erhalten, damit der Status nicht nur über Farbe erkennbar ist.
+- Version 11 wurde im Stil der bisherigen HTML-Versionshistorie ergänzt.
+
+**Warum haben wir das gemacht?**
+
+Die funktionierende Oberfläche sollte mit wenig zusätzlichem Aufwand besser
+lesbar und einheitlicher werden. Bootstrap-Klassen passen zu Formularen und
+Tabellen und vermeiden ein eigenes Gestaltungssystem. Farben unterstützen
+zusätzlich das schnelle Erkennen des Bewerbungsstatus.
+
+**Welche Auswirkungen hat das?**
+
+Die Gestaltung und eine neue reine Darstellungsfunktion im JavaScript wurden
+angepasst; Backend und Datenbank blieben unverändert. Lina bestätigte die
+verbesserte Darstellung, die Korrektur des Arbeitswegs und die Statusfarben.
+Sie bestätigte auch den zuvor angeleiteten Browsercheck mit Öffnen einer
+Stelle, Statusänderung und Speichern, Rückkehr zur Übersicht sowie dem
+manuellen Einstieg. Ein vollständiger Test auf schmalen Bildschirmen und
+neue automatisierte Abschlussprüfungen wurden für diesen Branch bislang
+nicht nachgewiesen. Insbesondere kann eine Tabelle durch `text-nowrap`
+auf schmalen Bildschirmen mehr Platz benötigen.
+
+**Welche Konzepte wurden behandelt?**
+
+HTML beschreibt die Struktur der Webseite, CSS ihre Darstellung und
+JavaScript ihr Verhalten. Obwohl alles in `index.html` steht, enthält die
+Datei HTML und einen JavaScript-Abschnitt innerhalb von `<script>`;
+Bootstrap-CSS wird über `<link>` geladen. Vue erweitert das HTML durch
+Bindungen wie `v-model`, `@click` und `:class`. XML ist ein anderes Format
+zur Strukturierung von Daten mit selbst definierten Tags und wird hier
+nicht verwendet. Die Flask-API tauscht JSON mit dem Frontend aus.
+Weitere Themen waren CDN, Integritätsprüfung, responsive Grundlagen,
+Bootstrap-Klassen und der Unterschied zwischen Versionskommentar und
+sichtbarem Inhalt.
+
+**Eigenleistung und KI-Unterstützung**
+
+Lina führte die Änderungen selbst in VS Code aus und prüfte sie im Browser.
+Sie wünschte ausdrücklich einzelne, kleine Schritte, den Erhalt von Mirkos
+Kommentaren und die zusätzliche farbige Statusanzeige. Der Agent las die
+betroffenen HTML-Abschnitte, lieferte passende Codeblöcke, erklärte deren
+Wirkung und grenzte Viewport-Metadaten von tatsächlich geprüfter mobiler
+Bedienbarkeit ab. Persönliche Erkenntnisse werden nicht vorweggenommen.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+
+Wie unterscheiden sich HTML-Struktur, Bootstrap-CSS und Vue-JavaScript
+an unserem Status-Badge? Welche Änderungen kann ich selbst nachvollziehen?
+
+**Nächster Lernschritt**
+
+Die Darstellung auch bei schmalem Fenster prüfen, Abschlussprüfungen ausführen
+und die Änderungen samt Lernlog auf dem Gestaltungsbranch sichern. Danach
+Preview und Review vor der Übernahme auf Master.
