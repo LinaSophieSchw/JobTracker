@@ -44,14 +44,27 @@ nur den Status (US 20004).
 Version 10 – 01.11.2026 (MG):
 «Löschen» im Zustand «Bestehend» mit Rückfrage; danach zur Übersicht
 (US 20005).
+
+Version 11 – 07.11.2026 (LS):
+Bootstrap-CSS über CDN eingebunden und Viewport-Metadaten ergänzt.
+Seitenbreite und Abstände sowie Eingabefelder, Auswahlfelder und Buttons gestaltet.
+Die Stellenübersicht erhält eine gestreifte Tabelle mit Hervorhebung der Zeilen.
+Der Arbeitsweg wird in der Übersicht ohne Zeilenumbruch angezeigt.
+Statuswerte werden als farbige Bootstrap-Badges dargestellt; die Funktion
+status_farbe() ordnet jedem Status die passende Farbe zu.
 -->
 <html lang="de">
 
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>JobTracker</title>
-    <!-- Vue 3 wird direkt aus dem Internet (CDN) geladen. -->
-    <!-- So brauchen wir keine Installation und keine Build-Tools. -->
+
+    <!-- Bootstrap gestaltet die Oberfläche ohne zusätzliche Build-Tools. -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+
+    <!-- Vue steuert weiterhin Datenbindung und Benutzerinteraktionen. -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
 
@@ -59,9 +72,9 @@ Version 10 – 01.11.2026 (MG):
      HTML: Seitenaufbau und Formular
      ======================================== -->
 
-<body>
-    <div id="app">
-        <h1>JobTracker</h1>
+<body class="bg-light">
+    <div id="app" class="container py-4">
+        <h1 class="mb-4">JobTracker</h1>
         <!-- Backend-Status vorerst ausgeblendet:
         <p>Backend: {{ backend_status }}</p>
         -->
@@ -73,229 +86,240 @@ Version 10 – 01.11.2026 (MG):
              "uebersicht" hat. Sonst zeigt Vue den Block mit v-else weiter
              unten. So gibt es zwei Screens in einer einzigen Datei (ADR 0010). -->
         <div v-if="ansicht === 'uebersicht'">
-        <h2>Übersicht</h2>
+            <h2>Übersicht</h2>
 
-        <button type="button" @click="neue_stelle_oeffnen">+ Neue Stelle</button>
+            <button type="button" class="btn btn-primary mb-3" @click="neue_stelle_oeffnen">
+                + Neue Stelle
+            </button>
 
-        <p v-if="fehlermeldung">{{ fehlermeldung }}</p>
+            <p v-if="fehlermeldung">{{ fehlermeldung }}</p>
 
-        <!-- Eine Tabellenzeile pro gespeicherter Stelle.
+            <!-- Eine Tabellenzeile pro gespeicherter Stelle.
              v-for wiederholt die Zeile <tr> für jede Stelle in der Liste
              «stellen». :key gibt Vue die id, damit es die Zeilen auseinanderhält.
              @click öffnet die Stelle dieser Zeile im Formular (US 20002). -->
-        <table>
-            <thead>
-                <tr>
-                    <th>Titel</th>
-                    <th>Firma</th>
-                    <th>Arbeitsort</th>
-                    <th>Status</th>
-                    <th>Arbeitsweg</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="stelle in stellen" :key="stelle.id" @click="stelle_oeffnen(stelle.id)">
-                    <td>{{ stelle.titel }}</td>
-                    <td>{{ stelle.firma }}</td>
-                    <td>{{ stelle.arbeitsort }}</td>
-                    <td>{{ status_anzeigen(stelle.status) }}</td>
-                    <td>{{ arbeitsweg_anzeigen(stelle) }}</td>
-                </tr>
-            </tbody>
-        </table>
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Titel</th>
+                        <th>Firma</th>
+                        <th>Arbeitsort</th>
+                        <th>Status</th>
+                        <th>Arbeitsweg</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="stelle in stellen" :key="stelle.id" @click="stelle_oeffnen(stelle.id)">
+                        <td>{{ stelle.titel }}</td>
+                        <td>{{ stelle.firma }}</td>
+                        <td>{{ stelle.arbeitsort }}</td>
+                        <td>
+                            <span class="badge" :class="status_farbe(stelle.status)">
+                                {{ status_anzeigen(stelle.status) }}
+                            </span>
+                        </td>
+                        <td class="text-nowrap">{{ arbeitsweg_anzeigen(stelle) }}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
         <!-- ========================================
              Screen 2: Stellen-Formular
              ======================================== -->
         <div v-else>
-        <!-- Führt zurück zur Übersicht und lädt sie neu (MG). Das Formular
+            <!-- Führt zurück zur Übersicht und lädt sie neu (MG). Das Formular
              bleibt nach dem Speichern offen (US 30006); mit diesem Button
              kehrt man danach selbst zurück. -->
-        <button type="button" @click="zur_uebersicht" :disabled="laedt || speichert">
-            ← Zurück zur Übersicht
-        </button>
+            <button type="button" class="btn btn-outline-secondary mb-3" @click="zur_uebersicht"
+                :disabled="laedt || speichert">
+                ← Zurück zur Übersicht
+            </button>
 
-        <!-- Zustand «Bestehend» (MG, US 20002): geoeffnete_stelle_id ist gesetzt,
+            <!-- Zustand «Bestehend» (MG, US 20002): geoeffnete_stelle_id ist gesetzt,
              wenn die Stelle aus der Übersicht geöffnet wurde. Dann gibt es
              nichts mehr zu laden, darum fehlt der Bereich mit dem Link. -->
-        <h2 v-if="geoeffnete_stelle_id === null">Stellenanzeige erfassen</h2>
-        <h2 v-else>Gespeicherte Stellenanzeige</h2>
+            <h2 v-if="geoeffnete_stelle_id === null">Stellenanzeige erfassen</h2>
+            <h2 v-else>Gespeicherte Stellenanzeige</h2>
 
-        <form v-if="geoeffnete_stelle_id === null" @submit.prevent="stellenanzeige_laden">
-            <label for="stellenlink">Link zur jobs.ch-Stellenanzeige</label>
-            <input id="stellenlink" type="url" v-model="stellenlink" required>
-            <button type="submit" :disabled="laedt">
-                {{ laedt ? "Wird geladen …" : "Informationen laden" }}
-            </button>
-            <!-- Öffnet das Formular ohne Import. -->
-            <button type="button" @click="stellenanzeige_manuell_erfassen" :disabled="laedt || speichert">
-                Von Hand erfassen
-            </button>
-        </form>
+            <form v-if="geoeffnete_stelle_id === null" @submit.prevent="stellenanzeige_laden">
+                <label for="stellenlink">Link zur jobs.ch-Stellenanzeige</label>
+                <input id="stellenlink" class="form-control mb-2" type="url" v-model="stellenlink" required>
+                <button type="submit" class="btn btn-primary" :disabled="laedt">
+                    {{ laedt ? "Wird geladen …" : "Informationen laden" }}
+                </button>
+                <!-- Öffnet das Formular ohne Import. -->
+                <button type="button" class="btn btn-outline-secondary" @click="stellenanzeige_manuell_erfassen"
+                    :disabled="laedt || speichert">
+                    Von Hand erfassen
+                </button>
+            </form>
 
-        <p v-if="fehlermeldung">{{ fehlermeldung }}</p>
-        <!-- Erscheint erst nach einer erfolgreichen Speicherung. -->
-        <p v-if="erfolgsmeldung">{{ erfolgsmeldung }}</p>
+            <p v-if="fehlermeldung">{{ fehlermeldung }}</p>
+            <!-- Erscheint erst nach einer erfolgreichen Speicherung. -->
+            <p v-if="erfolgsmeldung">{{ erfolgsmeldung }}</p>
 
-        <!-- Erscheint erst nach einem erfolgreichen Abruf. -->
-        <div v-if="vorschau_vorhanden">
-            <h2>Angaben prüfen und bearbeiten</h2>
+            <!-- Erscheint erst nach einem erfolgreichen Abruf. -->
+            <div v-if="vorschau_vorhanden">
+                <h2>Angaben prüfen und bearbeiten</h2>
 
-            <!-- Der geladene Link bleibt unverändert. -->
-            <p>
-                <!-- Bei manueller Erfassung ist der Link bearbeitbar. -->
-            <p v-if="manuelle_erfassung">
-                <label for="manueller_link">jobs.ch-Link (Pflichtfeld)</label>
-                <input id="manueller_link" type="url" v-model="anzeigenlink">
-            </p>
+                <!-- Der geladene Link bleibt unverändert. -->
+                <p>
+                    <!-- Bei manueller Erfassung ist der Link bearbeitbar. -->
+                <p v-if="manuelle_erfassung">
+                    <label for="manueller_link">jobs.ch-Link (Pflichtfeld)</label>
+                    <input id="manueller_link" type="url" v-model="anzeigenlink">
+                </p>
 
-            <!-- Nach einem Import bleibt der normalisierte Link nur lesbar. -->
-            <p v-else>
-                Geladene Anzeige:
-                <a :href="anzeigenlink" target="_blank" rel="noopener noreferrer">
-                    {{ anzeigenlink }}
-                </a>
-            </p>
+                <!-- Nach einem Import bleibt der normalisierte Link nur lesbar. -->
+                <p v-else>
+                    Geladene Anzeige:
+                    <a :href="anzeigenlink" target="_blank" rel="noopener noreferrer">
+                        {{ anzeigenlink }}
+                    </a>
+                </p>
 
-            <!-- Eine Zeile pro Feld: links Beschriftung, rechts Eingabe. -->
-            <table>
-                <tbody>
-                    <!-- Status nur bei einer geöffneten Stelle (MG, US 20003).
+                <!-- Eine Zeile pro Feld: links Beschriftung, rechts Eingabe. -->
+                <table>
+                    <tbody>
+                        <!-- Status nur bei einer geöffneten Stelle (MG, US 20003).
                          Eine neue Stelle startet immer mit «gespeichert».
                          v-for geht durch status_auswahl: «wert» wird gespeichert,
                          «anzeigetext» sieht der Benutzer. v-model hält die Wahl
                          in «status» fest. -->
-                    <tr v-if="geoeffnete_stelle_id !== null">
-                        <th scope="row"><label for="status">Status</label></th>
-                        <td>
-                            <select id="status" v-model="status">
-                                <option v-for="(anzeigetext, wert) in status_auswahl"
-                                        :key="wert" :value="wert">
-                                    {{ anzeigetext }}
-                                </option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="stellentitel">Titel</label></th>
-                        <td>
-                            <input id="stellentitel" type="text" v-model="stellentitel" maxlength="200">
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="firma">Firma</label></th>
-                        <td>
-                            <input id="firma" type="text" v-model="firma" maxlength="200">
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="arbeitsort">Arbeitsort</label></th>
-                        <td>
-                            <input id="arbeitsort" type="text" v-model="arbeitsort" maxlength="200">
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">
-                            <label for="inseratadresse_strasse">Strasse mit Hausnummer</label>
-                        </th>
-                        <td>
-                            <input id="inseratadresse_strasse" type="text" v-model="inseratadresse_strasse"
-                                maxlength="200">
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <th scope="row">
-                            <label for="inseratadresse_postleitzahl">Postleitzahl</label>
-                        </th>
-                        <td>
-                            <input id="inseratadresse_postleitzahl" type="text" v-model="inseratadresse_postleitzahl"
-                                maxlength="20">
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <th scope="row">
-                            <label for="inseratadresse_ort">Adressort</label>
-                        </th>
-                        <td>
-                            <input id="inseratadresse_ort" type="text" v-model="inseratadresse_ort" maxlength="200">
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="pensum">Pensum</label></th>
-                        <td>
-                            <input id="pensum" type="text" v-model="pensum" maxlength="50">
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">
-                            <label for="stellenbeschreibung">Stellenbeschreibung</label>
-                        </th>
-                        <td>
-                            <!-- Mehrzeiliges Eingabefeld für den langen Beschreibungstext. -->
-                            <textarea id="stellenbeschreibung" v-model="stellenbeschreibung" rows="12"
-                                cols="70"></textarea>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            </table>
-
-            <!-- Arbeitsweg (FH): nur lesbar. Die Werte berechnet das Backend
-                 beim ersten Klick auf «Speichern»; vorher bleiben die Felder leer.
-                 :value statt v-model: Vue schreibt den Wert nur ins Feld hinein,
-                 readonly verhindert, dass man selbst etwas eintippt. -->
-            <fieldset>
-                <legend>Arbeitsweg mit dem Auto (wird beim Speichern berechnet)</legend>
-                <table>
-                    <tbody>
-                        <tr>
-                            <th scope="row"><label for="strecke_auto">Strecke</label></th>
+                        <tr v-if="geoeffnete_stelle_id !== null">
+                            <th scope="row"><label for="status">Status</label></th>
                             <td>
-                                <input id="strecke_auto" type="text" :value="strecke_auto_text" readonly>
+                                <select id="status" class="form-select" v-model="status">
+                                    <option v-for="(anzeigetext, wert) in status_auswahl" :key="wert" :value="wert">
+                                        {{ anzeigetext }}
+                                    </option>
+                                </select>
                             </td>
                         </tr>
                         <tr>
-                            <th scope="row"><label for="fahrzeit_auto">Fahrzeit</label></th>
+                            <th scope="row"><label for="stellentitel">Titel</label></th>
                             <td>
-                                <input id="fahrzeit_auto" type="text" :value="fahrzeit_auto_text" readonly>
+                                <input id="stellentitel" class="form-control" type="text" v-model="stellentitel"
+                                    maxlength="200">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="firma">Firma</label></th>
+                            <td>
+                                <input id="firma" class="form-control" type="text" v-model="firma" maxlength="200">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="arbeitsort">Arbeitsort</label></th>
+                            <td>
+                                <input id="arbeitsort" class="form-control" type="text" v-model="arbeitsort"
+                                    maxlength="200">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="inseratadresse_strasse">Strasse mit Hausnummer</label>
+                            </th>
+                            <td>
+                                <input id="inseratadresse_strasse" class="form-control" type="text"
+                                    v-model="inseratadresse_strasse" maxlength="200">
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th scope="row">
+                                <label for="inseratadresse_postleitzahl">Postleitzahl</label>
+                            </th>
+                            <td>
+                                <input id="inseratadresse_postleitzahl" class="form-control" type="text"
+                                    v-model="inseratadresse_postleitzahl" maxlength="20">
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th scope="row">
+                                <label for="inseratadresse_ort">Adressort</label>
+                            </th>
+                            <td>
+                                <input id="inseratadresse_ort" class="form-control" type="text"
+                                    v-model="inseratadresse_ort" maxlength="200">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="pensum">Pensum</label></th>
+                            <td>
+                                <input id="pensum" class="form-control" type="text" v-model="pensum" maxlength="50">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="stellenbeschreibung">Stellenbeschreibung</label>
+                            </th>
+                            <td>
+                                <!-- Mehrzeiliges Eingabefeld für den langen Beschreibungstext. -->
+                                <textarea id="stellenbeschreibung" class="form-control" v-model="stellenbeschreibung"
+                                    rows="12" cols="70"></textarea>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-            </fieldset>
 
-            <!-- Speichert die bearbeiteten Angaben.
+                </table>
+
+                <!-- Arbeitsweg (FH): nur lesbar. Die Werte berechnet das Backend
+                 beim ersten Klick auf «Speichern»; vorher bleiben die Felder leer.
+                 :value statt v-model: Vue schreibt den Wert nur ins Feld hinein,
+                 readonly verhindert, dass man selbst etwas eintippt. -->
+                <fieldset>
+                    <legend>Arbeitsweg mit dem Auto (wird beim Speichern berechnet)</legend>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <th scope="row"><label for="strecke_auto">Strecke</label></th>
+                                <td>
+                                    <input id="strecke_auto" type="text" :value="strecke_auto_text" readonly>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="fahrzeit_auto">Fahrzeit</label></th>
+                                <td>
+                                    <input id="fahrzeit_auto" type="text" :value="fahrzeit_auto_text" readonly>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </fieldset>
+
+                <!-- Speichert die bearbeiteten Angaben.
                  Zwei Knöpfe mit derselben Beschriftung (MG, US 20003): Eine neue
-                 Stelle wird mit POST angelegt, eine geöffnete mit PUT geändert.
-                 v-if / v-else zeigt immer genau einen davon. -->
-            <button v-if="geoeffnete_stelle_id === null" type="button"
+                Stelle wird mit POST angelegt, eine geöffnete mit PUT geändert.
+                v-if / v-else zeigt immer genau einen davon. -->
+                <button v-if="geoeffnete_stelle_id === null" type="button" class="btn btn-primary"
                     @click="stellenanzeige_speichern" :disabled="speichert || laedt">
-                {{ speichert ? "Wird gespeichert …" : "Speichern" }}
-            </button>
-            <button v-else type="button"
-                    @click="stelle_aktualisieren" :disabled="speichert">
-                {{ speichert ? "Wird gespeichert …" : "Speichern" }}
-            </button>
+                    {{ speichert ? "Wird gespeichert …" : "Speichern" }}
+                </button>
 
-            <!-- Löscht die geöffnete Stelle (MG, US 20005). Nur im Zustand
+                <button v-else type="button" class="btn btn-primary" @click="stelle_aktualisieren"
+                    :disabled="speichert">
+                    {{ speichert ? "Wird gespeichert …" : "Speichern" }}
+                </button>
+
+                <!-- Löscht die geöffnete Stelle (MG, US 20005). Nur im Zustand
                  «Bestehend»: Eine neue Stelle ist noch nicht gespeichert, es gibt
                  also nichts zu löschen. -->
-            <button v-if="geoeffnete_stelle_id !== null" type="button"
+                <button v-if="geoeffnete_stelle_id !== null" type="button" class="btn btn-outline-danger"
                     @click="stelle_loeschen" :disabled="speichert">
-                Löschen
-            </button>
+                    Löschen
+                </button>
 
-            <!-- Blendet die ungespeicherte Vorschau aus. Bei einer geöffneten
+                <!-- Blendet die ungespeicherte Vorschau aus. Bei einer geöffneten
                  Stelle führt «← Zurück zur Übersicht» zurück (MG). -->
-            <button v-if="geoeffnete_stelle_id === null" type="button"
+                <button v-if="geoeffnete_stelle_id === null" type="button" class="btn btn-outline-secondary"
                     @click="vorschau_vorhanden = false" :disabled="speichert">
-                Abbrechen
-            </button>
-        </div>
+                    Abbrechen
+                </button>
+            </div>
         </div>
         <!-- Ende Screen 2: Stellen-Formular -->
 
@@ -586,6 +610,21 @@ Version 10 – 01.11.2026 (MG):
                 // wie er gespeichert ist, statt einer leeren Zelle.
                 status_anzeigen(status) {
                     return STATUS_ANZEIGE[status] || status;
+                },
+
+                // Ordnet jedem Status eine Bootstrap-Farbe zu (LS).
+                // Unbekannte Statuswerte werden ebenfalls grau dargestellt.
+                status_farbe(status) {
+                    const farben = {
+                        gespeichert: "text-bg-secondary",
+                        beworben: "text-bg-primary",
+                        interview: "text-bg-warning",
+                        zusage: "text-bg-success",
+                        absage: "text-bg-danger",
+                        zurueckgezogen: "text-bg-dark",
+                    };
+
+                    return farben[status] || "text-bg-secondary";
                 },
 
                 // Macht aus Strecke und Fahrzeit einen Text wie «125.4 km, 82 min» (MG).

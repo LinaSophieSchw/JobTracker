@@ -901,3 +901,347 @@ Erhalt bestehender Daten?
 Änderungen samt Lernlog committen, Branch veröffentlichen und nach Review
 auf Master übernehmen. Fabio die neuen Feldnamen und den vorläufigen
 Demo-Benutzer mitteilen. Nach dem Deployment den Online-Ablauf prüfen.
+
+## 2026-10-31 –  API-Schlüssel auf Vercel und Integrationstest
+
+
+
+**Was haben wir gemacht?**
+
+Lina holte die integrierten Beiträge von Fabio und Mirko und aktualisierte
+mit `uv sync --all-groups` die Python-Umgebung. Der Aufruf `uv run pytest`
+wurde durch eine Windows-Anwendungssteuerungsrichtlinie blockiert. Mit
+`uv run python -m pytest` starteten die Tests erfolgreich: 63 bestanden,
+85 Prozent Gesamt-Testabdeckung. Die Sicherheitsrichtlinie wurde nicht geändert.
+
+Für die öffentlich laufende App ergänzte Lina nach Fabios Hinweis die
+Umgebungsvariable `OPENROUTESERVICE_API_KEY` in den Vercel-Projekteinstellungen.
+Der Screenshot zeigte den korrekten Variablennamen, den Typ Secret und die
+Umgebung Production; der Schlüssel selbst wird hier nicht dokumentiert.
+Lina bestätigte am 07.11. rückblickend, den API-Key ergänzt zu haben.
+Besprochen wurden Speichern und anschliessendes Redeploy, damit die neue
+Konfiguration in einem neuen Deployment verfügbar wird. Ein erfolgreicher
+Redeploy wurde im damaligen Gespräch nicht separat nachgewiesen.
+
+Ein anschliessend gezeigter Browserversuch speicherte die Stelle
+«Polizeiaspirant/-in» als ID 10, zeigte aber «Arbeitsweg konnte nicht
+berechnet werden.». Alle drei Arbeitsadressfelder waren leer. Der vorhandene
+Arbeitsort Zürich ist davon getrennt. Dieser Versuch war deshalb kein
+Nachweis dafür, dass der API-Key falsch war oder die Online-Berechnung
+mit einer vollständigen Adresse nicht funktioniert.
+
+**Warum haben wir das gemacht?**
+
+Die lokale `.env` wird nicht automatisch nach Vercel übertragen. Das Backend
+benötigt dort eine eigene Konfiguration für den externen Routendienst.
+Ein erfolgreicher Unit-Test mit simulierten Antworten ersetzt keinen
+Integrationstest mit dem echten Dienst und geeigneten Adressen.
+
+**Welche Auswirkungen hat das?**
+
+Der Schlüssel ist für die Production-Umgebung hinterlegt. Preview-Deployments
+und lokale Entwicklung benötigen jeweils eine passende Konfiguration.
+Ein Fehler bei der Arbeitswegberechnung verhindert das Speichern der Stelle
+nicht. Leere Arbeitsadressfelder sind eine gesondert zu prüfende Voraussetzung.
+
+**Welche Konzepte wurden behandelt?**
+
+Virtuelle Python-Umgebung, Moduleinstieg mit `python -m`, Unit-Tests,
+Testabdeckung, lokale gegenüber serverseitigen Umgebungsvariablen,
+Secret, Production/Preview, Redeploy und Integrationstest.
+
+**Eigenleistung und KI-Unterstützung**
+
+Lina führte Einrichtung und Tests manuell aus und zeigte Ergebnisse und
+Screenshots. Der Agent erklärte die Windows-Meldung, den Unterschied zwischen
+lokaler und Online-Konfiguration sowie den Menüpfad in Vercel. Er ordnete
+den Fehler anhand der fehlenden Arbeitsadresse ein, ohne einen API-Erfolg
+oder einen fehlerhaften Schlüssel zu behaupten.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+
+Warum kann die Anwendung lokal funktionieren, obwohl auf Vercel noch eine
+Umgebungsvariable fehlt? Was beweist ein Speichertest ohne Arbeitsadresse?
+
+**Nächster Lernschritt**
+
+Die Production-Konfiguration mit einem neuen Deployment und vollständigen
+Start- und Zieladressen gezielt prüfen; Ergebnisse nach Umgebung festhalten.
+
+## 2026-11-06 – Nachtrag: Systemarchitektur mit Mermaid beschreiben
+
+
+**Was haben wir gemacht?**
+
+Lina wollte die Systemarchitektur als Mermaid-Code für README und Präsentation
+darstellen. Der Agent prüfte dazu `public/index.html`, `src/app/__init__.py`,
+`stellenanzeige_erfassen.py`, `datenbank.py` und `arbeitsweg.py` sowie die
+Vercel-Konfiguration. Es entstanden mehrere Mermaid-Entwürfe mit
+Browser-Frontend, Vercel, PostgreSQL bei Neon, jobs.ch und OpenRouteService.
+Die Syntax wurde zum Ausprobieren im Mermaid Live Editor bereitgestellt.
+
+Besprochen wurden die kostenlose Mermaid-Bibliothek unter MIT-Lizenz,
+die direkte Darstellung eines mermaid-Codeblocks in GitHub-Markdown und
+der Unterschied zum zusätzlichen Dienst Mermaid.ai. Eine Registrierung
+oder ein Abo ist für ein Mermaid-Diagramm in der GitHub-README nicht nötig.
+
+Die Beziehungen wurden fachlich abgegrenzt:
+
+- Vue läuft im Browser; Vercel liefert HTML und JavaScript aus.
+- Der Browser fragt die Flask-API ab und erhält JSON.
+- Flask liest und schreibt über psycopg in PostgreSQL bei Neon.
+- jobs.ch ist eine Webseiten-Datenquelle für den serverseitigen Import
+  aus HTML und JSON-LD, keine von uns verwendete Stellen-API.
+- OpenRouteService wird vom Backend über seine REST-API für Adresssuche
+  und Autorouten aufgerufen. Der Schlüssel bleibt serverseitig.
+- Die Pfeile zeigen den Initiator einer Anfrage; Antworten sind mitgemeint.
+  Browser-Verbindungen direkt zur Datenbank oder zu den beiden externen
+  Diensten gehören nicht zum implementierten Ablauf.
+
+Als Alternative wurde C4 erklärt: Context, Containers, Components und Code.
+Ein an C4 angelehntes Containerdiagramm wurde vorgeschlagen. Lina bevorzugte
+anschliessend die vorherige Architekturübersicht mit sichtbarer Vercel-
+Hostinggrenze und dem Frontend oben. Der Mermaid-Code wurde entsprechend
+angepasst. Eine formale UML- oder vollständige C4-Konformität wurde nicht
+beansprucht.
+
+**Warum haben wir das gemacht?**
+
+Die Architektur soll mit dem Repository übereinstimmen und für andere
+verständlich sein. Textbasierte Diagramme lassen sich gemeinsam mit dem
+Code versionieren und leichter aktualisieren. Für PowerPoint wurde ein
+SVG-Export besprochen, damit die Darstellung beim Skalieren scharf bleibt.
+
+**Welche Auswirkungen hat das?**
+
+Die Mermaid-Entwürfe stehen im Gespräch bereit. Eine Änderung der README
+wurde bei dieser Arbeit nicht vorgenommen. Für die Präsentation erstellte
+der Agent zunächst eine neue Folie aus nativen PowerPoint-Elementen. Lina
+wies darauf hin, dass sie ausdrücklich die von Mermaid erzeugte Abbildung
+wollte. Der Agent erkannte die Abweichung an und sagte den Austausch durch
+einen gerenderten Mermaid-SVG zu. Die tatsächliche SVG-Erzeugung und der
+Austausch sind in dieser Zusammenarbeit noch nicht nachgewiesen und bleiben
+offen; die PowerPoint-Nachzeichnung ist kein Mermaid-Export.
+
+**Welche Konzepte wurden behandelt?**
+
+Diagramme als Code, Markdown-Codeblöcke, automatische Anordnung in Mermaid,
+System- gegenüber Hostinggrenze, Anfrage- und Antwortrichtung, C4-Ebenen,
+Web Scraping gegenüber REST-API sowie SVG gegenüber Rasterbild und nativen
+PowerPoint-Elementen.
+
+**Eigenleistung und KI-Unterstützung**
+
+Lina bestimmte Zweck, bevorzugte Darstellung und Anordnung und korrigierte
+die Umsetzung, als diese nicht dem gewünschten Mermaid-Ergebnis entsprach.
+Der Agent prüfte Code und offizielle Dokumentation, lieferte Mermaid-Code,
+erklärte Alternativen und bearbeitete die Präsentation. Die ursprüngliche
+Fehlinterpretation bei der PPT-Umsetzung lag beim Agenten.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+
+Was lässt sich aus dem Diagramm über die Zuständigkeit von Browser und
+Backend ablesen? Warum bevorzuge ich diese Darstellung gegenüber C4?
+
+**Nächster Lernschritt**
+
+Den abgestimmten Mermaid-Code tatsächlich rendern, das SVG prüfen und in
+die Präsentation übernehmen. Die README-Einbindung erfolgt separat.
+
+## 2026-11-07 – Arbeitswegberechnung beim Anlegen und erneuten Speichern testen
+
+**Was haben wir gemacht?**
+
+Der lokale Master wurde mit GitHub verglichen: Beide zeigten Commit
+`7090938` (Merge von PR #31, Abschluss Use Case 2); das Arbeitsverzeichnis
+war vor diesem Lernlog-Eintrag sauber. Auslöser des Tests war Fabios
+Rückmeldung, dass die Berechnung bei einzelnen Adressen nicht gelingt.
+
+Lina startete die App mit
+`uv run python -m flask --app src/app run --debug --port 5001` und öffnete
+sie unter `http://127.0.0.1:5001`. Der Entwicklungsserver lief erfolgreich.
+
+Testfall:
+
+- Stelle: «Associate Luftfahrtrecht», Blum & Grob Rechtsanwälte.
+- jobs.ch-ID: `1145dec3-ac73-49f5-8dbc-80fb8ff0c5e4`.
+- Importierte Arbeitsadresse: Neumühlequai 6, 8001 Zürich.
+- Erstes Speichern: Stelle ID 18, Strecke 125,2 km und Fahrzeit 89 Minuten.
+  Der Screenshot zeigte die gespeicherte ID und beide Ergebniswerte.
+- Anschliessend sollte Lina dieselbe Stelle aus der Übersicht öffnen,
+  gespeicherte Werte prüfen und ohne Änderungen erneut speichern.
+  Sie bestätigte danach, dass alles funktioniert. Ein eigener zweiter
+  Screenshot oder separate Zahlen des erneuten Speicherns liegen nicht vor.
+
+**Warum haben wir das gemacht?**
+
+Mit demselben Datensatz lassen sich das erste Speichern und das Aktualisieren
+einer bestehenden Stelle vergleichen. Der Test prüft das Zusammenspiel von
+Import, Formular, Backend, echter Routen-API und Datenbank im lokalen Betrieb.
+
+**Welche Auswirkungen hat das?**
+
+Für diese vollständige Arbeitsadresse funktionierte die erste Berechnung;
+Lina bestätigte auch den anschliessend angeleiteten Ablauf. Daraus folgt
+nicht, dass jede Adresse funktioniert oder dass Fabios früherer Fehlerfall
+behoben ist. Wegen der einheitlichen Fehlermeldung kann die Oberfläche
+Adressprobleme, Zeitüberschreitungen und API-Probleme nicht unterscheiden.
+Die tatsächliche Wohnadresse wurde bei diesem Test nicht separat aus der
+Datenbank gelesen. Ein erneuter Vercel-Test wurde heute nicht durchgeführt.
+Es wurden für diesen Test keine Codeänderungen vorgenommen.
+
+**Welche Konzepte wurden behandelt?**
+
+Manueller Integrationstest, Neuanlage gegenüber Aktualisierung, Wiederöffnen
+persistierter Daten, vollständige Testdaten, Trennung von Beobachtung und
+vermuteter Ursache sowie Grenzen eines einzelnen erfolgreichen Testfalls.
+
+**Eigenleistung und KI-Unterstützung**
+
+Lina startete den Server, importierte die Stelle, speicherte sie und führte
+den anschliessend angeleiteten Test durch. Der Agent las die aktuelle
+Berechnungs- und Speicherlogik, strukturierte den Test und wertete den
+Screenshot und Linas Rückmeldung aus. Persönliche Lernerfahrungen bleiben
+von Lina selbst zu ergänzen.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+
+Was beweist dieser erfolgreiche Test, und welche weiteren Fälle brauche ich,
+um Fabios Rückmeldung zu bestimmten Adressen einzugrenzen?
+
+**Nächster Lernschritt**
+
+Einen von Fabio konkret genannten fehlgeschlagenen Adressfall mit denselben
+Voraussetzungen reproduzieren und mit dem erfolgreichen Fall vergleichen.
+Den bestätigten Ablauf bei Bedarf zusätzlich auf Vercel prüfen.
+
+## 2026-11-07 – Bootstrap für die Darstellung auswählen
+
+**Was haben wir gemacht?**
+
+Eigenes CSS und Bootstrap wurden für die Gestaltung der bestehenden
+Oberfläche verglichen. Lina entschied sich für Bootstrap allein über CDN;
+eine zusätzliche eigene CSS-Datei ist zunächst nicht nötig. Der Entscheid
+ist in `docs/decisions/0013-bootstrap-fuer-die-darstellung.md` festgehalten.
+Die Einbindung wurde noch nicht umgesetzt.
+
+**Warum haben wir das gemacht?**
+
+Die einfache Oberfläche benötigt vor allem konsistente Formulare, Buttons,
+Tabellen und Abstände. Vorgefertigte Klassen sollen den Aufwand begrenzen
+und ohne zusätzliche Build-Werkzeuge auskommen.
+
+**Welche Auswirkungen hat das?**
+
+Vue bleibt für die Interaktionen zuständig. Für die geplante Gestaltung
+reicht Bootstrap-CSS; Bootstrap-JavaScript ist nicht vorgesehen.
+Die Fachlogik bleibt unverändert. Die CDN-Abhängigkeit und das zunächst
+wenig individuelle Aussehen werden akzeptiert.
+
+**Welche Konzepte wurden behandelt?**
+
+Trennung von Darstellung und Bedienlogik, CSS-Klassen, CDN, responsive
+Gestaltung sowie Abwägen von eigener Gestaltung und vorgefertigten Bausteinen.
+
+**Eigenleistung und KI-Unterstützung**
+
+Lina wählte den Umfang ausdrücklich: Bootstrap reicht, eigenes CSS entfällt
+zunächst. Der Agent verglich Optionen, prüfte offizielle Dokumentation und
+schrieb auf Linas Wunsch den Architekturentscheid nach der Projektvorlage.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+
+Warum passt Bootstrap zu unserem Projekt und welche zusätzliche Abhängigkeit
+nehmen wir dafür in Kauf?
+
+**Nächster Lernschritt**
+
+Den offenen Dokumentationsstand sichern und die Gestaltung auf einem eigenen
+Branch schrittweise umsetzen; Browserabläufe und Bildschirmgrössen prüfen.
+
+## 2026-11-07 – Bootstrap-Gestaltung und farbige Statusanzeigen umsetzen
+
+**Was haben wir gemacht?**
+
+Nach dem Dokumentationscommit legte Lina manuell den Branch
+`feature/bootstrap-oberflaeche` an. Aufbauend auf ADR 0013 wurde
+`public/index.html` gemeinsam Schritt für Schritt gestaltet:
+
+- Bootstrap 5.3.8 als CSS-Datei über CDN eingebunden, inklusive
+  Integritätswert und `crossorigin`. Vue bleibt separat über CDN geladen;
+  Bootstrap-JavaScript und eigenes CSS wurden nicht ergänzt.
+- Viewport-Metadaten ergänzt. Sie ermöglichen die Verwendung der tatsächlichen
+  Gerätebreite, beweisen allein aber noch keine mobile Bedienbarkeit.
+- `bg-light`, `container`, `py-4` und `mb-4` für Hintergrund, Inhaltsbreite
+  und Abstände verwendet.
+- Den Button für neue Stellen und die Übersichtstabelle mit Bootstrap-Klassen
+  gestaltet: gestreifte Zeilen, Hervorhebung beim Darüberfahren und
+  vertikale Ausrichtung der Inhalte.
+- Eingabefelder und Stellenbeschreibung einzeln mit `form-control`, die
+  Statusauswahl mit `form-select` gestaltet. Vue-Bindungen und vorhandene
+  Attribute blieben erhalten.
+- Buttons für Laden, manuelle Erfassung, Zurück, Speichern, Löschen und
+  Abbrechen mit passenden Varianten von `btn` gestaltet. Die beiden
+  Speichern-Buttons für neue und bestehende Stellen bleiben getrennt;
+  Mirkos Kommentare und Bedingungen wurden beibehalten.
+- Der Arbeitsweg brach in der Übersicht teilweise vor «min» um. Mit
+  `text-nowrap` bleibt die Angabe in einer Zeile. Die Werte waren zuvor
+  nicht abgeschnitten, sondern auf zwei Zeilen verteilt.
+- `status_farbe()` ordnet den sechs Statuswerten Bootstrap-Farbklassen zu.
+  Ein `span` mit `badge` und dynamischer Klassenbindung zeigt die Farbe;
+  `status_anzeigen()` liefert unverändert den Anzeigetext. Unbekannte
+  Werte erhalten eine graue Darstellung. Die Schrift bleibt als zusätzliche
+  Information erhalten, damit der Status nicht nur über Farbe erkennbar ist.
+- Version 11 wurde im Stil der bisherigen HTML-Versionshistorie ergänzt.
+
+**Warum haben wir das gemacht?**
+
+Die funktionierende Oberfläche sollte mit wenig zusätzlichem Aufwand besser
+lesbar und einheitlicher werden. Bootstrap-Klassen passen zu Formularen und
+Tabellen und vermeiden ein eigenes Gestaltungssystem. Farben unterstützen
+zusätzlich das schnelle Erkennen des Bewerbungsstatus.
+
+**Welche Auswirkungen hat das?**
+
+Die Gestaltung und eine neue reine Darstellungsfunktion im JavaScript wurden
+angepasst; Backend und Datenbank blieben unverändert. Lina bestätigte die
+verbesserte Darstellung, die Korrektur des Arbeitswegs und die Statusfarben.
+Sie bestätigte auch den zuvor angeleiteten Browsercheck mit Öffnen einer
+Stelle, Statusänderung und Speichern, Rückkehr zur Übersicht sowie dem
+manuellen Einstieg. Ein vollständiger Test auf schmalen Bildschirmen und
+neue automatisierte Abschlussprüfungen wurden für diesen Branch bislang
+nicht nachgewiesen. Insbesondere kann eine Tabelle durch `text-nowrap`
+auf schmalen Bildschirmen mehr Platz benötigen.
+
+**Welche Konzepte wurden behandelt?**
+
+HTML beschreibt die Struktur der Webseite, CSS ihre Darstellung und
+JavaScript ihr Verhalten. Obwohl alles in `index.html` steht, enthält die
+Datei HTML und einen JavaScript-Abschnitt innerhalb von `<script>`;
+Bootstrap-CSS wird über `<link>` geladen. Vue erweitert das HTML durch
+Bindungen wie `v-model`, `@click` und `:class`. XML ist ein anderes Format
+zur Strukturierung von Daten mit selbst definierten Tags und wird hier
+nicht verwendet. Die Flask-API tauscht JSON mit dem Frontend aus.
+Weitere Themen waren CDN, Integritätsprüfung, responsive Grundlagen,
+Bootstrap-Klassen und der Unterschied zwischen Versionskommentar und
+sichtbarem Inhalt.
+
+**Eigenleistung und KI-Unterstützung**
+
+Lina führte die Änderungen selbst in VS Code aus und prüfte sie im Browser.
+Sie wünschte ausdrücklich einzelne, kleine Schritte, den Erhalt von Mirkos
+Kommentaren und die zusätzliche farbige Statusanzeige. Der Agent las die
+betroffenen HTML-Abschnitte, lieferte passende Codeblöcke, erklärte deren
+Wirkung und grenzte Viewport-Metadaten von tatsächlich geprüfter mobiler
+Bedienbarkeit ab. Persönliche Erkenntnisse werden nicht vorweggenommen.
+
+**Persönliche Reflexion – von Lina zu ergänzen**
+
+Wie unterscheiden sich HTML-Struktur, Bootstrap-CSS und Vue-JavaScript
+an unserem Status-Badge? Welche Änderungen kann ich selbst nachvollziehen?
+
+**Nächster Lernschritt**
+
+Die Darstellung auch bei schmalem Fenster prüfen, Abschlussprüfungen ausführen
+und die Änderungen samt Lernlog auf dem Gestaltungsbranch sichern. Danach
+Preview und Review vor der Übernahme auf Master.
