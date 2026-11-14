@@ -390,3 +390,51 @@ warum?
 **Nächster Lernschritt**
 Pull Request für US 20005 öffnen und von Use Case 1 (Lina) prüfen lassen.
 Testeinträge «s» über «Löschen» aufräumen.
+
+### 2026-11-14 – CI-Pipeline mit GitHub Actions
+
+**Was haben wir gemacht?**
+- Festgestellt, dass es keine CI-Pipeline gab: `.github/workflows/` enthielt
+  nur den Platzhalter `.gitkeep`. `uv sync` lief bisher nur von Hand (README,
+  Skill `start-coding`, VS-Code-Task) und im `Dockerfile`.
+- `.github/workflows/ci.yml` erstellt: bei jedem Push und Pull Request
+  `uv sync --locked --all-groups`, `uv run pytest`, `uv run ruff check .` und
+  `uv run black --check .`. Platzhalter `.gitkeep` entfernt.
+- Dieselben Schritte lokal ausgeführt: 74 Tests grün, ruff und black ohne
+  Meldung.
+- Entscheid als [ADR 0016](../../decisions/0016-ci-mit-github-actions.md)
+  dokumentiert.
+
+**Warum haben wir das gemacht?**
+Damit beim Review automatisch sichtbar ist, ob Tests und Stilprüfung grün
+sind, statt sich darauf zu verlassen, dass jede Person sie lokal ausgeführt
+hat. Betrachtete Alternativen: weiter von Hand, Vercel (prüft keine Tests),
+GitLab CI oder Jenkins (passen nicht zu GitHub).
+
+**Welche Auswirkungen hat das?**
+Jeder Pull Request zeigt ein grünes Häkchen oder ein rotes Kreuz. Tests
+dürfen keine echte Datenbank und keine echten Webdienste verwenden, weil die
+Pipeline keine Zugangsdaten hat.
+
+**Welche Konzepte wurden behandelt?**
+- CI (Continuous Integration: automatisch prüfen) gegenüber CD (Continuous
+  Deployment: automatisch ausliefern, bei uns Vercel).
+- GitHub Actions: Workflow als YAML-Datei, Auslöser (`on: push`,
+  `pull_request`), Job auf einem leeren Linux-Rechner, Schritte nacheinander.
+- `uv sync --locked`: bricht ab, wenn `uv.lock` nicht zu `pyproject.toml`
+  passt.
+- Warum Mocks die Pipeline ohne Secrets möglich machen.
+
+**Eigenleistung und KI-Unterstützung**
+- Mirko: Frage nach der fehlenden Pipeline, Entscheid für die Umsetzung mit
+  ADR und Learninglog.
+- KI (Claude): Suche im Repository, Workflow-Datei, lokale Prüfung, ADR und
+  Erklärungen.
+
+**Persönliche Reflexion – von Mirko zu ergänzen**
+Offen: Was ist der Unterschied zwischen CI und CD, in eigenen Worten?
+
+**Nächster Lernschritt**
+Pull Request öffnen und im Tab «Checks» den ersten Lauf der Pipeline
+anschauen. Lina fragen, ob sie «Branch protection» für `master` einschalten
+will.
