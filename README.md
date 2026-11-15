@@ -104,9 +104,9 @@ Alternativen und der Begründung.
 | Benutzer | Ein Demo-Benutzer ohne Login, vorbereitet für mehrere Benutzer | [0003](docs/decisions/0003-benutzer-ohne-login.md) |
 | Oberfläche | Zwei Screens: Übersicht und ein Formular für Erfassen und Bearbeiten | [0005](docs/decisions/0005-ein-formular-fuer-erfassen-und-bearbeiten.md), [0010](docs/decisions/0010-minimale-oberflaeche.md) |
 | Adressen | Drei Felder ohne Prüfung, getrennt vom angezeigten Arbeitsort | [0004](docs/decisions/0004-adresse-getrennt-vom-arbeitsort.md), [0009](docs/decisions/0009-adresse-in-drei-feldern.md) |
+| CI | Tests und Stilprüfung bei jedem Push mit GitHub Actions | [0016](docs/decisions/0016-ci-mit-github-actions.md) |
 | Lokale Entwicklung | `flask run` statt gunicorn | [0012](docs/decisions/0012-lokaler-server-mit-flask-run.md) |
 | Dokumentation | Systemarchitektur als Mermaid-Diagramm | [0015](docs/decisions/0015-systemarchitektur-mit-mermaid.md) |
-
 ## Wo finde ich was im Code?
 
 | Frage | Ort |
@@ -118,6 +118,7 @@ Alternativen und der Begründung.
 | Arbeitsweg mit OpenRouteService (externe API) | [`src/app/arbeitsweg.py`](src/app/arbeitsweg.py) |
 | Frontend | [`public/index.html`](public/index.html): HTML, Vue 3 und Bootstrap in einer Datei |
 | Tests | [`tests/`](tests/) |
+| CI-Pipeline | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
 | Abhängigkeiten | [`pyproject.toml`](pyproject.toml) und [`uv.lock`](uv.lock) |
 | Use Cases und User Stories | [`docs/Use_cases/`](docs/Use_cases/) |
 
@@ -225,7 +226,29 @@ Testabdeckung an (aktuell 85 %).
   oder [`tests/test_stelle_loeschen.py`](tests/test_stelle_loeschen.py) für
   US 20005.
 
-## Deployment
+## CI/CD
+
+Die automatische Prüfung (CI) und das Ausliefern (CD) sind getrennt: GitHub
+Actions prüft den Code, Vercel liefert ihn aus.
+
+### CI mit GitHub Actions
+
+Die Pipeline ist in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+definiert ([ADR 0016](docs/decisions/0016-ci-mit-github-actions.md)). Sie
+läuft bei jedem Push und bei jedem Pull Request und führt dieselben Befehle
+aus, die wir vor einem Commit auch von Hand ausführen:
+
+1. `uv sync --locked --all-groups`: Abhängigkeiten installieren. `--locked`
+   bricht ab, wenn `uv.lock` nicht zu `pyproject.toml` passt.
+2. `uv run pytest`: Unit-Tests ausführen
+3. `uv run ruff check .`: Code auf Fehler und Stilregeln prüfen
+4. `uv run black --check .`: Formatierung prüfen
+
+Im Pull Request erscheint danach ein grünes Häkchen oder ein rotes Kreuz.
+Gemergt wird nur, wenn es grün ist. Die Pipeline braucht keine Secrets, weil
+die Tests ohne Datenbank und ohne externe Dienste laufen.
+
+### Deployment mit Vercel
 
 Die Applikation läuft auf [Vercel](https://vercel.com). Vercel erkennt die
 Flask-App über den Eintrag `[tool.vercel]` in
