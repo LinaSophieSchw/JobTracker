@@ -16,7 +16,7 @@ from app.stellenanzeige_erfassen import (
 )
 
 
-# Requirement 1: Der Titel wird aus dem HTML gelesen.
+# Requirement 1: Der Titel wird aus dem HTML gelesen. UNITTEST
 def test_titel_wird_aus_hauptueberschrift_gelesen():
     """Entfernt HTML-Tags aus dem gefundenen Titel."""
     assert stellentitel_aus_html_lesen("<h1> Pilot 100% </h1>") == "Pilot 100%"

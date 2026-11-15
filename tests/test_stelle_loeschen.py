@@ -60,7 +60,7 @@ def route_vorbereiten(monkeypatch, loeschen_ersatz):
     monkeypatch.setitem(app.config, "DATABASE", "testadresse")
 
 
-# Requirement 4: Erfolg liefert 204 ohne Inhalt.
+# Requirement 4: Erfolg liefert 204 ohne Inhalt. KOMPONENTENTEST
 def test_route_loescht_stelle_mit_204_ohne_inhalt(monkeypatch):
     loeschen_mock = Mock(return_value=True)
     route_vorbereiten(monkeypatch, loeschen_mock)

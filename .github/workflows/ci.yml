@@ -1,0 +1,46 @@
+# CI-Pipeline für den JobTracker (MG, ADR 0016)
+#
+# Läuft bei jedem Push und bei jedem Pull Request auf GitHub. GitHub startet
+# dafür einen leeren Linux-Rechner und führt dieselben Prüfungen aus, die wir
+# vor einem Commit von Hand machen (Skill end-coding). Im Pull Request
+# erscheint danach ein grünes Häkchen oder ein rotes Kreuz.
+#
+# Die Tests brauchen weder Datenbank noch API-Schlüssel, weil sie alles
+# Externe durch Mocks ersetzen. Darum braucht die Pipeline keine Secrets.
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Den Code aus dem Repository auf den Rechner holen.
+      - name: Code holen
+        uses: actions/checkout@v4
+
+      # 2. uv installieren. Python selbst lädt uv danach in der Version aus
+      #    .python-version (3.13), wie auf unseren Rechnern.
+      - name: uv installieren
+        uses: astral-sh/setup-uv@v6
+
+      # 3. Abhängigkeiten installieren, auch pytest, ruff und black.
+      #    --locked bricht ab, wenn uv.lock nicht zu pyproject.toml passt.
+      - name: Abhängigkeiten installieren
+        run: uv sync --locked --all-groups
+
+      # 4. Unittests aus tests/ ausführen.
+      - name: Tests (pytest)
+        run: uv run pytest
+
+      # 5. Code auf Fehler und Stilregeln prüfen.
+      - name: Stil prüfen (ruff)
+        run: uv run ruff check .
+
+      # 6. Formatierung prüfen. --check ändert nichts, es meldet nur.
+      - name: Formatierung prüfen (black)
+        run: uv run black --check .
