@@ -1,78 +1,75 @@
-## Technology stack
+## Technologie
 
-This project represents a web application with a backend and a frontend part.
-The backend is to be kept completely in Python. The frontend stack can be chosen
-freely.
+Dieses Projekt ist eine Webapplikation mit einem Backend und einem Frontend.
+Das Backend ist vollständig in Python geschrieben. Das Frontend ist frei
+wählbar.
 
- * We use `uv` for any Python related tasks
+ * Für alle Aufgaben rund um Python verwenden wir `uv`.
 
-## Files and directories
+## Dateien und Ordner
 
- * Check `docs/directories.md` for the directory structure of this project.
- * The backend is a Flask application in `src/app/`. `src/app/__init__.py`
-   exposes the Flask application object named `app`.
- * The frontend lives in `public/index.html` (Vue 3 and Bootstrap via CDN).
-   Vercel serves `public/` directly; locally, Flask serves the same folder.
- * The application is deployed automatically to Vercel on every push to
-   `master`. Locally it is started with `flask run` (ADR 0012).
+ * Die Ordnerstruktur des Projekts steht in `docs/directories.md`.
+ * Das Backend ist eine Flask-App in `src/app/`. `src/app/__init__.py`
+   stellt das Flask-Objekt mit dem Namen `app` bereit.
+ * Das Frontend liegt in `public/index.html` (Vue 3 und Bootstrap über CDN).
+   Vercel liefert `public/` direkt aus; lokal liefert Flask denselben Ordner
+   aus.
+ * Die Applikation wird bei jedem Push auf `master` automatisch auf Vercel
+   deployt. Lokal wird sie mit `flask run` gestartet (ADR 0012).
 
-## Design guidelines
+## Gestaltungsrichtlinien
 
-This is a project that is to be developed in the course of a master degree in
-business informatics. The focus is on exploring and learning about all the parts
-involved in running a full web application rather than building a fully
-productive, scalable and long-term maintainable application. The created
-elements should be easy to understand.
+Das Projekt entsteht im Modul SWEN an der HSLU. Im Vordergrund steht, alle
+Teile einer vollständigen Webapplikation kennenzulernen, nicht eine produktive,
+skalierbare und langfristig wartbare Applikation zu bauen. Was entsteht, soll
+leicht verständlich sein.
 
- * When discussing design options, start with the simpler options; for example
-   suggest to start with Flask or Starlette rather than Django, suggest vanilla
-   JavaScript, HTMX or Alpine.js rather than going straight for full fledged
-   solutions like Angular or React. Accept more complex solutions once the
-   developers made it clear that they are needed and they understand the
-   implications.
- * Prefer frontend technologies that can be used through CDN and don't need any
-   frontend build steps.
- * For WSGI/ASGI start with either Gunicorn or Uvicorn depending on the web
-   framework used.
- * Document architectural design decisions that were discussed with the
-   developers in the folder `docs/decisions`. Use a new file for every decision
-   and use a continuous numbering scheme in the form
-   `0001-framework-choice.md`.
+ * Bei Designfragen zuerst die einfacheren Varianten vorschlagen, zum Beispiel
+   Flask oder Starlette statt Django und einfaches JavaScript, HTMX oder
+   Alpine.js statt umfangreicher Frameworks wie Angular oder React.
+   Komplexere Lösungen erst übernehmen, wenn das Team klar gemacht hat, dass
+   sie nötig sind, und die Folgen versteht.
+ * Frontend-Technologien bevorzugen, die über CDN eingebunden werden können
+   und keinen Build-Schritt brauchen.
+ * Als WSGI- bzw. ASGI-Server je nach Webframework mit Gunicorn oder Uvicorn
+   beginnen.
+ * Architekturentscheide, die mit dem Team besprochen wurden, im Ordner
+   `docs/decisions` festhalten. Für jeden Entscheid eine eigene Datei mit
+   fortlaufender Nummer im Format `0001-framework-wahl.md` anlegen.
 
-## Educational collaboration
+## Lernen statt nur Code erzeugen
 
-This template is used for learning software development, not only for producing
-code. When students ask an agent to add a feature, choose a technology, or make
-an architectural change, the agent should first help them reason about the
-decision before implementing it.
+Das Projekt dient dazu, Softwareentwicklung zu lernen, nicht nur Code zu
+erzeugen. Wenn das Team einen Agenten bittet, ein Feature umzusetzen, eine
+Technologie zu wählen oder die Architektur zu ändern, hilft der Agent zuerst,
+den Entscheid zu durchdenken, und setzt ihn erst danach um.
 
-Reusable guidance for this behavior is stored as the generic agent skill
-`.agents/skills/challenge-development-decisions`. Agents that support skills
-should use that skill for feature requests, technology choices, architecture
-placement questions, and decision records in this project.
+Die Anleitung dafür steht im Skill
+`.agents/skills/challenge-development-decisions`. Agenten, die Skills
+unterstützen, verwenden ihn bei Feature-Wünschen, Technologiewahl, Fragen zur
+Platzierung in der Architektur und bei Entscheidungsdokumenten.
 
-Decision records for this project belong in `docs/decisions` and should be
-based on `docs/decision-template.md`.
+Entscheidungsdokumente gehören nach `docs/decisions` und basieren auf
+`docs/decision-template.md`.
 
+## Git-Ablauf
 
-## Git workflow
+Das Team besteht aus Anfängern in Git und Programmierung. Drei Skills decken
+den Ablauf ab:
 
-The team members are Git and programming beginners. Three skills cover the
-workflow:
+ * `.agents/skills/start-coding`: wenn jemand eine neue Aufgabe beginnt.
+   Neuesten Stand holen, Abhängigkeiten aktualisieren, Feature-Branch anlegen.
+ * `.agents/skills/learn-coding`: während des Programmierens. Jede User Story
+   als Vertical Slice (Frontend → Backend → Datenbank) in kleinen, lauffähigen
+   Schritten umsetzen, Code im Stil der Codebeispiele aus dem Unterricht
+   schreiben und jeden Schritt in einfachem Deutsch erklären, damit das Team
+   den Code in der Präsentation erklären kann.
+ * `.agents/skills/end-coding`: wenn jemand fertig ist. Änderungen prüfen,
+   eine deutsche Commit-Message mit Typ-Präfix wie `feat:` schreiben,
+   committen, pushen und einen Pull Request öffnen.
 
- * `.agents/skills/start-coding` – when someone starts a new task: get the
-   latest code, sync dependencies, create a feature branch.
- * `.agents/skills/learn-coding` – while programming: build each user story
-   as a vertical slice (frontend → backend → database) in small, runnable
-   steps, write code in the style of the course examples and explain every
-   step in simple German, so the team can explain the code in the
-   presentation.
- * `.agents/skills/end-coding` – when someone is done: check changes, write
-   a German commit message with a type prefix such as `feat:`, commit, push
-   and open a pull request.
-
-For Claude Code all three skills are also registered in `.claude/skills/`, which
-only point to the shared files above.
+Für Claude Code sind diese drei Skills zusätzlich in `.claude/skills/`
+eingetragen. Diese Einträge verweisen nur auf die gemeinsamen Dateien oben.
 
 ## Learninglog zur Reflexionsvorbereitung
 
