@@ -248,9 +248,10 @@ Im Pull Request erscheint danach ein grünes Häkchen oder ein rotes Kreuz.
 Gemergt wird nur, wenn es grün ist. Die Pipeline braucht keine Secrets, weil
 die Tests ohne Datenbank und ohne externe Dienste laufen.
 
-### Deployment mit Vercel
+### CD mit Vercel
 
-Die Applikation läuft auf [Vercel](https://vercel.com). Vercel erkennt die
+Das Ausliefern übernimmt Vercel (Continuous Deployment). Die Applikation läuft
+auf [Vercel](https://vercel.com). Vercel erkennt die
 Flask-App über den Eintrag `[tool.vercel]` in
 [`pyproject.toml`](pyproject.toml) (`entrypoint = "src.app:app"`) und liefert
 die Dateien aus `public/` direkt aus.
