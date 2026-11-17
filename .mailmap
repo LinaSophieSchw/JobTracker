@@ -1,0 +1,6 @@
+# Einheitliche Autorennamen für git log und git shortlog.
+# Jede Zeile ordnet alle Commits mit dieser E-Mail dem Namen davor zu.
+# Die Commits selbst bleiben unverändert.
+Fabio Hänni <fabio.haenni@stud.hslu.ch>
+Lina Schwonnek <lina.schwonnek@students.bfh.ch>
+Mirko Gasser <mirko.gasser@outlook.com>
