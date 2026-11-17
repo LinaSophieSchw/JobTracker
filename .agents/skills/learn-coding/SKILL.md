@@ -123,7 +123,7 @@ wie man ihn nächstes Mal selbst erkennt.
 - **Styling zuletzt:** Das UI muss funktionieren, nicht schön sein. CSS kommt
   erst, wenn der Slice durchläuft, und nur wenn das Team es will.
 - **Projektstruktur einhalten:** Backend in `src/app/`, Frontend in
-  `src/app/static/`, Tests in `tests/` (siehe `docs/directories.md`).
+  `public/`, Tests in `tests/` (siehe `docs/directories.md`).
 - **Keine Geheimnisse im Code:** Passwörter und API-Keys gehören in eine
   `.env`-Datei, nicht in den Code.
 - **Projekt-relative Pfade**, keine absoluten wie `/Users/...`.

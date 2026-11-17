@@ -270,7 +270,7 @@ Umgebungsvariablen hinterlegt, nicht im Code.
 |---|---|
 | Lina Schwonnek | Use Case 1: Stelle von jobs.ch importieren und erfassen |
 | Mirko Gasser | Use Case 2: Übersicht, Stelle öffnen, ändern und löschen |
-| Fabio <!-- TODO: Nachname --> | Use Case 3: Arbeitsweg mit OpenRouteService berechnen |
+| Fabio Hänni | Use Case 3: Arbeitsweg mit OpenRouteService berechnen |
 
 <!-- TODO: Schwerpunkte im Team bestätigen und ergänzen (z.B. Deployment, Datenbank, Frontend) -->
 
