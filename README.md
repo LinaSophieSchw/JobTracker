@@ -9,7 +9,6 @@ einem Ort.
 Die Webapplikation ist das Gruppenprojekt im Modul SWEN (HSLU, HS2026).
 
 **Live:** <https://jobtracker-swen.vercel.app>
-<!-- TODO: Adresse in Vercel bestätigen, siehe ADR 0014 -->
 
 ## Was die Applikation kann
 
@@ -256,8 +255,6 @@ Flask-App über den Eintrag `[tool.vercel]` in
 [`pyproject.toml`](pyproject.toml) (`entrypoint = "src.app:app"`) und liefert
 die Dateien aus `public/` direkt aus.
 
-<!-- TODO: prüfen und bestätigen, dass Vercel mit dem GitHub-Repo verbunden ist
-     und jeden Merge auf master automatisch deployt -->
 Vercel ist mit diesem GitHub-Repository verbunden. Jeder Merge auf `master`
 löst automatisch ein neues Deployment aus.
 
@@ -271,8 +268,6 @@ Umgebungsvariablen hinterlegt, nicht im Code.
 | Lina Schwonnek | Use Case 1: Stelle von jobs.ch importieren und erfassen |
 | Mirko Gasser | Use Case 2: Übersicht, Stelle öffnen, ändern und löschen |
 | Fabio Hänni | Use Case 3: Arbeitsweg mit OpenRouteService berechnen |
-
-<!-- TODO: Schwerpunkte im Team bestätigen und ergänzen (z.B. Deployment, Datenbank, Frontend) -->
 
 Datenbank und Frontend haben alle gemeinsam weiterentwickelt. Wer welche
 Änderung gemacht hat, zeigen die Commits und Pull Requests auf GitHub. Unsere

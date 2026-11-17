@@ -1,27 +1,45 @@
-# Working With Coding Agents
+# Zusammenarbeit mit KI-Agenten
 
-This project template is meant to help students practice software development
-decisions, not only generate code. When using an agent, expect it to ask
-clarifying questions before implementing larger features or accepting technology
-choices.
+Wir haben den JobTracker mit Coding-Agenten wie Codex und Claude Code
+entwickelt. Diese Datei beschreibt, wie wir sie eingesetzt haben und welche
+Regeln dabei galten.
 
-Good prompts include both the desired result and the decisions already made:
+## Grundlage: AGENTS.md
 
-```text
-Implement an order overview page for administrators. It should show a paginated
-table with order number, customer, status, total price, and creation date.
-Filtering by status is enough for the first version. Authorization must be
-checked in the backend.
-```
+[AGENTS.md](../AGENTS.md) ist die Anleitung, die jeder Agent zuerst liest.
+Sie legt fest:
 
-If these decisions are not yet clear, ask the agent to help you decide:
+ * Einfache Lösungen zuerst, zum Beispiel Flask statt Django und ein Frontend
+   über CDN ohne Build-Schritt.
+ * Wichtige Entscheide werden als ADR in [decisions](decisions/) festgehalten,
+   auf der Grundlage von [decision-template.md](decision-template.md).
+ * Wo Backend, Frontend und Dokumentation liegen (siehe
+   [directories.md](directories.md)).
 
-```text
-We need an order overview page, but we are not sure yet who should see it, which
-filters are useful, and whether filtering should happen in the backend or
-frontend. Please challenge our assumptions before implementing it.
-```
+## Skills für den Arbeitsablauf
 
-Important decisions should be documented in `docs/decisions` using the
-continuous numbering scheme, for example `0001-framework-choice.md` followed by
-`0002-order-overview-scope.md`.
+Die Skills liegen in `.agents/skills/`. Für Claude Code sind `start-coding`,
+`learn-coding`, `end-coding` und `learninglog` zusätzlich in `.claude/skills/`
+eingetragen. Diese Einträge verweisen nur auf dieselben Dateien.
+
+| Skill | Wann | Was der Agent tut |
+|---|---|---|
+| `start-coding` | Vor einer neuen Aufgabe | Neuesten Stand von GitHub holen, Abhängigkeiten aktualisieren, Feature-Branch anlegen |
+| `learn-coding` | Beim Programmieren | Die User Story als Vertical Slice (Frontend → Backend → Datenbank) in kleinen, lauffähigen Schritten umsetzen und jeden Schritt einfach auf Deutsch erklären |
+| `end-coding` | Wenn die Aufgabe fertig ist | Änderungen prüfen, deutsche Commit-Message schreiben, committen, pushen und Pull Request öffnen |
+| `challenge-development-decisions` | Bei Technologie- und Architekturfragen | Annahmen hinterfragen und Alternativen zeigen, bevor gebaut wird, und den Entscheid als ADR festhalten |
+| `learninglog` | Nach wichtigen Schritten und Entscheiden | Arbeitsschritte, Entscheide und die Unterstützung durch die KI im Learninglog der Person festhalten |
+
+## Regeln
+
+ * **Der Agent schlägt vor, das Team entscheidet.** Neue Bibliotheken und
+   Technologien gibt es erst nach Rückfrage.
+ * **Wir müssen den Code erklären können.** Darum baut der Agent in kleinen
+   Schritten und erklärt jeden Schritt, statt ganze Dateien auf einmal zu
+   schreiben.
+ * **Entscheide werden dokumentiert.** Was wir mit dem Agenten entschieden
+   haben, steht als ADR in [decisions](decisions/).
+ * **Der Beitrag der KI bleibt sichtbar.** Jede Person führt einen eigenen
+   Learninglog in [reflection](reflection/). Darin steht, was die KI
+   beigetragen hat. Persönliche Reflexionen schreibt die Person selbst; der
+   Agent erfindet sie nicht.
