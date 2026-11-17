@@ -4,8 +4,6 @@ Status: Umgesetzt (PR #17) – Voraussetzung für die Stories 30001 bis 30003
 
 Datum: 2026-10-21, umgesetzt 2026-10-21
 
-Spickzettel zur Umsetzung: [30004-spickzettel.md](30004-spickzettel.md)
-
 ## User Story
 
 Als Nutzer möchte ich, dass ein Benutzer mit Wohnadresse fest im System hinterlegt ist, damit alle erfassten Stellen diesem Benutzer zugeordnet werden und die Wohnadresse als Ausgangspunkt für die Arbeitswegberechnung zur Verfügung steht, ohne dass ich zuerst ein Profil erfassen muss.

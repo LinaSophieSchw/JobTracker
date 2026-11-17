@@ -110,7 +110,7 @@ Pull Request #17 eröffnet. Neu ist die Funktion `wohnadresse_lesen()` in
 Teilen aus der Datenbank. Dazu kamen drei Unittests in
 `tests/test_datenbank.py`, Anpassungen an `docs/datenmodell.md` (Abschnitt 3,
 Regel B2) und ADR 0010 sowie ein
-[Spickzettel für die Präsentation](../../Use_cases/Use_Case_3/30004-spickzettel.md).
+Spickzettel für die Präsentation.
 Mit der Verbindungsadresse von Lina in der lokalen `.env` wurde die Funktion
 einmal gegen die Neon-Datenbank geprüft (nur lesend).
 
@@ -182,7 +182,7 @@ dem Auto: 95 Minuten» oder «Arbeitsweg konnte nicht berechnet werden.»).
 - Doku: Befund der technischen Prüfung in der Story,
   [ADR 0011](../../decisions/0011-strukturierte-adresssuche.md),
   Nachtrag in ADR 0008,
-  [Spickzettel](../../Use_cases/Use_Case_3/30001-spickzettel.md).
+  Spickzettel.
 
 **Warum haben wir das gemacht?**
 Die Story verlangt die Fahrzeit beim ersten Speichern. Vor dem Programmieren
@@ -261,7 +261,7 @@ Browser angezeigt («Fahrzeit mit dem Auto: 95 Minuten, Strecke: 138.3 km»).
   Speicherroute prüft auch Umrechnung und einzige Routenabfrage), ein
   angepasster Test von Lina in `tests/test_stellenanzeige_speichern.py`.
 - Doku: Befund in der Story,
-  [Spickzettel](../../Use_cases/Use_Case_3/30002-spickzettel.md), Hinweis im
+  Spickzettel, Hinweis im
   Spickzettel von US 30001, Stand in der Übersicht von Use Case 3.
 
 **Warum haben wir das gemacht?**
@@ -326,7 +326,7 @@ nicht bearbeitet werden.».
 - Tests: ein angepasster Test von Lina in
   `tests/test_stellenanzeige_speichern.py`. 39 Tests laufen durch.
 - Doku: [US 30006](../../Use_cases/Use_Case_3/30006-arbeitsweg-im-formular-anzeigen.md)
-  und [Spickzettel](../../Use_cases/Use_Case_3/30006-spickzettel.md).
+  und Spickzettel.
 - Commits `f6cc126` (feat) und `c149ff2` (docs), PR #21 mit Merge-Commit in
   `master`.
 

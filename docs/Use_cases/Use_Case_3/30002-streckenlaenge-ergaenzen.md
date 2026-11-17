@@ -4,8 +4,6 @@ Status: Umgesetzt (Branch `feature/30002-streckenlaenge`)
 
 Datum: 2026-10-20, umgesetzt 2026-10-24
 
-Spickzettel zur Umsetzung: [30002-spickzettel.md](30002-spickzettel.md)
-
 ## User Story
 
 Als Nutzer möchte ich bei einer neu gespeicherten Stelle zusätzlich die Strecke mit dem Auto sehen, damit ich die Entfernung auf dem Arbeitsweg einschätzen kann.

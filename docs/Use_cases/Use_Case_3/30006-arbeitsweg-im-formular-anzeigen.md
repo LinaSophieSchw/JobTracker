@@ -4,8 +4,6 @@ Status: Umgesetzt (Branch `feature/arbeitsweg-im-formular`)
 
 Datum: 2026-10-24, umgesetzt 2026-10-24
 
-Spickzettel zur Umsetzung: [30006-spickzettel.md](30006-spickzettel.md)
-
 ## User Story
 
 Als Nutzer möchte ich Strecke und Fahrzeit nach dem Speichern direkt im Stellen-Formular in nur lesbaren Feldern sehen, damit ich den Arbeitsweg bei den übrigen Angaben der Stelle finde und nicht nur in einer kurzen Bestätigungsmeldung.

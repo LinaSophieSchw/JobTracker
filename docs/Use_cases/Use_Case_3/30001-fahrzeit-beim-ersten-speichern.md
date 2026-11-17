@@ -4,8 +4,6 @@ Status: Umgesetzt (Branch `feature/30001-fahrzeit`)
 
 Datum: 2026-10-20, umgesetzt 2026-10-24
 
-Spickzettel zur Umsetzung: [30001-spickzettel.md](30001-spickzettel.md)
-
 ## User Story
 
 Als Nutzer möchte ich beim erstmaligen Speichern einer Stelle die geschätzte Autofahrzeit von meiner Wohnadresse zum Arbeitsort sehen, damit ich den Zeitaufwand für den Arbeitsweg einschätzen kann.
