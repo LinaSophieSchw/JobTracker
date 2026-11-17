@@ -11,7 +11,7 @@ Accepted
 Die Systemarchitektur soll im README verständlich dargestellt und gemeinsam
 mit dem Code gepflegt werden. Die Übersicht zeigt das Frontend mit Vue und
 Bootstrap, Flask auf Vercel, PostgreSQL bei Neon sowie jobs.ch und
-OpenRouteService. Fabio soll die Darstellung vor dem Merge prüfen.
+OpenRouteService.
 
 ## Options Considered
 
@@ -42,5 +42,4 @@ passt zum Lernprojekt und kann bei Änderungen angepasst werden.
 Das Diagramm muss bei Architekturänderungen mitgepflegt werden. Die genaue
 Anordnung und Formatierung hängen vom Mermaid-Renderer ab. Das Diagramm ist
 eine Systemübersicht und kein vollständiges C4- oder Datenbankmodell.
-Die Darstellung auf GitHub und die fachliche Prüfung durch Fabio stehen
-vor dem Merge noch aus. Die Laufzeitarchitektur der Webapp wird nicht verändert.
+Die Laufzeitarchitektur der Webapp wird nicht verändert.

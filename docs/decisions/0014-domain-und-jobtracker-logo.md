@@ -4,9 +4,8 @@ Datum: 2026-11-07
 
 ## Status
 
-Angenommen. Lina bestätigte die Domainänderung und prüfte das Logo lokal.
-Die endgültige Domain und ihre Weiterleitung sind noch separat zu prüfen;
-das Online-Deployment der Logoänderung steht noch aus.
+Angenommen. Von Lina entschieden: Die Verwendung einer verständlichen vercel.app-Domain und des
+JobTracker-Logos ist beschlossen.
 
 ## Kontext
 
@@ -31,8 +30,7 @@ Bootstrap-Hauptfarbe passen, ohne zusätzliche Bibliotheken einzuführen.
 
 ## Entscheidung
 
-Lina entscheidet sich für eine verständliche Adresse unter `vercel.app`
-mit Projekt- und Kursbezug. Im zuletzt gezeigten Bestätigungsdialog war
+Lina entscheidet sich für eine verständliche Adresse mit Projekt- und Kursbezug unter `vercel.app`. Im zuletzt gezeigten Bestätigungsdialog war
 `https://jobtracker-swen.vercel.app` eingetragen. Die Variante
 `jobtracker-swen26.vercel.app` wurde ebenfalls diskutiert; ein anschliessender
 Wechsel auf diesen Namen ist nicht belegt. Vor dem Aktualisieren zentraler
@@ -41,7 +39,7 @@ Projektlinks ist der tatsächlich gespeicherte Name in Vercel zu bestätigen.
 Die bisherige Domain soll auf die neue weiterleiten. Dafür war im
 Vercel-Dialog «Redirect old domain to new» ausgewählt.
 
-Als Logo wird ein mit KI-Bildgenerierung erstelltes blaues Aktenkoffer-Symbol
+Lina entscheidet sich als Logo für ein mit KI-Bildgenerierung erstelltes blaues Aktenkoffer-Symbol
 mit weissem Häkchen verwendet. Die Datei liegt unter `public/favicon.png`.
 Sie wird im HTML-Kopf als Favicon und zusätzlich als 40 × 40 Pixel grosses
 Bild neben «JobTracker» eingebunden. Bootstrap-Klassen richten Bild und
@@ -79,4 +77,5 @@ Favicon und Seitenlogo hält die Einbindung und Pflege überschaubar.
 - [ADR 0013: Bootstrap für die Darstellung](0013-bootstrap-fuer-die-darstellung.md)
 - [Frontend](../../public/index.html)
 - [Logo und Favicon](../../public/favicon.png)
+
 - [Linas Lernlog](../reflection/Lina/learninglog_lina.md)

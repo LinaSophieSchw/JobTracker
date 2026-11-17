@@ -24,6 +24,19 @@ Der gesonderte Entscheid zur externen Web-API steht in
 
 ## Betrachtete Optionen
 
+### Backend: Flask, FastAPI und Django
+
+Die Begründung der bestehenden Flask-Auswahl wurde am 17.11.2026 ergänzt:
+
+- **Flask:** Schlankes Python-Framework für HTTP-Endpunkte. Passt zu den
+  Formularen und Tabellen von JobTracker sowie zur vorhandenen Kursvorlage.
+- **FastAPI:** Auf die Entwicklung von APIs ausgerichtet, mit integrierter
+  Unterstützung für Datenvalidierung und API-Dokumentation. Diese zusätzlichen
+  Funktionen sind für den aktuellen Projektumfang nicht ausschlaggebend.
+- **Django:** Bietet unter anderem ein ORM, eine Administrationsoberfläche und
+  Benutzerverwaltung. Dieser grössere Funktionsumfang wird für die aktuelle
+  Version ohne Login nicht benötigt.
+
 ### Hosting: Azure Web Apps und Vercel
 
 - **Azure Web Apps (Azure App Service):** Als Hosting-Option betrachtet,
@@ -61,6 +74,13 @@ Vue über CDN ermöglicht interaktive Oberflächen ohne zusätzlichen
 Frontend-Build-Prozess. Flask hält das Backend vollständig in Python und passt
 zum überschaubaren Projektumfang. SQLite erfüllt den Wunsch nach relationaler
 Datenspeicherung und vereinfacht zunächst die lokale Einrichtung.
+
+Flask wird gewählt, weil die Anwendung vor allem Formulare, Tabellen und
+überschaubare HTTP-Endpunkte benötigt. Es passt zur Kursvorlage und ermöglicht
+einen einfachen Einstieg. Die zusätzlichen Funktionen von Django beziehungsweise
+die spezialisierte API-Unterstützung von FastAPI werden für den aktuellen
+Projektumfang nicht benötigt. Datenbankzugriffe und externe Webdienste werden
+gezielt über separate Python-Module angebunden.
 
 Vercel wurde gegenüber Azure Web Apps gewählt, weil das Team dort einen
 einfachen Weg zur Bereitstellung erwartet.

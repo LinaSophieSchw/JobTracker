@@ -4,8 +4,8 @@ Datum: 2026-11-07
 
 ## Status
 
-Angenommen. Von Lina für die weitere Gestaltung entschieden;
-die Einbindung ist noch nicht umgesetzt.
+Angenommen. Von Lina für die Gestaltung der Oberfläche entschieden. Bootstrap wird umgesetzt.
+Die Einbindung erfolgt als CSS-Bibliothek über CDN im bestehenden HTML.
 
 ## Kontext
 
