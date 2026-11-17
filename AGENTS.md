@@ -8,20 +8,13 @@ freely.
 
 ## Files and directories
 
- * Check `docs/directories.md` for the recommended directory structure.
- * In case Django is used, the entire `src/` directory maybe adapted for Djangos
-   directory conventions and the `app/` directory may be removed or ignored.
- * The project currently contains a very simple vanilla Python-based WSGI
-   application that can be run with gunicorn/waitress. Once the developers have
-   decided on the way to go, remove any of this basic code from
-   `src/app/__init__.py` and `src/app/static/index.html`.
- * If the developers choose Flask and deployment to Azure App Service with the
-   built-in Python runtime, follow
-   `docs/deployment-azure-app-service-flask.md`. In particular, create a
-   root-level `startup.sh` for Gunicorn and make sure `src/app/__init__.py`
-   exposes a Flask application object named `app` so `app:app` can be imported.
-   Keep these steps conditional; do not add Flask-specific Azure files when the
-   team chooses Django, FastAPI, Starlette or a container-based deployment.
+ * Check `docs/directories.md` for the directory structure of this project.
+ * The backend is a Flask application in `src/app/`. `src/app/__init__.py`
+   exposes the Flask application object named `app`.
+ * The frontend lives in `public/index.html` (Vue 3 and Bootstrap via CDN).
+   Vercel serves `public/` directly; locally, Flask serves the same folder.
+ * The application is deployed automatically to Vercel on every push to
+   `master`. Locally it is started with `flask run` (ADR 0012).
 
 ## Design guidelines
 

@@ -82,7 +82,7 @@ bleibt:
 ```
 Story: Neue Bewerbung erfassen
 
-Frontend   ✅ Formular (static/index.html)   ✅ fetch beim Klick
+Frontend   ✅ Formular (public/index.html)   ✅ fetch beim Klick
 Backend    ✅ POST /api/bewerbungen          ⬅️ jetzt: speichern
 Datenbank  ⬜ Tabelle bewerbungen
 Tests      ⬜
@@ -96,7 +96,7 @@ Tests      ⬜
 > Danach funktioniert: Formular ausfüllen, «Speichern» klicken, die Bewerbung
 > erscheint in der Liste darunter.
 >
-> 1. Frontend – `src/app/static/index.html`: Formular mit Firma und Stelle
+> 1. Frontend – `public/index.html`: Formular mit Firma und Stelle
 > 2. Frontend – `index.html`: beim Klick Daten als JSON an
 >    `POST /api/bewerbungen` schicken
 > 3. Backend – `src/app/__init__.py`: Route nimmt die Daten entgegen

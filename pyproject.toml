@@ -1,7 +1,7 @@
 [project]
-name = "py-webapp-template"
+name = "jobtracker"
 version = "0.1.0"
-description = "Web application project for the software development module"
+description = "JobTracker: Stellen von jobs.ch erfassen, verwalten und den Arbeitsweg berechnen"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
