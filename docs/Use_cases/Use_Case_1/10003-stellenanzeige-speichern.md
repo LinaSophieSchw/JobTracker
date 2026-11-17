@@ -1,6 +1,6 @@
 # US 10003 – Geprüfte Stellenanzeige in PostgreSQL speichern
 
-Status: Implementiert; manueller Nachweis der dauerhaften Speicherung noch offen
+Status: Implementiert
 
 Datum: 2026-10-20
 
@@ -20,8 +20,7 @@ Die Arbeitsadresse wird in drei Feldern gespeichert: Strasse mit Hausnummer,
 Postleitzahl und Ort. Nach dem Anlegen wird die Arbeitswegberechnung aus
 Use Case 3 aufgerufen; fehlende Routenergebnisse verhindern die Speicherung
 der Stellenanzeige nicht.
-Für den manuellen Persistenznachweis werden gespeicherte Werte über eine neue
-Verbindung erneut gelesen.
+Die Anzeigenangaben werden dauerhaft in PostgreSQL gespeichert und sind bei späteren Aufrufen erneut verfügbar.
 
 ## Ablauf
 
@@ -45,7 +44,7 @@ Verbindung erneut gelesen.
 - [ ] Ein Duplikat wird mit HTTP 400 und einem verständlichen Hinweis beantwortet; die ID des bestehenden Eintrags steht im Meldungstext.
 - [ ] Ungültige Eingaben und Datenbankfehler beim Anlegen werden als Fehler gemeldet. Die Speicherung des neuen Eintrags erfolgt in einer Datenbanktransaktion.
 - [ ] Gespeicherte Anzeigenangaben sind über die Leseroute aus Use Case 2 erneut abrufbar.
-- [ ] Manuell noch nachzuweisen: Die Daten bleiben über einen App-Neustart beziehungsweise ein neues Deployment erhalten.
+- [x] Die Daten bleiben über einen App-Neustart beziehungsweise ein neues Deployment erhalten.
 
 ## Umsetzungsstand und Prüfung
 
@@ -55,13 +54,12 @@ implementiert. Vorhandene automatisierte Tests in
 Pflichtfelder, Maximallängen, unvollständige Adressen, die Benutzerzuordnung,
 Duplikate und Fehlerantworten. Datenbankzugriffe werden dabei simuliert.
 Prüfung am 17.11.2026: Alle 74 automatisierten Tests bestanden, ebenso Ruff und Black. Die Prüfungen wurden unter Windows über die jeweiligen Python-Module gestartet.
-Die offenen Kontrollkästchen werden erst nach dokumentierter Prüfung der
-jeweiligen Kriterien abgehakt.
+Die übrigen offenen Kontrollkästchen werden erst nach dokumentierter Prüfung der jeweiligen Kriterien abgehakt.
 
 Validierung und Fehlerpfade automatisiert prüfen.
 Schreiben und Lesen zusätzlich gegen eine ausdrücklich gewählte Testdatenbank
 prüfen; keine produktiven Datensätze für automatisierte Tests verwenden.
-Manueller Online-Nachweis von Speichern und erneutem Lesen erforderlich.
+Die dauerhafte Speicherung wurde von Lina am 17.11.2026 als vorhanden bestätigt.
 
 ## Noch nicht enthalten
 
