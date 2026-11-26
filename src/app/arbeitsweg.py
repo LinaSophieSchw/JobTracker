@@ -43,6 +43,10 @@ von arbeitsweg_berechnen(). (FH)
 Version 07  24.10.2026:
 Vereinfacht: route_abfragen() in arbeitsweg_berechnen() eingebaut, weil die
 Route nur an einer Stelle abgefragt wird. (FH)
+
+Version 08  26.11.2026:
+Neue Internetadressen api.heigit.org. Der Betreiber HeiGIT hat
+api.openrouteservice.org am 24.11.2026 abgeschaltet. (FH)
 """
 
 # Werkzeug, mit dem Python Fragen ins Internet schicken kann.
@@ -51,16 +55,22 @@ import requests
 # ==================================================
 # Vorbereitung: Adressen und Zeitlimit
 # ==================================================
+# Alle Dienste des Betreibers HeiGIT liegen unter api.heigit.org, nach dem
+# Muster api.heigit.org/<Dienstname>/<Version>/. Die alte Adresse
+# api.openrouteservice.org ist seit dem 24.11.2026 abgeschaltet und
+# antwortet nur noch mit «410 Gone». Der Schlüssel bleibt derselbe.
+
 # Internetadresse der Adresssuche des Kartendienstes.
+# «pelias» ist der Name der Software, die bei HeiGIT Adressen sucht.
 # Strukturierte Suche: Strasse, Postleitzahl und Ort gehen getrennt an den
 # Dienst. Die Freitext-Suche hat in der technischen Prüfung die erfundene
 # Adresse «Gibtsnichtweg 999, 9999 Nirgendwo» als «Böschenstrasse 999, Chur»
 # erkannt. Die strukturierte Suche findet dafür nur «Schweiz» (ADR 0011).
-ADRESSSUCHE_URL = "https://api.openrouteservice.org/geocode/search/structured"
+ADRESSSUCHE_URL = "https://api.heigit.org/pelias/v1/search/structured"
 
 # Internetadresse der Routenberechnung fürs Auto («driving-car»).
 # Ohne Live-Verkehr, so wie es die Story will.
-ROUTE_URL = "https://api.openrouteservice.org/v2/directions/driving-car"
+ROUTE_URL = "https://api.heigit.org/openrouteservice/v2/directions/driving-car"
 
 # Wir warten höchstens 5 Sekunden auf eine Antwort.
 # Sonst würde der Klick auf «Speichern» im schlimmsten Fall ewig hängen.

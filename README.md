@@ -152,8 +152,8 @@ Das Frontend spricht nie direkt mit ihnen.
 
 | Dienst | Methode | Adresse | Zweck | Im Code |
 |---|---|---|---|---|
-| OpenRouteService | `GET` | `https://api.openrouteservice.org/geocode/search/structured` | Wandelt eine Adresse in Koordinaten um | `koordinaten_suchen()` in [`arbeitsweg.py`](src/app/arbeitsweg.py) |
-| OpenRouteService | `POST` | `https://api.openrouteservice.org/v2/directions/driving-car` | Berechnet Strecke und Fahrzeit mit dem Auto | `arbeitsweg_berechnen()` in [`arbeitsweg.py`](src/app/arbeitsweg.py) |
+| OpenRouteService | `GET` | `https://api.heigit.org/pelias/v1/search/structured` | Wandelt eine Adresse in Koordinaten um | `koordinaten_suchen()` in [`arbeitsweg.py`](src/app/arbeitsweg.py) |
+| OpenRouteService | `POST` | `https://api.heigit.org/openrouteservice/v2/directions/driving-car` | Berechnet Strecke und Fahrzeit mit dem Auto | `arbeitsweg_berechnen()` in [`arbeitsweg.py`](src/app/arbeitsweg.py) |
 | jobs.ch | `GET` | `https://www.jobs.ch/de/stellenangebote/detail/<jobid>/` | Lädt die Anzeigenseite und liest die Felder aus dem HTML | `stellenanzeige_auslesen()` in [`stellenanzeige_erfassen.py`](src/app/stellenanzeige_erfassen.py) |
 
 OpenRouteService braucht einen API-Schlüssel (`OPENROUTESERVICE_API_KEY`).
