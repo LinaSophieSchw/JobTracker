@@ -467,3 +467,106 @@ wo ich bei diesem Fehler zuerst nachschaue?
 
 **Nächster Lernschritt**
 Mit Lina und Mirko über `flask run` entscheiden und danach US 90001 umsetzen.
+
+## 2026-11-26 – Arbeitsweg kaputt, weil der externe Dienst umgezogen ist
+
+**Was haben wir gemacht?**
+Fabio bemerkte, dass die Berechnung des Arbeitswegs nicht mehr funktionierte.
+In der App erschien bei jeder Stelle nur «Arbeitsweg konnte nicht berechnet
+werden.». Am Code hatte sich seit Wochen nichts geändert.
+
+Ablauf der Fehlersuche:
+
+- Die Anfragen aus [`arbeitsweg.py`](../../../src/app/arbeitsweg.py) wurden
+  einzeln und direkt an den Dienst geschickt, an der App vorbei. Beide
+  Anfragen (Adresssuche und Route) bekamen den Status **410 Gone** und eine
+  Seite «Deprecated HeiGIT API URL».
+- Die Seite und die Ankündigung im OpenRouteService-Forum erklärten den Grund:
+  Der Betreiber HeiGIT hat `api.openrouteservice.org` am 28.04.2026 als
+  veraltet angekündigt und am 24.11.2026 abgeschaltet. Die Dienste laufen
+  weiter, aber unter `api.heigit.org/<Dienstname>/<Version>/`.
+- Die neuen Adressen wurden zuerst ohne Codeänderung getestet: zuerst einzeln,
+  dann über die echte Funktion `arbeitsweg_berechnen()` mit ausgetauschten
+  Adressen. Ergebnis Bern–Zug: 91 Minuten, 137 780 Meter. Der bisherige
+  API-Schlüssel funktioniert auch unter der neuen Adresse.
+- Danach wurden die zwei Adressen in `arbeitsweg.py` (Version 08) und in der
+  Tabelle der externen Schnittstellen im [README](../../../README.md)
+  umgestellt. Branch `fix/openrouteservice-neue-adresse`.
+
+| Wofür | Alt | Neu |
+|---|---|---|
+| Adresssuche | `api.openrouteservice.org/geocode/search/structured` | `api.heigit.org/pelias/v1/search/structured` |
+| Route | `api.openrouteservice.org/v2/directions/driving-car` | `api.heigit.org/openrouteservice/v2/directions/driving-car` |
+
+Ein Stolperstein beim Testen: Der erste Test mit den neuen Adressen lieferte
+trotzdem «leer». Ursache war die Testadresse «Bahnhofplatz 1, Zug». Der Dienst
+kennt dort nur die Strasse und keine Hausnummer, und der Code lehnt solche
+Treffer absichtlich ab (`layer != "address"`, ADR 0011). Mit einer anderen
+Adresse klappte es. Ein Fehlschlag beim Testen muss also nicht dieselbe
+Ursache haben wie der eigentliche Fehler.
+
+**Warum haben wir das gemacht?**
+Ohne die Änderung funktioniert Use Case 3 weder lokal noch online. Zuerst
+wurde die Ursache gesucht, statt etwas auszuprobieren: Weil der Code nicht
+geändert worden war, lag die Vermutung nahe, dass sich etwas ausserhalb der
+App geändert hatte. Der direkte Aufruf hat das bestätigt.
+
+HeiGIT hat umgestellt, weil der Betreiber alle seine Dienste (Routen,
+Adresssuche, Höhendaten, OpenStreetMap-Statistiken) unter einer einheitlichen
+Adresse anbieten will. Laut Ankündigung gab es eine Übergangszeit von rund
+sieben Monaten. Das Projekt entstand im Oktober, also mitten in dieser Zeit,
+als die alte Adresse noch lief.
+
+**Welche Auswirkungen hat das?**
+Lokal funktioniert die Berechnung nach der Änderung wieder (direkt geprüft,
+siehe oben). Offen:
+
+- Die Online-Version auf Vercel funktioniert erst wieder, wenn die Änderung
+  über einen Pull Request in `master` gemergt und deployt ist.
+- Fehler beim Arbeitsweg bleiben unsichtbar, weil `except Exception:` jeden
+  Fehler gleich behandelt. Für die Benutzer ist das so gewollt (eine Meldung
+  ohne technische Details, ADR 0008). Ein Eintrag im Server-Log hätte den
+  Fehler 410 aber sofort gezeigt. Ob das ergänzt wird, ist nicht entschieden.
+- ADR 0008 nennt unter «Konsequenzen» die Abhängigkeit vom externen Dienst
+  noch nicht. Ob das nachgetragen wird, ist nicht entschieden.
+
+**Welche Konzepte wurden behandelt?**
+- **HTTP-Statuscode 410 Gone:** Die Adresse gab es einmal, jetzt nicht mehr,
+  und sie kommt auch nicht zurück. Das ist anders als 404 (nicht gefunden)
+  oder 500 (Fehler auf dem Server).
+- **Deprecation (Abkündigung):** Ein Anbieter kündigt an, dass etwas
+  verschwindet, lässt es eine Weile weiterlaufen und schaltet es dann ab.
+- **Abhängigkeit von externen Diensten:** Die App kann kaputtgehen, ohne dass
+  jemand am eigenen Code etwas ändert. Der Anbieter entscheidet, nicht das
+  Team.
+- **Fehler abfangen und Fehler sichtbar machen:** `except` schützt die App vor
+  dem Absturz, versteckt aber gleichzeitig die Ursache. Eine
+  benutzerfreundliche Meldung und ein Log-Eintrag für Entwickler schliessen
+  sich nicht aus.
+- **Fehlersuche Schicht für Schicht:** Die Anfrage direkt und ohne App
+  abschicken, um zu sehen, ob der Fehler in der App oder beim Dienst liegt.
+  Die Lösung zuerst ohne Codeänderung testen, dann umsetzen.
+- **Simulierte Antworten in Tests:** Die automatischen Tests blieben grün,
+  weil sie den Dienst nicht wirklich aufrufen. Das ist gewollt (ADR 0008),
+  bedeutet aber auch, dass solche Ausfälle nur im echten Betrieb auffallen.
+
+**Eigenleistung und KI-Unterstützung**
+Fabio bemerkte den Fehler und liess die Ursache untersuchen. Er fragte nach,
+ob wirklich nur die Adressen geändert werden müssen und warum der Betreiber
+die Umstellung gemacht hat. Er entschied, die Adressen umzustellen und den
+Fall als Learning für den Abschlussbericht festzuhalten.
+
+Der Agent rief den Dienst direkt auf, las die Abschaltseite und die
+Forumsankündigung, testete die neuen Adressen zuerst ohne Codeänderung,
+klärte den Fehlschlag mit der Testadresse, änderte `arbeitsweg.py` und das
+README und schrieb diesen Eintrag.
+
+**Persönliche Reflexion – von Fabio zu ergänzen**
+Hätten wir die Abkündigung im Oktober bemerken können, und woran? Was würde
+ich bei einem eigenen Projekt mit einem externen Dienst von Anfang an anders
+machen, zum Beispiel beim Fehlerprotokoll oder bei einem Test gegen den
+echten Dienst?
+
+**Nächster Lernschritt**
+Die Änderung über einen Pull Request in `master` bringen und danach auf
+Vercel prüfen, ob der Arbeitsweg online wieder berechnet wird.
